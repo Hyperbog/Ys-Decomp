@@ -1,0 +1,21 @@
+{
+  "schema": "ys-bank04-bounded-collision-v1",
+  "case_count": 3968,
+  "descriptor_records": 31,
+  "origin_seed_count": 16,
+  "boundary_variants": 8,
+  "collision_positive_cases": 3033,
+  "collision_negative_cases": 935,
+  "executed_opcodes_total_with_repeats": 84699,
+  "return_sites": {
+    "8086": 280,
+    "8096": 14,
+    "80A1": 3674
+  },
+  "outcome_trace_sha256": "4290475a0305428d1fe857ba5b3bdafa2ba787fc63af15cf8d9d6a520a28d977",
+  "limitations": [
+    "Runs actual bank-4 collision instruction bytes on seeded registers and IX memory.",
+    "Independent direct predicate checks arithmetic and carry behavior; synthetic state only.",
+    "Does not establish game-state call paths, actor coordinate units, or whole-system runtime."
+  ]
+}

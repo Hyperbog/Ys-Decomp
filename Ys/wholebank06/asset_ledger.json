@@ -1,0 +1,147 @@
+{
+  "schema": "ys-bank6-sprite-asset-ledger-v1",
+  "bank": 6,
+  "source_only_bytes": 16384,
+  "previously_source_backed_bytes": 7192,
+  "newly_source_backed_bytes": 9192,
+  "unresolved_visual_bytes": 7408,
+  "indexed_tile_bytes": 1520,
+  "layout_pointer_bytes": 16,
+  "layout_count_bytes_plus_triplets": 241,
+  "padding_bytes": 7,
+  "layout_record_counts": [
+    13,
+    14,
+    13,
+    8,
+    10,
+    10,
+    10
+  ],
+  "layout_total_triplets": 78,
+  "layout_directories": {
+    "A": [
+      47568,
+      47608,
+      47651,
+      47608
+    ],
+    "B": [
+      47715,
+      47740,
+      47771,
+      47802
+    ]
+  },
+  "fixed_bank_literals": [
+    {
+      "source": "src/wholebank00/new_code.asm",
+      "line": 1069,
+      "asm": "ld hl,$ba5b",
+      "address": "BA5B",
+      "target_bank_candidate": 6,
+      "confidence": "instruction literal only; bank mapper state unverified",
+      "context": "sprite-layout pointer directory"
+    },
+    {
+      "source": "src/wholebank00/new_code.asm",
+      "line": 1354,
+      "asm": "ld hl,$9c18",
+      "address": "9C18",
+      "target_bank_candidate": 6,
+      "confidence": "instruction literal only; bank mapper state unverified",
+      "context": "visual-data entry"
+    }
+  ],
+  "source_segments": [
+    {
+      "start": 39960,
+      "end_exclusive": 47368,
+      "type": "unresolved graphics bytes in eight-byte lanes",
+      "bytes": 7408
+    },
+    {
+      "start": 47368,
+      "end_exclusive": 47560,
+      "type": "tile indices A",
+      "bytes": 192
+    },
+    {
+      "start": 47560,
+      "end_exclusive": 47568,
+      "type": "layout pointers A",
+      "bytes": 8
+    },
+    {
+      "start": 47568,
+      "end_exclusive": 47608,
+      "type": "sprite layout A",
+      "bytes": 40
+    },
+    {
+      "start": 47608,
+      "end_exclusive": 47651,
+      "type": "sprite layout A",
+      "bytes": 43
+    },
+    {
+      "start": 47651,
+      "end_exclusive": 47691,
+      "type": "sprite layout A",
+      "bytes": 40
+    },
+    {
+      "start": 47691,
+      "end_exclusive": 47707,
+      "type": "tile indices middle",
+      "bytes": 16
+    },
+    {
+      "start": 47707,
+      "end_exclusive": 47715,
+      "type": "layout pointers B",
+      "bytes": 8
+    },
+    {
+      "start": 47715,
+      "end_exclusive": 47740,
+      "type": "sprite layout B",
+      "bytes": 25
+    },
+    {
+      "start": 47740,
+      "end_exclusive": 47771,
+      "type": "sprite layout B",
+      "bytes": 31
+    },
+    {
+      "start": 47771,
+      "end_exclusive": 47802,
+      "type": "sprite layout B",
+      "bytes": 31
+    },
+    {
+      "start": 47802,
+      "end_exclusive": 47833,
+      "type": "sprite layout B",
+      "bytes": 31
+    },
+    {
+      "start": 47833,
+      "end_exclusive": 49145,
+      "type": "tile indices tail",
+      "bytes": 1312
+    },
+    {
+      "start": 49145,
+      "end_exclusive": 49152,
+      "type": "padding",
+      "bytes": 7
+    }
+  ],
+  "confidence_notes": [
+    "Sprite count-prefix and three-byte record sizing are mechanically verified.",
+    "Graphics byte lanes are storage subdivisions; original pixel-bit interpretation remains uncertain.",
+    "Bank 0 contains instructions loading these two bank6 asset addresses. Active bank6 mapping at the call sites is not proven by the literal alone."
+  ]
+}

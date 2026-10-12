@@ -1,0 +1,320 @@
+{
+  "schema": "ys-m5-static-sound-links-v1",
+  "bank2_sha256": "78b8ac016f2574ffece7f944f9b7680e873eb33f8481c31bbc0a480c4c74a4d8",
+  "evidence": "ROM-matched source mnemonics only; no full music execution trace",
+  "lookup_references": [
+    {
+      "bank": 2,
+      "cpu": "821E",
+      "rom_file_offset": "0821E",
+      "table_cpu": "8C90",
+      "table_kind": "song_directory_55"
+    },
+    {
+      "bank": 2,
+      "cpu": "85D6",
+      "rom_file_offset": "085D6",
+      "table_cpu": "8A58",
+      "table_kind": "psg_note_periods_73"
+    },
+    {
+      "bank": 2,
+      "cpu": "85DC",
+      "rom_file_offset": "085DC",
+      "table_cpu": "8AEA",
+      "table_kind": "fm_note_registers_73"
+    },
+    {
+      "bank": 2,
+      "cpu": "88A4",
+      "rom_file_offset": "088A4",
+      "table_cpu": "8B7D",
+      "table_kind": "sequence_directory_17"
+    },
+    {
+      "bank": 2,
+      "cpu": "89A9",
+      "rom_file_offset": "089A9",
+      "table_cpu": "8B7D",
+      "table_kind": "sequence_directory_17"
+    }
+  ],
+  "hardware_writes": [
+    {
+      "bank": 2,
+      "cpu": "8101",
+      "rom_file_offset": "08101",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "810A",
+      "rom_file_offset": "0810A",
+      "io_port": "F1",
+      "hardware_role": "ym2413_register_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8123",
+      "rom_file_offset": "08123",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8139",
+      "rom_file_offset": "08139",
+      "io_port": "F1",
+      "hardware_role": "ym2413_register_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8184",
+      "rom_file_offset": "08184",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "818A",
+      "rom_file_offset": "0818A",
+      "io_port": "F1",
+      "hardware_role": "ym2413_register_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8299",
+      "rom_file_offset": "08299",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "829D",
+      "rom_file_offset": "0829D",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "82C5",
+      "rom_file_offset": "082C5",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "82C9",
+      "rom_file_offset": "082C9",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "82CD",
+      "rom_file_offset": "082CD",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "82D0",
+      "rom_file_offset": "082D0",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8339",
+      "rom_file_offset": "08339",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "8340",
+      "rom_file_offset": "08340",
+      "io_port": "F1",
+      "hardware_role": "ym2413_register_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8348",
+      "rom_file_offset": "08348",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "834E",
+      "rom_file_offset": "0834E",
+      "io_port": "F1",
+      "hardware_role": "ym2413_register_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8441",
+      "rom_file_offset": "08441",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "8454",
+      "rom_file_offset": "08454",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "8477",
+      "rom_file_offset": "08477",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "8485",
+      "rom_file_offset": "08485",
+      "io_port": "F1",
+      "hardware_role": "ym2413_register_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8491",
+      "rom_file_offset": "08491",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "849A",
+      "rom_file_offset": "0849A",
+      "io_port": "F1",
+      "hardware_role": "ym2413_register_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "864B",
+      "rom_file_offset": "0864B",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "8659",
+      "rom_file_offset": "08659",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "86AD",
+      "rom_file_offset": "086AD",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "874F",
+      "rom_file_offset": "0874F",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8776",
+      "rom_file_offset": "08776",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "877B",
+      "rom_file_offset": "0877B",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "87A7",
+      "rom_file_offset": "087A7",
+      "io_port": "F0",
+      "hardware_role": "ym2413_register_select"
+    },
+    {
+      "bank": 2,
+      "cpu": "87B5",
+      "rom_file_offset": "087B5",
+      "io_port": "F1",
+      "hardware_role": "ym2413_register_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "886D",
+      "rom_file_offset": "0886D",
+      "io_port": "F1",
+      "hardware_role": "ym2413_register_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "88AF",
+      "rom_file_offset": "088AF",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8905",
+      "rom_file_offset": "08905",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8944",
+      "rom_file_offset": "08944",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8997",
+      "rom_file_offset": "08997",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "89B7",
+      "rom_file_offset": "089B7",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8A03",
+      "rom_file_offset": "08A03",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8A0D",
+      "rom_file_offset": "08A0D",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    },
+    {
+      "bank": 2,
+      "cpu": "8A55",
+      "rom_file_offset": "08A55",
+      "io_port": "7F",
+      "hardware_role": "psg_data"
+    }
+  ],
+  "lookup_reference_count": 5,
+  "hardware_write_instruction_count": 39,
+  "full_audio_runtime_verified": false
+}
