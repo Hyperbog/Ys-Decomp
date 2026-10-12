@@ -1,0 +1,107 @@
+{
+  "schema": "ys-phase21-source-overlay-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "rom_bytes": 262144,
+  "previous_source_backed_bytes": 38293,
+  "new_source_backed_bytes": 8056,
+  "new_regions": {
+    "resource_records": 207,
+    "song_directory": 110,
+    "regular_descriptors": 777,
+    "variable_headers": 357,
+    "candidate_glyph_stream": 6605
+  },
+  "new_source_sha256": "60ae3a49243e5b1830bd01166e548e52ac1072c1b12c67c7d4a3e80aaf8d553c",
+  "source_backed_bytes": 46349,
+  "fallback_bytes": 215795,
+  "source_backed_percent": 17.6807,
+  "candidate_classification_bytes": 58490,
+  "new_distinct_classification_bytes": 357,
+  "new_distinct_scope": "24 x (1+9*N) variable music descriptor headers; event bodies remain only bounded",
+  "per_bank": [
+    {
+      "bank": 0,
+      "source_bytes": 8242,
+      "fallback_bytes": 8142
+    },
+    {
+      "bank": 1,
+      "source_bytes": 779,
+      "fallback_bytes": 15605
+    },
+    {
+      "bank": 2,
+      "source_bytes": 3785,
+      "fallback_bytes": 12599
+    },
+    {
+      "bank": 3,
+      "source_bytes": 12237,
+      "fallback_bytes": 4147
+    },
+    {
+      "bank": 4,
+      "source_bytes": 162,
+      "fallback_bytes": 16222
+    },
+    {
+      "bank": 5,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 6,
+      "source_bytes": 7192,
+      "fallback_bytes": 9192
+    },
+    {
+      "bank": 7,
+      "source_bytes": 13631,
+      "fallback_bytes": 2753
+    },
+    {
+      "bank": 8,
+      "source_bytes": 138,
+      "fallback_bytes": 16246
+    },
+    {
+      "bank": 9,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 10,
+      "source_bytes": 75,
+      "fallback_bytes": 16309
+    },
+    {
+      "bank": 11,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 12,
+      "source_bytes": 108,
+      "fallback_bytes": 16276
+    },
+    {
+      "bank": 13,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 14,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 15,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    }
+  ],
+  "source_only_rom": false,
+  "external_wla_verified": false,
+  "full_system_emulator_verified": false,
+  "note": "Source text stores numeric glyph slots and unresolved metadata as literal bytes, NOT decrypted game dialogue. Original ROM still supplies all fallback bytes. 357 additional previously unclassified descriptor headers are structurally anchored; other regenerated regions were previously classified."
+}

@@ -1,0 +1,118 @@
+{
+  "schema": "ys-phase19-regression-checkpoint-v1",
+  "suite_count": 22,
+  "all_passed": true,
+  "suite_results": [
+    {
+      "suite": "phase1",
+      "status": "passed",
+      "elapsed_seconds": 2.756
+    },
+    {
+      "suite": "phase2",
+      "status": "passed",
+      "elapsed_seconds": 3.446
+    },
+    {
+      "suite": "phase3",
+      "status": "passed",
+      "elapsed_seconds": 5.058
+    },
+    {
+      "suite": "phase4",
+      "status": "passed",
+      "elapsed_seconds": 4.312
+    },
+    {
+      "suite": "phase5",
+      "status": "passed",
+      "elapsed_seconds": 4.53
+    },
+    {
+      "suite": "phase6",
+      "status": "passed",
+      "elapsed_seconds": 6.722
+    },
+    {
+      "suite": "phase7",
+      "status": "passed",
+      "elapsed_seconds": 4.229
+    },
+    {
+      "suite": "phase8",
+      "status": "passed",
+      "elapsed_seconds": 4.613
+    },
+    {
+      "suite": "phase9",
+      "status": "passed",
+      "elapsed_seconds": 6.204
+    },
+    {
+      "suite": "phase10",
+      "status": "passed",
+      "elapsed_seconds": 0.816
+    },
+    {
+      "suite": "phase11",
+      "status": "passed",
+      "elapsed_seconds": 0.899
+    },
+    {
+      "suite": "phase11b",
+      "status": "passed",
+      "elapsed_seconds": 0.818
+    },
+    {
+      "suite": "phase12",
+      "status": "passed",
+      "elapsed_seconds": 0.963
+    },
+    {
+      "suite": "phase13",
+      "status": "passed",
+      "elapsed_seconds": 0.702
+    },
+    {
+      "suite": "phase14",
+      "status": "passed",
+      "elapsed_seconds": 1.07
+    },
+    {
+      "suite": "phase15",
+      "status": "passed",
+      "elapsed_seconds": 1.232
+    },
+    {
+      "suite": "phase16",
+      "status": "passed",
+      "elapsed_seconds": 1.26
+    },
+    {
+      "suite": "phase17",
+      "status": "passed",
+      "elapsed_seconds": 1.437
+    },
+    {
+      "suite": "phase18",
+      "status": "passed",
+      "elapsed_seconds": 0.774
+    },
+    {
+      "suite": "phase19",
+      "status": "passed",
+      "elapsed_seconds": 0.825
+    },
+    {
+      "suite": "scratch_workflow",
+      "status": "passed",
+      "elapsed_seconds": 0.75
+    },
+    {
+      "suite": "full_rom_overlay",
+      "status": "passed",
+      "elapsed_seconds": 1.362
+    }
+  ],
+  "note": "All suites executed with the Phase 19 CLI-aware per-suite runner on the SHA-256-verified original ROM; no raw ROM or test output attached."
+}

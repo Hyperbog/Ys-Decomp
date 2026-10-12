@@ -1,0 +1,656 @@
+{
+  "schema": "ys-phase18-bounded-z80-execution-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "scope": "ROM opcode execution of fixed-bank $0BA1 and $0427 with synthetic caller state; not a full-system gameplay trace",
+  "uploader_traces": [
+    {
+      "caller": "1DC8",
+      "executed_instructions": 7145,
+      "mapper_write_bank": 3,
+      "vdp_control_commands": [
+        "5400"
+      ],
+      "vram_start": "1400",
+      "out_data_bytes": 1984,
+      "output_sha256": "bbd17d3ff64b40623f2bcc69678e28b05c4aa170d1fcedc7ce1322cba5a018c3"
+    },
+    {
+      "caller": "3C9C",
+      "executed_instructions": 7375,
+      "mapper_write_bank": 3,
+      "vdp_control_commands": [
+        "6820"
+      ],
+      "vram_start": "2820",
+      "out_data_bytes": 2048,
+      "output_sha256": "c67aa4d90a6be1b2acee35d054bab7d9093dd840dace298309a22eaa34115dd1"
+    },
+    {
+      "caller": "3CA7",
+      "executed_instructions": 1510,
+      "mapper_write_bank": 3,
+      "vdp_control_commands": [
+        "6600"
+      ],
+      "vram_start": "2600",
+      "out_data_bytes": 416,
+      "output_sha256": "2b67cde21a86ba02d884772b2f1ed946e39a24be1227a4a244f55084d525923c"
+    },
+    {
+      "caller": "3D97",
+      "executed_instructions": 7375,
+      "mapper_write_bank": 3,
+      "vdp_control_commands": [
+        "6C00"
+      ],
+      "vram_start": "2C00",
+      "out_data_bytes": 2048,
+      "output_sha256": "8d63a690596d2feda76c543760e447396f075efe54cc7236a027375272014d62"
+    }
+  ],
+  "uploader_output_bytes_with_repeats": 6496,
+  "sprite_sat_trace": {
+    "entry_cpu": "0427",
+    "executed_instructions": 206,
+    "record_directory_index": 7,
+    "record_elements": 30,
+    "ram_y_start": "DD00",
+    "ram_xt_start": "DD40",
+    "control_commands": [
+      "7F00",
+      "7F80"
+    ],
+    "sat_y_range": "3F00-3F3F",
+    "sat_x_tile_range": "3F80-3FFF",
+    "output_bytes": 192,
+    "output_sha256": "1d4c34764ca08b5bfe8b90a316c9c0cbbeba0a96e96bef50f4ed7c8cdd42ffdf"
+  },
+  "bank7_unrolled_traces": [
+    {
+      "index": 0,
+      "entry_cpu": "82C0",
+      "source_cpu": "8CDF",
+      "instructions": 513,
+      "source_bytes": 128,
+      "vdp_bytes": 512,
+      "vdp_sha256": "9252e1f9451ea0cce6c05a5bea0082dbab277552faee80ed32860d113f30113f"
+    },
+    {
+      "index": 1,
+      "entry_cpu": "81C0",
+      "source_cpu": "8C3F",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "065bd110eb95c585401ce2f9e3066c959ce7ca0fe9651740180db6ba117e2c71"
+    },
+    {
+      "index": 2,
+      "entry_cpu": "8180",
+      "source_cpu": "8B97",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "d317a957bb914dad21f4f28d78ddc530925f3b7094703b4dab4cc0226fff0c97"
+    },
+    {
+      "index": 3,
+      "entry_cpu": "81C0",
+      "source_cpu": "8AF7",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "52c9760d27a367f739e4cafacfcde4937accbfb09c08bfc47c7ee38e337f9428"
+    },
+    {
+      "index": 4,
+      "entry_cpu": "8180",
+      "source_cpu": "8A4F",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "28e7d9ac9c9c15cf9f35a441e5fae0f6d0159170cff2faadf780f2a7255f9b1c"
+    },
+    {
+      "index": 5,
+      "entry_cpu": "8180",
+      "source_cpu": "89A7",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "059f15fea699d4708ab77aebe9ed9b7b2b3d54c952044a78f1f7b9b9853a4eec"
+    },
+    {
+      "index": 6,
+      "entry_cpu": "8200",
+      "source_cpu": "890F",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "104b9c9c765d7a7f3d4113af0fb66ee7553fe7188f9a24d4ff269b7103854a1c"
+    },
+    {
+      "index": 7,
+      "entry_cpu": "8200",
+      "source_cpu": "8877",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "57167e751c087cca5b575cbdcbd64c9fd30d7239d1f351d718edb58eafdaf375"
+    },
+    {
+      "index": 8,
+      "entry_cpu": "82C0",
+      "source_cpu": "AF3F",
+      "instructions": 513,
+      "source_bytes": 128,
+      "vdp_bytes": 512,
+      "vdp_sha256": "5750d0c939ce7110d24619246ca5da35f86f61e55fb02474d93baf7e3bebf8c7"
+    },
+    {
+      "index": 9,
+      "entry_cpu": "8240",
+      "source_cpu": "AEAF",
+      "instructions": 577,
+      "source_bytes": 144,
+      "vdp_bytes": 576,
+      "vdp_sha256": "1d5fdb64bed12239d76f46991aa89de40c40f5a9195dd4affe2f2918f23ea388"
+    },
+    {
+      "index": 10,
+      "entry_cpu": "8180",
+      "source_cpu": "AE07",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "df1b38b34cbbce04da38c312af13bd1ad79920915b67a520fda310ef2df9178d"
+    },
+    {
+      "index": 11,
+      "entry_cpu": "81C0",
+      "source_cpu": "AD67",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "f86f764d988d2b6749468bf88e3f27e08f8e39745165ae82864785cdd4c92302"
+    },
+    {
+      "index": 12,
+      "entry_cpu": "8180",
+      "source_cpu": "ACBF",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "1797d87da3b8faa52e10c1e4d8a3f7487e09558d64371e01a63d8268dd40f6eb"
+    },
+    {
+      "index": 13,
+      "entry_cpu": "81C0",
+      "source_cpu": "AC1F",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "2d566918783ab0ae6fd3dd8bd430cd586a6b5364fd00f11c5235d647beb9c0a9"
+    },
+    {
+      "index": 14,
+      "entry_cpu": "8240",
+      "source_cpu": "AB8F",
+      "instructions": 577,
+      "source_bytes": 144,
+      "vdp_bytes": 576,
+      "vdp_sha256": "c6c3d5853bf6830234caffdf841a72c80fae55d33e26b4881d02e2a791fd7833"
+    },
+    {
+      "index": 15,
+      "entry_cpu": "82C0",
+      "source_cpu": "AB0F",
+      "instructions": 513,
+      "source_bytes": 128,
+      "vdp_bytes": 512,
+      "vdp_sha256": "4e3c22a908f17de01158bb694d1520f065f2b4646550516a234c5af909bd5d96"
+    },
+    {
+      "index": 16,
+      "entry_cpu": "8240",
+      "source_cpu": "AA7F",
+      "instructions": 577,
+      "source_bytes": 144,
+      "vdp_bytes": 576,
+      "vdp_sha256": "98957c8356a8ac98a55254a8a91cbc8bf7d9c754c79e6fdb2e05fe1ab2409e5b"
+    },
+    {
+      "index": 17,
+      "entry_cpu": "8200",
+      "source_cpu": "A9E7",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "00c5e483d353c1dc34bceb5b0266d7c79dc128e875b52fcc4236f2c18b29db76"
+    },
+    {
+      "index": 18,
+      "entry_cpu": "8180",
+      "source_cpu": "A93F",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "833654af4846041360024cefa543b69adc0abc45a7eb2d075ddf8d5db7943725"
+    },
+    {
+      "index": 19,
+      "entry_cpu": "8180",
+      "source_cpu": "A897",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "9c1ff995af045dd736047de1b9e2b872bc3a3022325ff6a4cedf388768dd4bc7"
+    },
+    {
+      "index": 20,
+      "entry_cpu": "8180",
+      "source_cpu": "A7EF",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "dfeb5f1f885a8907bd2c5741df38156af0bf40e7796a8a7b5e1c6381637a61a3"
+    },
+    {
+      "index": 21,
+      "entry_cpu": "8180",
+      "source_cpu": "A747",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "b3c387bcd8b9e4b28c51c56a02f199711d3b89ac23e09e6d1dbfa698f13ce634"
+    },
+    {
+      "index": 22,
+      "entry_cpu": "8240",
+      "source_cpu": "A6B7",
+      "instructions": 577,
+      "source_bytes": 144,
+      "vdp_bytes": 576,
+      "vdp_sha256": "a40c3d1aa325b3d9b835d39e8e62b2790313af0e45df0ac642c103fe9bad7966"
+    },
+    {
+      "index": 23,
+      "entry_cpu": "8280",
+      "source_cpu": "A62F",
+      "instructions": 545,
+      "source_bytes": 136,
+      "vdp_bytes": 544,
+      "vdp_sha256": "749b815084ea5109e12f42ec22ecaa0fd6543b54fc53882ac8d4d2b1481e60d8"
+    },
+    {
+      "index": 24,
+      "entry_cpu": "8240",
+      "source_cpu": "A59F",
+      "instructions": 577,
+      "source_bytes": 144,
+      "vdp_bytes": 576,
+      "vdp_sha256": "ca59d5f6c06d0983f448cf2f919c3149b4b8a7d998bb334e26757a4947a6a002"
+    },
+    {
+      "index": 25,
+      "entry_cpu": "8180",
+      "source_cpu": "A4F7",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "518aff1f911910941071cd4846cfe33c0178efc1ed4c0c35d9bbbe8392463d91"
+    },
+    {
+      "index": 26,
+      "entry_cpu": "81C0",
+      "source_cpu": "A457",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "8b105af49cf7a163fc5ce670216ba1fd2e97ebdcbec6df8a96c2f87a45afa7f5"
+    },
+    {
+      "index": 27,
+      "entry_cpu": "8180",
+      "source_cpu": "A3AF",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "5156685ae392ebfc17e250b5072ceb44582cbaa57ea3f60b293f9e73956ee1cb"
+    },
+    {
+      "index": 28,
+      "entry_cpu": "8180",
+      "source_cpu": "A307",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "cf3f566116740bc07d52656554b8c0d7e5f82026c95e457c7bc500596672acba"
+    },
+    {
+      "index": 29,
+      "entry_cpu": "81C0",
+      "source_cpu": "A267",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "6af6e5d5bcfc71251ce4c70ad567ff4530736630de472ddfe3538aa81d8e1175"
+    },
+    {
+      "index": 30,
+      "entry_cpu": "8200",
+      "source_cpu": "A1CF",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "99fabec7d13c415ca85b33f36da6267df87eaf9e0ad9b8e7009840ef900383fd"
+    },
+    {
+      "index": 31,
+      "entry_cpu": "81C0",
+      "source_cpu": "A12F",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "83c7592ff45334c57e7bb8a664ffa1181e4bdca7c96853123f5c64ffb90c11c0"
+    },
+    {
+      "index": 32,
+      "entry_cpu": "81C0",
+      "source_cpu": "A08F",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "86ad4fec569535d387ee467abcde5005b27f19c585b1a918c043774a6d402929"
+    },
+    {
+      "index": 33,
+      "entry_cpu": "8180",
+      "source_cpu": "9FE7",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "bac16b4470e318ffb670d16aaea2d7bc5890773295008e3a0662421f812b74c9"
+    },
+    {
+      "index": 34,
+      "entry_cpu": "8200",
+      "source_cpu": "9F4F",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "1f9e2d66f41c450ec87cbcd195dbcbdb3924c246f611382f3e94715ae5d5427b"
+    },
+    {
+      "index": 35,
+      "entry_cpu": "8180",
+      "source_cpu": "9EA7",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "5c5a7bd59a18ceb92e6838ddb1439c64be0aa868a93a73e64e7c523264743198"
+    },
+    {
+      "index": 36,
+      "entry_cpu": "8180",
+      "source_cpu": "9DFF",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "c935d26c255166f2bce4c4ff54f7074ce0f49f3e341a9924c2cd830b154c4bc0"
+    },
+    {
+      "index": 37,
+      "entry_cpu": "8200",
+      "source_cpu": "9D67",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "aa061c6dbcfe2edcb2c05b514d0d70484a744fce1e8b65414d6030596d82bcec"
+    },
+    {
+      "index": 38,
+      "entry_cpu": "8200",
+      "source_cpu": "9CCF",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "317aa17b36c5646fd947f7fdd9ca25ae22ecd0d05e34c10e6907a4419730391c"
+    },
+    {
+      "index": 39,
+      "entry_cpu": "81C0",
+      "source_cpu": "9C2F",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "992e67732e94bee14a19cb22c1bfc9a7fca9a9434aedd2b1350c255866a5ef28"
+    },
+    {
+      "index": 40,
+      "entry_cpu": "81C0",
+      "source_cpu": "9B8F",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "82a718dce611903d585cb4e0295dee19c2ebf8ec20b6f885b35ad1ebaf4c324a"
+    },
+    {
+      "index": 41,
+      "entry_cpu": "8200",
+      "source_cpu": "9AF7",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "d9579514bae3301a83e1e2bea80a64b7ed099e9264cbfb06c324da1037b3bc07"
+    },
+    {
+      "index": 42,
+      "entry_cpu": "8240",
+      "source_cpu": "9A67",
+      "instructions": 577,
+      "source_bytes": 144,
+      "vdp_bytes": 576,
+      "vdp_sha256": "db902e0753ff3212c449337bd9db8f156d92c648e126b680d0ab6c4369a75795"
+    },
+    {
+      "index": 43,
+      "entry_cpu": "8180",
+      "source_cpu": "99BF",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "f863e26267425bb495c6f2f53734fc1eb5219ff751594c04af1e7eaf780cb9d5"
+    },
+    {
+      "index": 44,
+      "entry_cpu": "8180",
+      "source_cpu": "9917",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "b45101ead89c4e07b4fb4f8e699e9c51f33a9486e3426f6446f78f8e87051e78"
+    },
+    {
+      "index": 45,
+      "entry_cpu": "81C0",
+      "source_cpu": "9877",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "89559684b5ab29b1ed09a71a3bfc20c776464a49a79f17c20981ff224737faf6"
+    },
+    {
+      "index": 46,
+      "entry_cpu": "81C0",
+      "source_cpu": "97D7",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "ba35612d1a8572e9adeaf63e8669236c9723769f9ada650880579553dd5cc1bf"
+    },
+    {
+      "index": 47,
+      "entry_cpu": "81C0",
+      "source_cpu": "9737",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "032b7eb2a8890372806d9589e4db2cb3095e0c2403311cb05343d874086d0978"
+    },
+    {
+      "index": 48,
+      "entry_cpu": "8200",
+      "source_cpu": "969F",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "8f07bb366ce57152caa70b216545bcd867b0b3dff1c7bd0037b384dc8b9cb4c4"
+    },
+    {
+      "index": 49,
+      "entry_cpu": "8200",
+      "source_cpu": "9607",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "7f6b3ce11a19a276f56ea54a17193cd88d0fdf143dd6eef4773e37e3b509f543"
+    },
+    {
+      "index": 50,
+      "entry_cpu": "8180",
+      "source_cpu": "955F",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "490b9351f360ff5d40650de815709fc9029a1a247950e0e3dcbeb3eb78de44c2"
+    },
+    {
+      "index": 51,
+      "entry_cpu": "8180",
+      "source_cpu": "94B7",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "eba34af719079c32012d2dfb23a8eab41b4c2fee85dd757541136962bcfd1985"
+    },
+    {
+      "index": 52,
+      "entry_cpu": "8180",
+      "source_cpu": "940F",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "67605b6b0ec571dbf85fde091d1bf7e2be5e182a8cd462e1996b757a5c6980c8"
+    },
+    {
+      "index": 53,
+      "entry_cpu": "8180",
+      "source_cpu": "9367",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "0ef441906cdbb3f411ff99e447738586776e43946ca3ddd74dd8a2759f24bccf"
+    },
+    {
+      "index": 54,
+      "entry_cpu": "81C0",
+      "source_cpu": "92C7",
+      "instructions": 641,
+      "source_bytes": 160,
+      "vdp_bytes": 640,
+      "vdp_sha256": "111dbadaf868a63ecf7388763ed4675c507064575aa8823e63e18da706811886"
+    },
+    {
+      "index": 55,
+      "entry_cpu": "8240",
+      "source_cpu": "9237",
+      "instructions": 577,
+      "source_bytes": 144,
+      "vdp_bytes": 576,
+      "vdp_sha256": "f1392e016093698b222f48602a5a32a68ec12d5c282e68c43e7109d9eb64dd52"
+    },
+    {
+      "index": 56,
+      "entry_cpu": "8300",
+      "source_cpu": "91BF",
+      "instructions": 481,
+      "source_bytes": 120,
+      "vdp_bytes": 480,
+      "vdp_sha256": "f20f73e32c4575cdb053be0dd6e8484129d0db762057b29b76250139fea2a400"
+    },
+    {
+      "index": 57,
+      "entry_cpu": "8200",
+      "source_cpu": "9127",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "d11c8a35f395b944703ca65570f005bd804c8d4ca6ff62e24b22a4e3d0183b76"
+    },
+    {
+      "index": 58,
+      "entry_cpu": "8180",
+      "source_cpu": "907F",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "1506ca75d2acce7a8c2c54dd98cb50175d212e95ba50fd5ac05cbd0a7fb66ab1"
+    },
+    {
+      "index": 59,
+      "entry_cpu": "8180",
+      "source_cpu": "8FD7",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "edad5c047b96ce58e320470bec850b2a3d3b455950c2c9b23240db0c1aece9e0"
+    },
+    {
+      "index": 60,
+      "entry_cpu": "8180",
+      "source_cpu": "8F2F",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "67729c54f5ccc73182963e5abeb536e74d67a9b17f5ce5039734995a5188c7aa"
+    },
+    {
+      "index": 61,
+      "entry_cpu": "8180",
+      "source_cpu": "8E87",
+      "instructions": 673,
+      "source_bytes": 168,
+      "vdp_bytes": 672,
+      "vdp_sha256": "766aef0af06472a3d6aa6c293b11de079cf1daa7577b04f9db75726fa3ad730f"
+    },
+    {
+      "index": 62,
+      "entry_cpu": "8200",
+      "source_cpu": "8DEF",
+      "instructions": 609,
+      "source_bytes": 152,
+      "vdp_bytes": 608,
+      "vdp_sha256": "5f21a4f83ba84343c227b64f171e07f1dc91d314e1ca22933846ba49db3d6cea"
+    },
+    {
+      "index": 63,
+      "entry_cpu": "8240",
+      "source_cpu": "8D5F",
+      "instructions": 577,
+      "source_bytes": 144,
+      "vdp_bytes": 576,
+      "vdp_sha256": "a01da7c2838a56021cebaf5a81c810d1791605b3a6a791b86b5d45f23c86fe1f"
+    }
+  ],
+  "bank7_total_output_bytes_across_record_runs": 40224,
+  "bank7_combined_output_sha256": "a5a8d07b77aa2a1040ca76e013cc8c0b78057ddc57d509d0c6b29f90690aaf2b",
+  "new_rom_bytes_classified": 0,
+  "new_source_backed_bytes": 0,
+  "limitations": [
+    "Unsupported Z80 instructions fail closed",
+    "No frame timing, rendering, interrupts or real gameplay state",
+    "RAM buffers seeded using independent static producer model",
+    "No external SMS emulator or Z80 assembler installed"
+  ]
+}

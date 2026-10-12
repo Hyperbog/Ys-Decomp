@@ -1,0 +1,10 @@
+{
+  "combined_source_sha256": "60ae3a49243e5b1830bd01166e548e52ac1072c1b12c67c7d4a3e80aaf8d553c",
+  "region_bytes": {
+    "resource_records": 207,
+    "song_directory": 110,
+    "regular_descriptors": 777,
+    "variable_headers": 357,
+    "candidate_glyph_stream": 6605
+  }
+}

@@ -1,0 +1,371 @@
+; Phase 2: ROM-backed, explicit bounded ranges. Not an assembled ROM.
+; Offset  CPU     Bytes              Decoded Z80 instruction
+
+; IM1 VDP interrupt branch and register-save path | bank 0 | file 00102-001AB
+00102  0102  3A 21 C0           ld a,($C021)
+00105  0105  B7                 or a
+00106  0106  28 40              jr z,$0148
+00108  0108  21 1A C0           ld hl,$C01A
+0010B  010B  01 BF 8B           ld bc,$8BBF
+0010E  010E  ED AB              outd
+00110  0110  ED 41              out (c),b
+00112  0112  ED AB              outd
+00114  0114  ED 41              out (c),b
+00116  0116  ED AB              outd
+00118  0118  ED 41              out (c),b
+0011A  011A  21 FF 85           ld hl,$85FF
+0011D  011D  ED 69              out (c),l
+0011F  011F  ED 61              out (c),h
+00121  0121  21 AA 01           ld hl,$01AA
+00124  0124  CF                 rst $0008
+00125  0125  FB                 ei
+00126  0126  3A 1F C0           ld a,($C01F)
+00129  0129  FE 0D              cp $0D
+0012B  012B  28 0B              jr z,$0138
+0012D  012D  CD 73 07           call $0773
+00130  0130  3E 02              ld a,$02
+00132  0132  32 FF FF           ld ($FFFF),a
+00135  0135  CD 00 80           call $8000
+00138  0138  DB DD              in a,($DD)
+0013A  013A  E6 10              and $10
+0013C  013C  CA A5 00           jp z,$00A5
+0013F  013F  AF                 xor a
+00140  0140  32 21 C0           ld ($C021),a
+00143  0143  32 0F C1           ld ($C10F),a
+00146  0146  F1                 pop af
+00147  0147  C9                 ret
+00148  0148  C5                 push bc
+00149  0149  D5                 push de
+0014A  014A  E5                 push hl
+0014B  014B  08                 ex af,af'
+0014C  014C  D9                 exx
+0014D  014D  F5                 push af
+0014E  014E  C5                 push bc
+0014F  014F  D5                 push de
+00150  0150  E5                 push hl
+00151  0151  DD E5              push ix
+00153  0153  FD E5              push iy
+00155  0155  3A FF FF           ld a,($FFFF)
+00158  0158  F5                 push af
+00159  0159  3A FC FF           ld a,($FFFC)
+0015C  015C  F5                 push af
+0015D  015D  AF                 xor a
+0015E  015E  32 FC FF           ld ($FFFC),a
+00161  0161  3E 02              ld a,$02
+00163  0163  32 FF FF           ld ($FFFF),a
+00166  0166  CD 00 80           call $8000
+00169  0169  3A 10 C0           ld a,($C010)
+0016C  016C  E6 10              and $10
+0016E  016E  28 1F              jr z,$018F
+00170  0170  3A 11 C0           ld a,($C011)
+00173  0173  E6 40              and $40
+00175  0175  28 18              jr z,$018F
+00177  0177  AF                 xor a
+00178  0178  D3 BF              out ($BF),a
+0017A  017A  3E 8A              ld a,$8A
+0017C  017C  D3 BF              out ($BF),a
+0017E  017E  3E FF              ld a,$FF
+00180  0180  D3 BF              out ($BF),a
+00182  0182  3E 85              ld a,$85
+00184  0184  D3 BF              out ($BF),a
+00186  0186  3A 31 C0           ld a,($C031)
+00189  0189  D3 BF              out ($BF),a
+0018B  018B  3E 88              ld a,$88
+0018D  018D  D3 BF              out ($BF),a
+0018F  018F  3E 01              ld a,$01
+00191  0191  32 0F C1           ld ($C10F),a
+00194  0194  F1                 pop af
+00195  0195  32 FC FF           ld ($FFFC),a
+00198  0198  F1                 pop af
+00199  0199  32 FF FF           ld ($FFFF),a
+0019C  019C  FD E1              pop iy
+0019E  019E  DD E1              pop ix
+001A0  01A0  E1                 pop hl
+001A1  01A1  D1                 pop de
+001A2  01A2  C1                 pop bc
+001A3  01A3  F1                 pop af
+001A4  01A4  D9                 exx
+001A5  01A5  08                 ex af,af'
+001A6  01A6  E1                 pop hl
+001A7  01A7  D1                 pop de
+001A8  01A8  C1                 pop bc
+001A9  01A9  F1                 pop af
+001AA  01AA  FB                 ei
+001AB  01AB  C9                 ret
+
+; interrupt continuation handlers | bank 0 | file 00540-005F1
+00540  0540  E5                 push hl
+00541  0541  2A 22 C0           ld hl,($C022)
+00544  0544  E9                 jp (hl)
+00545  0545  3E 9B              ld a,$9B
+00547  0547  D3 BF              out ($BF),a
+00549  0549  3E 8A              ld a,$8A
+0054B  054B  D3 BF              out ($BF),a
+0054D  054D  21 57 05           ld hl,$0557
+00550  0550  22 22 C0           ld ($C022),hl
+00553  0553  E1                 pop hl
+00554  0554  F1                 pop af
+00555  0555  FB                 ei
+00556  0556  C9                 ret
+00557  0557  3E 01              ld a,$01
+00559  0559  D3 BF              out ($BF),a
+0055B  055B  3E 8A              ld a,$8A
+0055D  055D  D3 BF              out ($BF),a
+0055F  055F  21 75 05           ld hl,$0575
+00562  0562  22 22 C0           ld ($C022),hl
+00565  0565  C5                 push bc
+00566  0566  CD F2 05           call $05F2
+00569  0569  3A 98 C1           ld a,($C198)
+0056C  056C  B7                 or a
+0056D  056D  C4 24 06           call nz,$0624
+00570  0570  C1                 pop bc
+00571  0571  E1                 pop hl
+00572  0572  F1                 pop af
+00573  0573  FB                 ei
+00574  0574  C9                 ret
+00575  0575  3E 07              ld a,$07
+00577  0577  D3 BF              out ($BF),a
+00579  0579  3E 8A              ld a,$8A
+0057B  057B  D3 BF              out ($BF),a
+0057D  057D  21 87 05           ld hl,$0587
+00580  0580  22 22 C0           ld ($C022),hl
+00583  0583  E1                 pop hl
+00584  0584  F1                 pop af
+00585  0585  FB                 ei
+00586  0586  C9                 ret
+00587  0587  21 A8 05           ld hl,$05A8
+0058A  058A  22 22 C0           ld ($C022),hl
+0058D  058D  E1                 pop hl
+0058E  058E  AF                 xor a
+0058F  058F  D3 BF              out ($BF),a
+00591  0591  3E 88              ld a,$88
+00593  0593  D3 BF              out ($BF),a
+00595  0595  3E F9              ld a,$F9
+00597  0597  D3 BF              out ($BF),a
+00599  0599  3E 82              ld a,$82
+0059B  059B  D3 BF              out ($BF),a
+0059D  059D  3E EF              ld a,$EF
+0059F  059F  D3 BF              out ($BF),a
+005A1  05A1  3E 85              ld a,$85
+005A3  05A3  D3 BF              out ($BF),a
+005A5  05A5  F1                 pop af
+005A6  05A6  FB                 ei
+005A7  05A7  C9                 ret
+005A8  05A8  21 BF 05           ld hl,$05BF
+005AB  05AB  22 22 C0           ld ($C022),hl
+005AE  05AE  E1                 pop hl
+005AF  05AF  3E 02              ld a,$02
+005B1  05B1  3D                 dec a
+005B2  05B2  20 FD              jr nz,$05B1
+005B4  05B4  3E FF              ld a,$FF
+005B6  05B6  D3 BF              out ($BF),a
+005B8  05B8  3E 82              ld a,$82
+005BA  05BA  D3 BF              out ($BF),a
+005BC  05BC  F1                 pop af
+005BD  05BD  FB                 ei
+005BE  05BE  C9                 ret
+005BF  05BF  21 D9 05           ld hl,$05D9
+005C2  05C2  22 22 C0           ld ($C022),hl
+005C5  05C5  3E FF              ld a,$FF
+005C7  05C7  D3 BF              out ($BF),a
+005C9  05C9  3E 8A              ld a,$8A
+005CB  05CB  D3 BF              out ($BF),a
+005CD  05CD  3E F9              ld a,$F9
+005CF  05CF  D3 BF              out ($BF),a
+005D1  05D1  3E 82              ld a,$82
+005D3  05D3  D3 BF              out ($BF),a
+005D5  05D5  E1                 pop hl
+005D6  05D6  F1                 pop af
+005D7  05D7  FB                 ei
+005D8  05D8  C9                 ret
+005D9  05D9  21 45 05           ld hl,$0545
+005DC  05DC  22 22 C0           ld ($C022),hl
+005DF  05DF  AF                 xor a
+005E0  05E0  D3 BF              out ($BF),a
+005E2  05E2  3E 8A              ld a,$8A
+005E4  05E4  D3 BF              out ($BF),a
+005E6  05E6  3E FF              ld a,$FF
+005E8  05E8  D3 BF              out ($BF),a
+005EA  05EA  3E 82              ld a,$82
+005EC  05EC  D3 BF              out ($BF),a
+005EE  05EE  E1                 pop hl
+005EF  05EF  F1                 pop af
+005F0  05F0  FB                 ei
+005F1  05F1  C9                 ret
+
+; video register initialization | bank 0 | file 00749-00767
+00749  0749  21 68 07           ld hl,$0768
+0074C  074C  11 10 C0           ld de,$C010
+0074F  074F  01 80 0B           ld bc,$0B80
+00752  0752  7E                 ld a,(hl)
+00753  0753  12                 ld (de),a
+00754  0754  D3 BF              out ($BF),a
+00756  0756  79                 ld a,c
+00757  0757  D3 BF              out ($BF),a
+00759  0759  23                 inc hl
+0075A  075A  13                 inc de
+0075B  075B  0C                 inc c
+0075C  075C  10 F4              djnz $0752
+0075E  075E  11 10 C0           ld de,$C010
+00761  0761  AF                 xor a
+00762  0762  F5                 push af
+00763  0763  EF                 rst $0028
+00764  0764  F1                 pop af
+00765  0765  D3 BE              out ($BE),a
+00767  0767  C9                 ret
+
+; input read and state update helper | bank 0 | file 00773-00781
+00773  0773  DB DC              in a,($DC)
+00775  0775  21 1B C0           ld hl,$C01B
+00778  0778  F6 C0              or $C0
+0077A  077A  2F                 cpl
+0077B  077B  47                 ld b,a
+0077C  077C  AE                 xor (hl)
+0077D  077D  70                 ld (hl),b
+0077E  077E  23                 inc hl
+0077F  077F  A0                 and b
+00780  0780  77                 ld (hl),a
+00781  0781  C9                 ret
+
+; SRAM signature check and initializer | bank 0 | file 0079A-007D4
+0079A  079A  3A FC FF           ld a,($FFFC)
+0079D  079D  F6 08              or $08
+0079F  079F  32 FC FF           ld ($FFFC),a
+007A2  07A2  21 82 07           ld hl,$0782
+007A5  07A5  11 10 80           ld de,$8010
+007A8  07A8  06 18              ld b,$18
+007AA  07AA  1A                 ld a,(de)
+007AB  07AB  BE                 cp (hl)
+007AC  07AC  20 06              jr nz,$07B4
+007AE  07AE  23                 inc hl
+007AF  07AF  13                 inc de
+007B0  07B0  10 F8              djnz $07AA
+007B2  07B2  18 18              jr $07CC
+007B4  07B4  21 10 80           ld hl,$8010
+007B7  07B7  11 11 80           ld de,$8011
+007BA  07BA  01 EE 1F           ld bc,$1FEE
+007BD  07BD  36 00              ld (hl),$00
+007BF  07BF  ED B0              ldir
+007C1  07C1  21 82 07           ld hl,$0782
+007C4  07C4  11 10 80           ld de,$8010
+007C7  07C7  01 18 00           ld bc,$0018
+007CA  07CA  ED B0              ldir
+007CC  07CC  3A FC FF           ld a,($FFFC)
+007CF  07CF  E6 F7              and $F7
+007D1  07D1  32 FC FF           ld ($FFFC),a
+007D4  07D4  C9                 ret
+
+; VBlank wait wrapper | bank 0 | file 00BC5-00BEE
+00BC5  0BC5  F5                 push af
+00BC6  0BC6  C5                 push bc
+00BC7  0BC7  D5                 push de
+00BC8  0BC8  E5                 push hl
+00BC9  0BC9  08                 ex af,af'
+00BCA  0BCA  D9                 exx
+00BCB  0BCB  F5                 push af
+00BCC  0BCC  C5                 push bc
+00BCD  0BCD  D5                 push de
+00BCE  0BCE  E5                 push hl
+00BCF  0BCF  DD E5              push ix
+00BD1  0BD1  FD E5              push iy
+00BD3  0BD3  3A FF FF           ld a,($FFFF)
+00BD6  0BD6  F5                 push af
+00BD7  0BD7  3E 01              ld a,$01
+00BD9  0BD9  CD 42 00           call $0042
+00BDC  0BDC  F1                 pop af
+00BDD  0BDD  32 FF FF           ld ($FFFF),a
+00BE0  0BE0  FD E1              pop iy
+00BE2  0BE2  DD E1              pop ix
+00BE4  0BE4  E1                 pop hl
+00BE5  0BE5  D1                 pop de
+00BE6  0BE6  C1                 pop bc
+00BE7  0BE7  F1                 pop af
+00BE8  0BE8  D9                 exx
+00BE9  0BE9  08                 ex af,af'
+00BEA  0BEA  E1                 pop hl
+00BEB  0BEB  D1                 pop de
+00BEC  0BEC  C1                 pop bc
+00BED  0BED  F1                 pop af
+00BEE  0BEE  C9                 ret
+
+; bank2 boot + shared video/audio initializer | bank 2 | file 08803-08877
+08803  8803  E5                 push hl
+08804  8804  D5                 push de
+08805  8805  C5                 push bc
+08806  8806  21 63 DE           ld hl,$DE63
+08809  8809  11 64 DE           ld de,$DE64
+0880C  880C  36 00              ld (hl),$00
+0880E  880E  ED A0              ldi
+08810  8810  ED A0              ldi
+08812  8812  ED A0              ldi
+08814  8814  ED A0              ldi
+08816  8816  ED A0              ldi
+08818  8818  ED A0              ldi
+0881A  881A  ED A0              ldi
+0881C  881C  ED A0              ldi
+0881E  881E  ED A0              ldi
+08820  8820  ED A0              ldi
+08822  8822  21 6F DE           ld hl,$DE6F
+08825  8825  AF                 xor a
+08826  8826  06 08              ld b,$08
+08828  8828  11 18 00           ld de,$0018
+0882B  882B  77                 ld (hl),a
+0882C  882C  19                 add hl,de
+0882D  882D  77                 ld (hl),a
+0882E  882E  23                 inc hl
+0882F  882F  77                 ld (hl),a
+08830  8830  23                 inc hl
+08831  8831  77                 ld (hl),a
+08832  8832  23                 inc hl
+08833  8833  77                 ld (hl),a
+08834  8834  11 05 00           ld de,$0005
+08837  8837  19                 add hl,de
+08838  8838  10 EE              djnz $8828
+0883A  883A  3E E4              ld a,$E4
+0883C  883C  32 68 DE           ld ($DE68),a
+0883F  883F  C1                 pop bc
+08840  8840  D1                 pop de
+08841  8841  E1                 pop hl
+08842  8842  E5                 push hl
+08843  8843  C5                 push bc
+08844  8844  21 78 88           ld hl,$8878
+08847  8847  0E 7F              ld c,$7F
+08849  8849  ED A3              outi
+0884B  884B  ED A3              outi
+0884D  884D  ED A3              outi
+0884F  884F  ED A3              outi
+08851  8851  ED A3              outi
+08853  8853  ED A3              outi
+08855  8855  ED A3              outi
+08857  8857  ED A3              outi
+08859  8859  ED A3              outi
+0885B  885B  ED A3              outi
+0885D  885D  ED A3              outi
+0885F  885F  D5                 push de
+08860  8860  06 06              ld b,$06
+08862  8862  AF                 xor a
+08863  8863  0E F0              ld c,$F0
+08865  8865  16 20              ld d,$20
+08867  8867  ED 51              out (c),d
+08869  8869  14                 inc d
+0886A  886A  CD 83 88           call $8883
+0886D  886D  D3 F1              out ($F1),a
+0886F  886F  CD 83 88           call $8883
+08872  8872  10 F3              djnz $8867
+08874  8874  D1                 pop de
+08875  8875  C1                 pop bc
+08876  8876  E1                 pop hl
+08877  8877  C9                 ret
+
+; data: interrupt state dispatch entries for A=1..4 (RST 08 indexes from 01AA; A=0 points at EI/RET instruction bytes)
+001AC  ----  B4 01 BA 01 D7 01 B8 03
+
+; data: 11 video register initialization values (written to port BF by loop at 0752)
+00768  ----  26 A0 FF FF FF FF FF 00 00 00 00
+
+; data: 24-byte save RAM signature (Ancient Ys Vanished Omen)
+00782  ----  41 6E 63 69 65 6E 74 20 59 73 20 56 61 6E 69 73 68 65 64 20 4F 6D 65 6E
+
+; data: 11 PSG initialization bytes (output via OUTI port 7F in bank 2)
+08878  ----  80 00 90 00 C0 00 E4 9F BF DF FF
+

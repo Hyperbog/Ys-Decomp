@@ -1,0 +1,79 @@
+{
+  "code": [
+    {
+      "name": "IM1 VDP interrupt branch and register-save path",
+      "bank": 0,
+      "slot": 0,
+      "start": "0102",
+      "end_exclusive": "01AC"
+    },
+    {
+      "name": "interrupt continuation handlers",
+      "bank": 0,
+      "slot": 0,
+      "start": "0540",
+      "end_exclusive": "05F2"
+    },
+    {
+      "name": "video register initialization",
+      "bank": 0,
+      "slot": 0,
+      "start": "0749",
+      "end_exclusive": "0768"
+    },
+    {
+      "name": "input read and state update helper",
+      "bank": 0,
+      "slot": 0,
+      "start": "0773",
+      "end_exclusive": "0782"
+    },
+    {
+      "name": "SRAM signature check and initializer",
+      "bank": 0,
+      "slot": 0,
+      "start": "079A",
+      "end_exclusive": "07D5"
+    },
+    {
+      "name": "VBlank wait wrapper",
+      "bank": 0,
+      "slot": 0,
+      "start": "0BC5",
+      "end_exclusive": "0BEF"
+    },
+    {
+      "name": "bank2 boot + shared video/audio initializer",
+      "bank": 2,
+      "slot": 2,
+      "start": "8803",
+      "end_exclusive": "8878"
+    }
+  ],
+  "data": [
+    {
+      "name": "interrupt state dispatch entries for A=1..4",
+      "start": "01AC",
+      "hex": "B4 01 BA 01 D7 01 B8 03",
+      "note": "RST 08 indexes from 01AA; A=0 points at EI/RET instruction bytes"
+    },
+    {
+      "name": "11 video register initialization values",
+      "start": "0768",
+      "hex": "26 A0 FF FF FF FF FF 00 00 00 00",
+      "note": "written to port BF by loop at 0752"
+    },
+    {
+      "name": "24-byte save RAM signature",
+      "start": "0782",
+      "hex": "41 6E 63 69 65 6E 74 20 59 73 20 56 61 6E 69 73 68 65 64 20 4F 6D 65 6E",
+      "note": "Ancient Ys Vanished Omen"
+    },
+    {
+      "name": "11 PSG initialization bytes",
+      "start": "8878",
+      "hex": "80 00 90 00 C0 00 E4 9F BF DF FF",
+      "note": "output via OUTI port 7F in bank 2"
+    }
+  ]
+}
