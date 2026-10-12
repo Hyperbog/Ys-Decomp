@@ -1,0 +1,74 @@
+{
+  "entrypoints": [
+    "2002",
+    "0A5B",
+    "0AA7",
+    "0AC3",
+    "0AE8",
+    "0B19",
+    "0B56",
+    "0B73",
+    "0BA1"
+  ],
+  "dispatch_tables": [
+    {
+      "start": "205A",
+      "end_exclusive": "20AC"
+    },
+    {
+      "start": "2C24",
+      "end_exclusive": "2C36"
+    }
+  ],
+  "data": [
+    {
+      "start": "205A",
+      "end_exclusive": "20AC",
+      "name": "41 little-endian game state jump targets indexed via RST $0008",
+      "confidence": "structural",
+      "sha256": "acdcb9d43f6e91739c12a0d2a71a7b01bac58d018697ae8c5d6b5253a16f06c5"
+    },
+    {
+      "start": "2533",
+      "end_exclusive": "2585",
+      "name": "41-address table of fixed-bank data-record pointers (not code targets)",
+      "confidence": "structural",
+      "sha256": "b99c740f4532cfe430e0f3d7d390e4f92ccb11d277e0bcddbb1e90670fa041ca"
+    },
+    {
+      "start": "2585",
+      "end_exclusive": "2654",
+      "name": "23 nine-byte ROM resource records, pointer directory starts $2533",
+      "confidence": "opaque",
+      "sha256": "e77729e39c8dc112dac2c484094606b2366bad8d888c391a2c18f63056ea20f8"
+    },
+    {
+      "start": "2C24",
+      "end_exclusive": "2C36",
+      "name": "9 little-endian state/scene jump targets indexed by RST $0008",
+      "confidence": "structural",
+      "sha256": "91362ded0c7de8663050e84165f15ceff4c0fc93c0fdafedde8246a82e8c5883"
+    },
+    {
+      "start": "8D5F",
+      "end_exclusive": "AA77",
+      "name": "Music event streams and control-flow tokens preceding the header directory",
+      "confidence": "opaque",
+      "sha256": "1a2eb947263dd98040cbac9c4591c1b4b1dbb205a21752ca22ee30206bc4823e"
+    },
+    {
+      "start": "AA77",
+      "end_exclusive": "AD80",
+      "name": "21 regularly spaced $25-byte audio descriptor records indexed from $8C90",
+      "confidence": "structural",
+      "sha256": "40ac0b57926a1044dbce367f6e6fe14c747aab7567231c347af5f4a1c8c12e57"
+    },
+    {
+      "start": "AD80",
+      "end_exclusive": "B319",
+      "name": "Pointer-referenced additional music event streams; inner format incomplete",
+      "confidence": "opaque",
+      "sha256": "03575b2cf5fee98e3652e2da8946abf694fb20061d00e3fe80ffc9be9f2c25ad"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "entrypoints": [
+    "0260",
+    "0389",
+    "0406",
+    "0624",
+    "0BEF",
+    "0C4A",
+    "0EDE",
+    "0F23",
+    "0F39",
+    "0F71",
+    "0DC9",
+    "8329",
+    "837F",
+    "8472",
+    "8543",
+    "85E9",
+    "8A4B"
+  ],
+  "data": [
+    {
+      "name": "20 little-endian event-handler addresses, indexed at $85EF",
+      "start": "8600",
+      "end_exclusive": "8628",
+      "sha256": "7485ed3187f09aaedfc1970d4fb7f76ca73dd2069e640f65c224395b2c6ea943"
+    },
+    {
+      "name": "two ROM address-calculation lookup arrays referenced at $85D6/$85DC",
+      "start": "8A58",
+      "end_exclusive": "8B7C",
+      "sha256": "80fc7c3a6aea0e681f58f2e54fe7720090e4af2beb2229e37dfca32d11bd4a2f"
+    },
+    {
+      "name": "one marker, 17 pointers, and indexed audio modulation/envelope streams; subformat unresolved",
+      "start": "8B7C",
+      "end_exclusive": "8C2F",
+      "sha256": "12d765cb281b1fc702b4c367e23cf84cb4e242c4425640f38f0b22fb240a75d3"
+    },
+    {
+      "name": "five pointers and associated modulation bytes referenced at $842C",
+      "start": "8C2F",
+      "end_exclusive": "8C8F",
+      "sha256": "4edb2689d23637e66748c6ecd910d670d7d0b69db856f8fea408bdcf2f03fb05"
+    },
+    {
+      "name": "one $80 marker plus 55 little-endian song pointers; destination mapper state unresolved",
+      "start": "8C8F",
+      "end_exclusive": "8CFE",
+      "sha256": "14b6ea934ac838cd41b9c24f8ea23ee798067095195549d80a43fcb6baab4be3"
+    },
+    {
+      "name": "observed prefix of the audio priority lookup; full extent unresolved",
+      "start": "8D02",
+      "end_exclusive": "8D40",
+      "sha256": "9a4f2a34be39d34944bf9075899ce822ee6b416ab532077a3c010f30b860e84e"
+    }
+  ]
+}

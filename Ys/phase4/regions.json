@@ -1,0 +1,38 @@
+{
+  "code": [
+    {
+      "name": "FM and PSG setup, preset upload and command helpers",
+      "bank": 2,
+      "slot": 2,
+      "start": "80F1",
+      "end_exclusive": "81B1"
+    },
+    {
+      "name": "sound command dispatcher, channel setup, record copy and pointer helper",
+      "bank": 2,
+      "slot": 2,
+      "start": "81D9",
+      "end_exclusive": "8329"
+    }
+  ],
+  "data": [
+    {
+      "name": "two FM rhythm preset pointers plus 2 x 18-byte register/value sequences",
+      "start": "81B1",
+      "hex": "B5 81 C7 81 16 20 17 B0 18 01 26 05 27 01 28 01 36 00 37 40 38 51 16 20 17 B0 18 FF 26 05 27 01 28 A5 36 04 37 30 38 F6",
+      "note": "81B1/B3 words are 81B5/81C7; preset streams are each 9 register/value pairs"
+    },
+    {
+      "name": "two direct command handlers referenced through BC/BD dispatch",
+      "start": "8CFE",
+      "hex": "12 81 4C 81",
+      "note": "BC->8112, BD->814C via dispatcher at 81F5"
+    },
+    {
+      "name": "31-byte table loaded for commands 81..9F",
+      "start": "8D40",
+      "hex": "02 10 04 0A 0A 04 03 05 07 02 00 02 02 10 00 03 00 05 05 00 80 FF 03 A4 0C A2 A1 9F A2 A1 9F",
+      "note": "indexed at 820F after subtracting 81 from command; meaning beyond timer reload unverified"
+    }
+  ]
+}

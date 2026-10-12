@@ -1,0 +1,32 @@
+{
+  "code": [
+    {
+      "name": "IM1 $01AC-dispatch target implementations, including bank 3 selection",
+      "bank": 0, "slot": 0, "start": "01B4", "end_exclusive": "01EB"
+    },
+    {
+      "name": "empty substate target and initial tile transfer routine",
+      "bank": 0, "slot": 0, "start": "01FD", "end_exclusive": "0260"
+    },
+    {
+      "name": "interrupt VDP upload and staging paths",
+      "bank": 0, "slot": 0, "start": "03B8", "end_exclusive": "0406"
+    },
+    {
+      "name": "interrupt VDP transfer with temporary bank 3 and mapper restore",
+      "bank": 0, "slot": 0, "start": "05F2", "end_exclusive": "0624"
+    },
+    {
+      "name": "bank 2 frame-update entry and first three helpers",
+      "bank": 2, "slot": 2, "start": "8000", "end_exclusive": "80F1"
+    }
+  ],
+  "data": [
+    {
+      "name": "9-entry secondary dispatch table indexed by C105 at 01D7",
+      "start": "01EB",
+      "hex": "FD 01 FE 01 88 02 B1 02 C2 02 2A 03 39 03 5D 03 89 03",
+      "note": "entry 0 -> 01FD (RET); entries 1..8 -> 01FE,0288,02B1,02C2,032A,0339,035D,0389; other indices unproven"
+    }
+  ]
+}

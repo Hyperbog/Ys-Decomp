@@ -1,0 +1,290 @@
+; Phase 4: ROM-backed, explicit bounded ranges. Not an assembled ROM.
+; Offset  CPU     Bytes              Decoded Z80 instruction
+
+; FM and PSG setup, preset upload and command helpers | bank 2 | file 080F1-081B0
+080F1  80F1  08                 ex af,af'
+080F2  80F2  20 02              jr nz,$80F6
+080F4  80F4  08                 ex af,af'
+080F5  80F5  C9                 ret
+080F6  80F6  08                 ex af,af'
+080F7  80F7  21 76 DE           ld hl,$DE76
+080FA  80FA  11 1F 00           ld de,$001F
+080FD  80FD  01 30 05           ld bc,$0530
+08100  8100  79                 ld a,c
+08101  8101  D3 F0              out ($F0),a
+08103  8103  0C                 inc c
+08104  8104  7E                 ld a,(hl)
+08105  8105  E6 F0              and $F0
+08107  8107  23                 inc hl
+08108  8108  B6                 or (hl)
+08109  8109  19                 add hl,de
+0810A  810A  D3 F1              out ($F1),a
+0810C  810C  CD 83 88           call $8883
+0810F  810F  10 EF              djnz $8100
+08111  8111  C9                 ret
+08112  8112  3E 0C              ld a,$0C
+08114  8114  32 6A DE           ld ($DE6A),a
+08117  8117  3A 6C DE           ld a,($DE6C)
+0811A  811A  32 6B DE           ld ($DE6B),a
+0811D  811D  AF                 xor a
+0811E  811E  32 0F DF           ld ($DF0F),a
+08121  8121  3E FF              ld a,$FF
+08123  8123  D3 7F              out ($7F),a
+08125  8125  3A 60 DE           ld a,($DE60)
+08128  8128  B7                 or a
+08129  8129  CA 1A 83           jp z,$831A
+0812C  812C  06 03              ld b,$03
+0812E  812E  AF                 xor a
+0812F  812F  0E F0              ld c,$F0
+08131  8131  16 23              ld d,$23
+08133  8133  ED 51              out (c),d
+08135  8135  14                 inc d
+08136  8136  CD 83 88           call $8883
+08139  8139  D3 F1              out ($F1),a
+0813B  813B  CD 83 88           call $8883
+0813E  813E  10 F3              djnz $8133
+08140  8140  32 0F DF           ld ($DF0F),a
+08143  8143  32 2F DF           ld ($DF2F),a
+08146  8146  32 4F DF           ld ($DF4F),a
+08149  8149  C3 1A 83           jp $831A
+0814C  814C  AF                 xor a
+0814D  814D  32 67 DE           ld ($DE67),a
+08150  8150  32 2F DF           ld ($DF2F),a
+08153  8153  32 4F DF           ld ($DF4F),a
+08156  8156  21 CF DE           ld hl,$DECF
+08159  8159  CB 96              res 2,(hl)
+0815B  815B  21 EF DE           ld hl,$DEEF
+0815E  815E  CB 96              res 2,(hl)
+08160  8160  21 0F DF           ld hl,$DF0F
+08163  8163  CB 96              res 2,(hl)
+08165  8165  21 80 88           ld hl,$8880
+08168  8168  0E 7F              ld c,$7F
+0816A  816A  06 03              ld b,$03
+0816C  816C  ED B3              otir
+0816E  816E  3E 24              ld a,$24
+08170  8170  CD 84 81           call $8184
+08173  8173  21 80 88           ld hl,$8880
+08176  8176  0E 7F              ld c,$7F
+08178  8178  06 03              ld b,$03
+0817A  817A  ED B3              otir
+0817C  817C  3E 25              ld a,$25
+0817E  817E  CD 84 81           call $8184
+08181  8181  C3 1A 83           jp $831A
+08184  8184  D3 F0              out ($F0),a
+08186  8186  CD 83 88           call $8883
+08189  8189  AF                 xor a
+0818A  818A  D3 F1              out ($F1),a
+0818C  818C  C9                 ret
+0818D  818D  C5                 push bc
+0818E  818E  0A                 ld a,(bc)
+0818F  818F  E6 F0              and $F0
+08191  8191  1F                 rra
+08192  8192  1F                 rra
+08193  8193  1F                 rra
+08194  8194  1F                 rra
+08195  8195  21 B1 81           ld hl,$81B1
+08198  8198  CD 20 83           call $8320
+0819B  819B  60                 ld h,b
+0819C  819C  69                 ld l,c
+0819D  819D  06 12              ld b,$12
+0819F  819F  0E F1              ld c,$F1
+081A1  81A1  0D                 dec c
+081A2  81A2  ED A3              outi
+081A4  81A4  0C                 inc c
+081A5  81A5  CD 83 88           call $8883
+081A8  81A8  ED A3              outi
+081AA  81AA  CD 83 88           call $8883
+081AD  81AD  20 F2              jr nz,$81A1
+081AF  81AF  C1                 pop bc
+081B0  81B0  C9                 ret
+
+; sound command dispatcher, channel setup, record copy and pointer helper | bank 2 | file 081D9-08328
+081D9  81D9  3A 63 DE           ld a,($DE63)
+081DC  81DC  CB 7F              bit 7,a
+081DE  81DE  CA 03 88           jp z,$8803
+081E1  81E1  FE A0              cp $A0
+081E3  81E3  DA 04 82           jp c,$8204
+081E6  81E6  FE B8              cp $B8
+081E8  81E8  DA 35 82           jp c,$8235
+081EB  81EB  FE BC              cp $BC
+081ED  81ED  DA 1A 83           jp c,$831A
+081F0  81F0  FE BE              cp $BE
+081F2  81F2  D2 03 88           jp nc,$8803
+081F5  81F5  D6 BC              sub $BC
+081F7  81F7  87                 add a,a
+081F8  81F8  4F                 ld c,a
+081F9  81F9  06 00              ld b,$00
+081FB  81FB  21 FE 8C           ld hl,$8CFE
+081FE  81FE  09                 add hl,bc
+081FF  81FF  7E                 ld a,(hl)
+08200  8200  23                 inc hl
+08201  8201  66                 ld h,(hl)
+08202  8202  6F                 ld l,a
+08203  8203  E9                 jp (hl)
+08204  8204  D6 81              sub $81
+08206  8206  F8                 ret m
+08207  8207  F5                 push af
+08208  8208  CD 03 88           call $8803
+0820B  820B  F1                 pop af
+0820C  820C  06 00              ld b,$00
+0820E  820E  4F                 ld c,a
+0820F  820F  21 40 8D           ld hl,$8D40
+08212  8212  09                 add hl,bc
+08213  8213  F5                 push af
+08214  8214  7E                 ld a,(hl)
+08215  8215  32 61 DE           ld ($DE61),a
+08218  8218  32 62 DE           ld ($DE62),a
+0821B  821B  11 AF DE           ld de,$DEAF
+0821E  821E  21 90 8C           ld hl,$8C90
+08221  8221  08                 ex af,af'
+08222  8222  28 06              jr z,$822A
+08224  8224  11 6F DE           ld de,$DE6F
+08227  8227  21 FE 8C           ld hl,$8CFE
+0822A  822A  08                 ex af,af'
+0822B  822B  F1                 pop af
+0822C  822C  CD 20 83           call $8320
+0822F  822F  CD 8D 81           call $818D
+08232  8232  C3 D7 82           jp $82D7
+08235  8235  AF                 xor a
+08236  8236  32 47 DF           ld ($DF47),a
+08239  8239  32 67 DF           ld ($DF67),a
+0823C  823C  3A 63 DE           ld a,($DE63)
+0823F  823F  D6 A0              sub $A0
+08241  8241  21 CE 8C           ld hl,$8CCE
+08244  8244  08                 ex af,af'
+08245  8245  28 03              jr z,$824A
+08247  8247  21 FE 8C           ld hl,$8CFE
+0824A  824A  08                 ex af,af'
+0824B  824B  CD 20 83           call $8320
+0824E  824E  60                 ld h,b
+0824F  824F  69                 ld l,c
+08250  8250  23                 inc hl
+08251  8251  23                 inc hl
+08252  8252  7E                 ld a,(hl)
+08253  8253  08                 ex af,af'
+08254  8254  28 2C              jr z,$8282
+08256  8256  08                 ex af,af'
+08257  8257  FE 10              cp $10
+08259  8259  28 09              jr z,$8264
+0825B  825B  FE 14              cp $14
+0825D  825D  28 0D              jr z,$826C
+0825F  825F  11 4F DF           ld de,$DF4F
+08262  8262  18 17              jr $827B
+08264  8264  CD 03 88           call $8803
+08267  8267  11 6F DE           ld de,$DE6F
+0826A  826A  18 6B              jr $82D7
+0826C  826C  11 2F DF           ld de,$DF2F
+0826F  826F  3E 24              ld a,$24
+08271  8271  CD 84 81           call $8184
+08274  8274  3E 14              ld a,$14
+08276  8276  21 EF DE           ld hl,$DEEF
+08279  8279  CB D6              set 2,(hl)
+0827B  827B  C6 10              add a,$10
+0827D  827D  CD 84 81           call $8184
+08280  8280  18 55              jr $82D7
+08282  8282  08                 ex af,af'
+08283  8283  FE C0              cp $C0
+08285  8285  28 1D              jr z,$82A4
+08287  8287  FE E0              cp $E0
+08289  8289  28 0C              jr z,$8297
+0828B  828B  FE A0              cp $A0
+0828D  828D  28 1A              jr z,$82A9
+0828F  828F  CD 03 88           call $8803
+08292  8292  11 AF DE           ld de,$DEAF
+08295  8295  18 40              jr $82D7
+08297  8297  3E DF              ld a,$DF
+08299  8299  D3 7F              out ($7F),a
+0829B  829B  3E E7              ld a,$E7
+0829D  829D  D3 7F              out ($7F),a
+0829F  829F  21 0F DF           ld hl,$DF0F
+082A2  82A2  CB D6              set 2,(hl)
+082A4  82A4  11 4F DF           ld de,$DF4F
+082A7  82A7  18 08              jr $82B1
+082A9  82A9  11 2F DF           ld de,$DF2F
+082AC  82AC  21 CF DE           ld hl,$DECF
+082AF  82AF  CB D6              set 2,(hl)
+082B1  82B1  60                 ld h,b
+082B2  82B2  69                 ld l,c
+082B3  82B3  D5                 push de
+082B4  82B4  11 0B 00           ld de,$000B
+082B7  82B7  19                 add hl,de
+082B8  82B8  D1                 pop de
+082B9  82B9  7E                 ld a,(hl)
+082BA  82BA  FE E0              cp $E0
+082BC  82BC  20 09              jr nz,$82C7
+082BE  82BE  21 0F DF           ld hl,$DF0F
+082C1  82C1  CB D6              set 2,(hl)
+082C3  82C3  3E E7              ld a,$E7
+082C5  82C5  D3 7F              out ($7F),a
+082C7  82C7  3E FF              ld a,$FF
+082C9  82C9  D3 7F              out ($7F),a
+082CB  82CB  3E C0              ld a,$C0
+082CD  82CD  D3 7F              out ($7F),a
+082CF  82CF  AF                 xor a
+082D0  82D0  D3 7F              out ($7F),a
+082D2  82D2  21 EF DE           ld hl,$DEEF
+082D5  82D5  CB D6              set 2,(hl)
+082D7  82D7  60                 ld h,b
+082D8  82D8  69                 ld l,c
+082D9  82D9  7E                 ld a,(hl)
+082DA  82DA  E6 0F              and $0F
+082DC  82DC  47                 ld b,a
+082DD  82DD  23                 inc hl
+082DE  82DE  C5                 push bc
+082DF  82DF  E5                 push hl
+082E0  82E0  DD E1              pop ix
+082E2  82E2  ED A0              ldi
+082E4  82E4  ED A0              ldi
+082E6  82E6  ED A0              ldi
+082E8  82E8  ED A0              ldi
+082EA  82EA  ED A0              ldi
+082EC  82EC  ED A0              ldi
+082EE  82EE  ED A0              ldi
+082F0  82F0  ED A0              ldi
+082F2  82F2  ED A0              ldi
+082F4  82F4  3E 20              ld a,$20
+082F6  82F6  12                 ld (de),a
+082F7  82F7  13                 inc de
+082F8  82F8  3E 01              ld a,$01
+082FA  82FA  12                 ld (de),a
+082FB  82FB  13                 inc de
+082FC  82FC  AF                 xor a
+082FD  82FD  12                 ld (de),a
+082FE  82FE  13                 inc de
+082FF  82FF  12                 ld (de),a
+08300  8300  13                 inc de
+08301  8301  12                 ld (de),a
+08302  8302  E5                 push hl
+08303  8303  21 13 00           ld hl,$0013
+08306  8306  19                 add hl,de
+08307  8307  EB                 ex de,hl
+08308  8308  E1                 pop hl
+08309  8309  01 17 83           ld bc,$8317
+0830C  830C  C5                 push bc
+0830D  830D  3A 60 DE           ld a,($DE60)
+08310  8310  B7                 or a
+08311  8311  C2 72 84           jp nz,$8472
+08314  8314  C3 4B 8A           jp $8A4B
+08317  8317  C1                 pop bc
+08318  8318  10 C4              djnz $82DE
+0831A  831A  3E 80              ld a,$80
+0831C  831C  32 63 DE           ld ($DE63),a
+0831F  831F  C9                 ret
+08320  8320  87                 add a,a
+08321  8321  06 00              ld b,$00
+08323  8323  4F                 ld c,a
+08324  8324  09                 add hl,bc
+08325  8325  4E                 ld c,(hl)
+08326  8326  23                 inc hl
+08327  8327  46                 ld b,(hl)
+08328  8328  C9                 ret
+
+; data: two FM rhythm preset pointers plus 2 x 18-byte register/value sequences (81B1/B3 words are 81B5/81C7; preset streams are each 9 register/value pairs)
+081B1  ----  B5 81 C7 81 16 20 17 B0 18 01 26 05 27 01 28 01 36 00 37 40 38 51 16 20 17 B0 18 FF 26 05 27 01 28 A5 36 04 37 30 38 F6
+
+; data: two direct command handlers referenced through BC/BD dispatch (BC->8112, BD->814C via dispatcher at 81F5)
+08CFE  ----  12 81 4C 81
+
+; data: 31-byte table loaded for commands 81..9F (indexed at 820F after subtracting 81 from command; meaning beyond timer reload unverified)
+08D40  ----  02 10 04 0A 0A 04 03 05 07 02 00 02 02 10 00 03 00 05 05 00 80 FF 03 A4 0C A2 A1 9F A2 A1 9F
+

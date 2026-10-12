@@ -1,0 +1,2118 @@
+; Phase 5: anchored, bank-aware recursive Z80 listing
+; STATIC reachability only. NOT execution-traced or assembler-verified.
+; ROM offset  CPU addr  ROM bytes          decoded instruction
+
+00260 0260  CD A9 03            call $03A9
+00263 0263  78                  ld a,b
+00264 0264  BA                  cp d
+00265 0265  28 0E               jr z,$0275
+00267 0267  FE 01               cp $01
+00269 0269  28 14               jr z,$027F
+0026B 026B  3E E9               ld a,$E9
+0026D 026D  D3 BE               out ($BE),a
+0026F 026F  3E 1C               ld a,$1C
+00271 0271  D3 BE               out ($BE),a
+00273 0273  10 EB               djnz $0260
+00275 0275  3E E8               ld a,$E8
+00277 0277  D3 BE               out ($BE),a
+00279 0279  3E 1C               ld a,$1C
+0027B 027B  D3 BE               out ($BE),a
+0027D 027D  10 E1               djnz $0260
+0027F 027F  3E E8               ld a,$E8
+00281 0281  D3 BE               out ($BE),a
+00283 0283  3E 1E               ld a,$1E
+00285 0285  D3 BE               out ($BE),a
+00287 0287  C9                  ret
+00389 0389  2A 0A C1            ld hl,($C10A)
+0038C 038C  ED 5B 08 C1         ld de,($C108)
+00390 0390  ED 4B 06 C1         ld bc,($C106)
+00394 0394  7B                  ld a,e
+00395 0395  D3 BF               out ($BF),a
+00397 0397  7A                  ld a,d
+00398 0398  D3 BF               out ($BF),a
+0039A 039A  79                  ld a,c
+0039B 039B  B7                  or a
+0039C 039C  28 01               jr z,$039F
+0039E 039E  04                  inc b
+0039F 039F  78                  ld a,b
+003A0 03A0  41                  ld b,c
+003A1 03A1  0E BE               ld c,$BE
+003A3 03A3  ED B3               otir
+003A5 03A5  3D                  dec a
+003A6 03A6  20 FB               jr nz,$03A3
+003A8 03A8  C9                  ret
+003A9 03A9  7D                  ld a,l
+003AA 03AA  D3 BF               out ($BF),a
+003AC 03AC  7C                  ld a,h
+003AD 03AD  D3 BF               out ($BF),a
+003AF 03AF  7D                  ld a,l
+003B0 03B0  07                  rlca
+003B1 03B1  07                  rlca
+003B2 03B2  C6 08               add a,$08
+003B4 03B4  0F                  rrca
+003B5 03B5  0F                  rrca
+003B6 03B6  6F                  ld l,a
+003B7 03B7  C9                  ret
+00406 0406  3A 97 C1            ld a,($C197)
+00409 0409  B7                  or a
+0040A 040A  C8                  ret z
+0040B 040B  06 14               ld b,$14
+0040D 040D  10 FE               djnz $040D
+0040F 040F  AF                  xor a
+00410 0410  32 97 C1            ld ($C197),a
+00413 0413  3E 0D               ld a,$0D
+00415 0415  D3 BF               out ($BF),a
+00417 0417  3E C0               ld a,$C0
+00419 0419  D3 BF               out ($BF),a
+0041B 041B  21 6D C1            ld hl,$C16D
+0041E 041E  0E BE               ld c,$BE
+00420 0420  ED A3               outi
+00422 0422  ED A3               outi
+00424 0424  ED A3               outi
+00426 0426  C9                  ret
+00427 0427  AF                  xor a
+00428 0428  D3 BF               out ($BF),a
+0042A 042A  3E 7F               ld a,$7F
+0042C 042C  D3 BF               out ($BF),a
+0042E 042E  0E BE               ld c,$BE
+00430 0430  21 00 DD            ld hl,$DD00
+00433 0433  CD BF 04            call $04BF
+00436 0436  3C                  inc a
+00437 0437  D3 BF               out ($BF),a
+00439 0439  3D                  dec a
+0043A 043A  D3 BF               out ($BF),a
+0043C 043C  21 40 DD            ld hl,$DD40
+0043F 043F  ED A3               outi
+00441 0441  ED A3               outi
+00443 0443  ED A3               outi
+00445 0445  ED A3               outi
+00447 0447  ED A3               outi
+00449 0449  ED A3               outi
+0044B 044B  ED A3               outi
+0044D 044D  ED A3               outi
+0044F 044F  ED A3               outi
+00451 0451  ED A3               outi
+00453 0453  ED A3               outi
+00455 0455  ED A3               outi
+00457 0457  ED A3               outi
+00459 0459  ED A3               outi
+0045B 045B  ED A3               outi
+0045D 045D  ED A3               outi
+0045F 045F  ED A3               outi
+00461 0461  ED A3               outi
+00463 0463  ED A3               outi
+00465 0465  ED A3               outi
+00467 0467  ED A3               outi
+00469 0469  ED A3               outi
+0046B 046B  ED A3               outi
+0046D 046D  ED A3               outi
+0046F 046F  ED A3               outi
+00471 0471  ED A3               outi
+00473 0473  ED A3               outi
+00475 0475  ED A3               outi
+00477 0477  ED A3               outi
+00479 0479  ED A3               outi
+0047B 047B  ED A3               outi
+0047D 047D  ED A3               outi
+0047F 047F  ED A3               outi
+00481 0481  ED A3               outi
+00483 0483  ED A3               outi
+00485 0485  ED A3               outi
+00487 0487  ED A3               outi
+00489 0489  ED A3               outi
+0048B 048B  ED A3               outi
+0048D 048D  ED A3               outi
+0048F 048F  ED A3               outi
+00491 0491  ED A3               outi
+00493 0493  ED A3               outi
+00495 0495  ED A3               outi
+00497 0497  ED A3               outi
+00499 0499  ED A3               outi
+0049B 049B  ED A3               outi
+0049D 049D  ED A3               outi
+0049F 049F  ED A3               outi
+004A1 04A1  ED A3               outi
+004A3 04A3  ED A3               outi
+004A5 04A5  ED A3               outi
+004A7 04A7  ED A3               outi
+004A9 04A9  ED A3               outi
+004AB 04AB  ED A3               outi
+004AD 04AD  ED A3               outi
+004AF 04AF  ED A3               outi
+004B1 04B1  ED A3               outi
+004B3 04B3  ED A3               outi
+004B5 04B5  ED A3               outi
+004B7 04B7  ED A3               outi
+004B9 04B9  ED A3               outi
+004BB 04BB  ED A3               outi
+004BD 04BD  ED A3               outi
+004BF 04BF  ED A3               outi
+004C1 04C1  ED A3               outi
+004C3 04C3  ED A3               outi
+004C5 04C5  ED A3               outi
+004C7 04C7  ED A3               outi
+004C9 04C9  ED A3               outi
+004CB 04CB  ED A3               outi
+004CD 04CD  ED A3               outi
+004CF 04CF  ED A3               outi
+004D1 04D1  ED A3               outi
+004D3 04D3  ED A3               outi
+004D5 04D5  ED A3               outi
+004D7 04D7  ED A3               outi
+004D9 04D9  ED A3               outi
+004DB 04DB  ED A3               outi
+004DD 04DD  ED A3               outi
+004DF 04DF  ED A3               outi
+004E1 04E1  ED A3               outi
+004E3 04E3  ED A3               outi
+004E5 04E5  ED A3               outi
+004E7 04E7  ED A3               outi
+004E9 04E9  ED A3               outi
+004EB 04EB  ED A3               outi
+004ED 04ED  ED A3               outi
+004EF 04EF  ED A3               outi
+004F1 04F1  ED A3               outi
+004F3 04F3  ED A3               outi
+004F5 04F5  ED A3               outi
+004F7 04F7  ED A3               outi
+004F9 04F9  ED A3               outi
+004FB 04FB  ED A3               outi
+004FD 04FD  ED A3               outi
+004FF 04FF  ED A3               outi
+00501 0501  ED A3               outi
+00503 0503  ED A3               outi
+00505 0505  ED A3               outi
+00507 0507  ED A3               outi
+00509 0509  ED A3               outi
+0050B 050B  ED A3               outi
+0050D 050D  ED A3               outi
+0050F 050F  ED A3               outi
+00511 0511  ED A3               outi
+00513 0513  ED A3               outi
+00515 0515  ED A3               outi
+00517 0517  ED A3               outi
+00519 0519  ED A3               outi
+0051B 051B  ED A3               outi
+0051D 051D  ED A3               outi
+0051F 051F  ED A3               outi
+00521 0521  ED A3               outi
+00523 0523  ED A3               outi
+00525 0525  ED A3               outi
+00527 0527  ED A3               outi
+00529 0529  ED A3               outi
+0052B 052B  ED A3               outi
+0052D 052D  ED A3               outi
+0052F 052F  ED A3               outi
+00531 0531  ED A3               outi
+00533 0533  ED A3               outi
+00535 0535  ED A3               outi
+00537 0537  ED A3               outi
+00539 0539  ED A3               outi
+0053B 053B  ED A3               outi
+0053D 053D  ED A3               outi
+0053F 053F  C9                  ret
+00624 0624  01 40 00            ld bc,$0040
+00627 0627  21 03 C1            ld hl,$C103
+0062A 062A  7E                  ld a,(hl)
+0062B 062B  FE 01               cp $01
+0062D 062D  38 2E               jr c,$065D
+0062F 062F  70                  ld (hl),b
+00630 0630  28 1B               jr z,$064D
+00632 0632  2A 80 C5            ld hl,($C580)
+00635 0635  09                  add hl,bc
+00636 0636  7C                  ld a,h
+00637 0637  FE 7F               cp $7F
+00639 0639  38 02               jr c,$063D
+0063B 063B  26 78               ld h,$78
+0063D 063D  0E BF               ld c,$BF
+0063F 063F  ED 69               out (c),l
+00641 0641  ED 61               out (c),h
+00643 0643  21 82 C5            ld hl,$C582
+00646 0646  01 BE 7C            ld bc,$7CBE
+00649 0649  ED A3               outi
+0064B 064B  10 FC               djnz $0649
+0064D 064D  21 80 C5            ld hl,$C580
+00650 0650  0E BF               ld c,$BF
+00652 0652  ED A3               outi
+00654 0654  ED A3               outi
+00656 0656  01 BE 7C            ld bc,$7CBE
+00659 0659  ED A3               outi
+0065B 065B  10 FC               djnz $0659
+0065D 065D  21 04 C1            ld hl,$C104
+00660 0660  7E                  ld a,(hl)
+00661 0661  FE 01               cp $01
+00663 0663  D8                  ret c
+00664 0664  70                  ld (hl),b
+00665 0665  28 1D               jr z,$0684
+00667 0667  2A C0 C5            ld hl,($C5C0)
+0066A 066A  0E 40               ld c,$40
+0066C 066C  09                  add hl,bc
+0066D 066D  7C                  ld a,h
+0066E 066E  FE 7F               cp $7F
+00670 0670  38 02               jr c,$0674
+00672 0672  26 78               ld h,$78
+00674 0674  0E BF               ld c,$BF
+00676 0676  ED 69               out (c),l
+00678 0678  ED 61               out (c),h
+0067A 067A  21 C2 C5            ld hl,$C5C2
+0067D 067D  01 BE 7C            ld bc,$7CBE
+00680 0680  ED A3               outi
+00682 0682  10 FC               djnz $0680
+00684 0684  21 C0 C5            ld hl,$C5C0
+00687 0687  0E BF               ld c,$BF
+00689 0689  ED A3               outi
+0068B 068B  ED A3               outi
+0068D 068D  01 BE 7C            ld bc,$7CBE
+00690 0690  ED A3               outi
+00692 0692  10 FC               djnz $0690
+00694 0694  C9                  ret
+00695 0695  0E 04               ld c,$04
+00697 0697  41                  ld b,c
+00698 0698  C5                  push bc
+00699 0699  D5                  push de
+0069A 069A  7E                  ld a,(hl)
+0069B 069B  23                  inc hl
+0069C 069C  B7                  or a
+0069D 069D  28 1C               jr z,$06BB
+0069F 069F  47                  ld b,a
+006A0 06A0  CB B8               res 7,b
+006A2 06A2  07                  rlca
+006A3 06A3  08                  ex af,af'
+006A4 06A4  EF                  rst $0028
+006A5 06A5  7E                  ld a,(hl)
+006A6 06A6  D3 BE               out ($BE),a
+006A8 06A8  08                  ex af,af'
+006A9 06A9  30 01               jr nc,$06AC
+006AB 06AB  23                  inc hl
+006AC 06AC  08                  ex af,af'
+006AD 06AD  79                  ld a,c
+006AE 06AE  83                  add a,e
+006AF 06AF  5F                  ld e,a
+006B0 06B0  30 01               jr nc,$06B3
+006B2 06B2  14                  inc d
+006B3 06B3  10 EF               djnz $06A4
+006B5 06B5  08                  ex af,af'
+006B6 06B6  38 E2               jr c,$069A
+006B8 06B8  23                  inc hl
+006B9 06B9  18 DF               jr $069A
+006BB 06BB  D1                  pop de
+006BC 06BC  13                  inc de
+006BD 06BD  C1                  pop bc
+006BE 06BE  10 D8               djnz $0698
+006C0 06C0  C9                  ret
+006C1 06C1  EF                  rst $0028
+006C2 06C2  79                  ld a,c
+006C3 06C3  B7                  or a
+006C4 06C4  28 01               jr z,$06C7
+006C6 06C6  04                  inc b
+006C7 06C7  78                  ld a,b
+006C8 06C8  41                  ld b,c
+006C9 06C9  0E BE               ld c,$BE
+006CB 06CB  ED A3               outi
+006CD 06CD  00                  nop
+006CE 06CE  20 FB               jr nz,$06CB
+006D0 06D0  3D                  dec a
+006D1 06D1  20 F8               jr nz,$06CB
+006D3 06D3  C9                  ret
+006D4 06D4  EF                  rst $0028
+006D5 06D5  79                  ld a,c
+006D6 06D6  B7                  or a
+006D7 06D7  28 01               jr z,$06DA
+006D9 06D9  04                  inc b
+006DA 06DA  7D                  ld a,l
+006DB 06DB  D3 BE               out ($BE),a
+006DD 06DD  F5                  push af
+006DE 06DE  F1                  pop af
+006DF 06DF  7C                  ld a,h
+006E0 06E0  D3 BE               out ($BE),a
+006E2 06E2  0D                  dec c
+006E3 06E3  20 F5               jr nz,$06DA
+006E5 06E5  10 F3               djnz $06DA
+006E7 06E7  C9                  ret
+00BEF 0BEF  41                  ld b,c
+00BF0 0BF0  D5                  push de
+00BF1 0BF1  C5                  push bc
+00BF2 0BF2  7E                  ld a,(hl)
+00BF3 0BF3  B7                  or a
+00BF4 0BF4  28 23               jr z,$0C19
+00BF6 0BF6  F2 0A 0C            jp p,$0C0A
+00BF9 0BF9  E6 7F               and $7F
+00BFB 0BFB  47                  ld b,a
+00BFC 0BFC  23                  inc hl
+00BFD 0BFD  7E                  ld a,(hl)
+00BFE 0BFE  12                  ld (de),a
+00BFF 0BFF  79                  ld a,c
+00C00 0C00  83                  add a,e
+00C01 0C01  5F                  ld e,a
+00C02 0C02  30 01               jr nc,$0C05
+00C04 0C04  14                  inc d
+00C05 0C05  10 F5               djnz $0BFC
+00C07 0C07  23                  inc hl
+00C08 0C08  18 E8               jr $0BF2
+00C0A 0C0A  47                  ld b,a
+00C0B 0C0B  23                  inc hl
+00C0C 0C0C  7E                  ld a,(hl)
+00C0D 0C0D  12                  ld (de),a
+00C0E 0C0E  79                  ld a,c
+00C0F 0C0F  83                  add a,e
+00C10 0C10  5F                  ld e,a
+00C11 0C11  30 01               jr nc,$0C14
+00C13 0C13  14                  inc d
+00C14 0C14  10 F6               djnz $0C0C
+00C16 0C16  23                  inc hl
+00C17 0C17  18 D9               jr $0BF2
+00C19 0C19  C1                  pop bc
+00C1A 0C1A  D1                  pop de
+00C1B 0C1B  13                  inc de
+00C1C 0C1C  23                  inc hl
+00C1D 0C1D  10 D1               djnz $0BF0
+00C1F 0C1F  C9                  ret
+00C20 0C20  7E                  ld a,(hl)
+00C21 0C21  23                  inc hl
+00C22 0C22  B7                  or a
+00C23 0C23  C8                  ret z
+00C24 0C24  F2 33 0C            jp p,$0C33
+00C27 0C27  E6 7F               and $7F
+00C29 0C29  47                  ld b,a
+00C2A 0C2A  7E                  ld a,(hl)
+00C2B 0C2B  12                  ld (de),a
+00C2C 0C2C  13                  inc de
+00C2D 0C2D  23                  inc hl
+00C2E 0C2E  10 FA               djnz $0C2A
+00C30 0C30  C3 20 0C            jp $0C20
+00C33 0C33  47                  ld b,a
+00C34 0C34  7E                  ld a,(hl)
+00C35 0C35  12                  ld (de),a
+00C36 0C36  13                  inc de
+00C37 0C37  3C                  inc a
+00C38 0C38  10 FB               djnz $0C35
+00C3A 0C3A  23                  inc hl
+00C3B 0C3B  C3 20 0C            jp $0C20
+00C4A 0C4A  CD 5B 0A            call $0A5B
+00C4D 0C4D  3E 02               ld a,$02
+00C4F 0C4F  32 FF FF            ld ($FFFF),a
+00C52 0C52  CD 03 88            call $8803
+00C55 0C55  ED 73 2E C0         ld ($C02E),sp
+00C59 0C59  3E 05               ld a,$05
+00C5B 0C5B  32 FF FF            ld ($FFFF),a
+00C5E 0C5E  21 1A B6            ld hl,$B61A
+00C61 0C61  11 00 C6            ld de,$C600
+00C64 0C64  CD 20 0C            call $0C20
+00C67 0C67  21 00 C6            ld hl,$C600
+00C6A 0C6A  11 00 D6            ld de,$D600
+00C6D 0C6D  0E 02               ld c,$02
+00C6F 0C6F  CD EF 0B            call $0BEF
+00C72 0C72  21 00 D6            ld hl,$D600
+00C75 0C75  11 00 79            ld de,$7900
+00C78 0C78  01 00 06            ld bc,$0600
+00C7B 0C7B  CD C1 06            call $06C1
+00C7E 0C7E  21 00 80            ld hl,$8000
+00C81 0C81  11 00 40            ld de,$4000
+00C84 0C84  CD 95 06            call $0695
+00C87 0C87  21 D1 A4            ld hl,$A4D1
+00C8A 0C8A  11 00 C6            ld de,$C600
+00C8D 0C8D  0E 04               ld c,$04
+00C8F 0C8F  CD EF 0B            call $0BEF
+00C92 0C92  3E 20               ld a,$20
+00C94 0C94  32 19 C0            ld ($C019),a
+00C97 0C97  3E 81               ld a,$81
+00C99 0C99  32 64 DE            ld ($DE64),a
+00C9C 0C9C  CD A7 0A            call $0AA7
+00C9F 0C9F  CD 89 0D            call $0D89
+00CA2 0CA2  01 68 01            ld bc,$0168
+00CA5 0CA5  CD D9 0C            call $0CD9
+00CA8 0CA8  CD F8 0C            call $0CF8
+00CAB 0CAB  01 B4 00            ld bc,$00B4
+00CAE 0CAE  CD D9 0C            call $0CD9
+00CB1 0CB1  CD E2 0C            call $0CE2
+00CB4 0CB4  01 F0 00            ld bc,$00F0
+00CB7 0CB7  CD D9 0C            call $0CD9
+00CBA 0CBA  CD 0E 0D            call $0D0E
+00CBD 0CBD  CD CE 0C            call $0CCE
+00CC0 0CC0  18 FB               jr $0CBD
+00CC2 0CC2  ED 7B 2E C0         ld sp,($C02E)
+00CC6 0CC6  3E 02               ld a,$02
+00CC8 0CC8  32 1F C0            ld ($C01F),a
+00CCB 0CCB  C3 56 0B            jp $0B56
+00CCE 0CCE  CD C5 0B            call $0BC5
+00CD1 0CD1  3A 1C C0            ld a,($C01C)
+00CD4 0CD4  E6 30               and $30
+00CD6 0CD6  20 EA               jr nz,$0CC2
+00CD8 0CD8  C9                  ret
+00CD9 0CD9  CD CE 0C            call $0CCE
+00CDC 0CDC  0B                  dec bc
+00CDD 0CDD  78                  ld a,b
+00CDE 0CDE  B1                  or c
+00CDF 0CDF  20 F8               jr nz,$0CD9
+00CE1 0CE1  C9                  ret
+00CE2 0CE2  DD 21 31 B8         ld ix,$B831
+00CE6 0CE6  06 0C               ld b,$0C
+00CE8 0CE8  C5                  push bc
+00CE9 0CE9  21 00 C6            ld hl,$C600
+00CEC 0CEC  11 20 5B            ld de,$5B20
+00CEF 0CEF  06 20               ld b,$20
+00CF1 0CF1  CD 49 0D            call $0D49
+00CF4 0CF4  C1                  pop bc
+00CF5 0CF5  10 F1               djnz $0CE8
+00CF7 0CF7  C9                  ret
+00CF8 0CF8  DD 21 31 B8         ld ix,$B831
+00CFC 0CFC  06 0C               ld b,$0C
+00CFE 0CFE  C5                  push bc
+00CFF 0CFF  21 00 CA            ld hl,$CA00
+00D02 0D02  11 20 5F            ld de,$5F20
+00D05 0D05  06 67               ld b,$67
+00D07 0D07  CD 4F 0D            call $0D4F
+00D0A 0D0A  C1                  pop bc
+00D0B 0D0B  10 F1               djnz $0CFE
+00D0D 0D0D  C9                  ret
+00D0E 0D0E  21 E0 D6            ld hl,$D6E0
+00D11 0D11  11 00 6C            ld de,$6C00
+00D14 0D14  0E 08               ld c,$08
+00D16 0D16  CD CE 0C            call $0CCE
+00D19 0D19  CD CE 0C            call $0CCE
+00D1C 0D1C  CD CE 0C            call $0CCE
+00D1F 0D1F  E5                  push hl
+00D20 0D20  D5                  push de
+00D21 0D21  06 20               ld b,$20
+00D23 0D23  C5                  push bc
+00D24 0D24  01 04 00            ld bc,$0004
+00D27 0D27  CD C1 06            call $06C1
+00D2A 0D2A  3E 1C               ld a,$1C
+00D2C 0D2C  85                  add a,l
+00D2D 0D2D  6F                  ld l,a
+00D2E 0D2E  30 01               jr nc,$0D31
+00D30 0D30  24                  inc h
+00D31 0D31  3E 20               ld a,$20
+00D33 0D33  83                  add a,e
+00D34 0D34  5F                  ld e,a
+00D35 0D35  30 01               jr nc,$0D38
+00D37 0D37  14                  inc d
+00D38 0D38  C1                  pop bc
+00D39 0D39  10 E8               djnz $0D23
+00D3B 0D3B  D1                  pop de
+00D3C 0D3C  E1                  pop hl
+00D3D 0D3D  23                  inc hl
+00D3E 0D3E  23                  inc hl
+00D3F 0D3F  23                  inc hl
+00D40 0D40  23                  inc hl
+00D41 0D41  13                  inc de
+00D42 0D42  13                  inc de
+00D43 0D43  13                  inc de
+00D44 0D44  13                  inc de
+00D45 0D45  0D                  dec c
+00D46 0D46  20 CE               jr nz,$0D16
+00D48 0D48  C9                  ret
+00D49 0D49  CD CE 0C            call $0CCE
+00D4C 0D4C  CD CE 0C            call $0CCE
+00D4F 0D4F  CD CE 0C            call $0CCE
+00D52 0D52  C5                  push bc
+00D53 0D53  0E 08               ld c,$08
+00D55 0D55  06 04               ld b,$04
+00D57 0D57  C5                  push bc
+00D58 0D58  CB B2               res 6,d
+00D5A 0D5A  EF                  rst $0028
+00D5B 0D5B  DD 4E 00            ld c,(ix+0)
+00D5E 0D5E  7E                  ld a,(hl)
+00D5F 0D5F  A1                  and c
+00D60 0D60  47                  ld b,a
+00D61 0D61  79                  ld a,c
+00D62 0D62  2F                  cpl
+00D63 0D63  4F                  ld c,a
+00D64 0D64  DB BE               in a,($BE)
+00D66 0D66  A1                  and c
+00D67 0D67  4F                  ld c,a
+00D68 0D68  CB F2               set 6,d
+00D6A 0D6A  EF                  rst $0028
+00D6B 0D6B  79                  ld a,c
+00D6C 0D6C  B0                  or b
+00D6D 0D6D  D3 BE               out ($BE),a
+00D6F 0D6F  13                  inc de
+00D70 0D70  23                  inc hl
+00D71 0D71  C1                  pop bc
+00D72 0D72  10 E3               djnz $0D57
+00D74 0D74  DD 23               inc ix
+00D76 0D76  0D                  dec c
+00D77 0D77  20 DC               jr nz,$0D55
+00D79 0D79  01 F8 FF            ld bc,$FFF8
+00D7C 0D7C  DD 09               add ix,bc
+00D7E 0D7E  C1                  pop bc
+00D7F 0D7F  10 D1               djnz $0D52
+00D81 0D81  C5                  push bc
+00D82 0D82  01 08 00            ld bc,$0008
+00D85 0D85  DD 09               add ix,bc
+00D87 0D87  C1                  pop bc
+00D88 0D88  C9                  ret
+00D89 0D89  11 30 10            ld de,$1030
+00D8C 0D8C  CD 98 0D            call $0D98
+00D8F 0D8F  11 03 01            ld de,$0103
+00D92 0D92  CD 98 0D            call $0D98
+00D95 0D95  11 0C 04            ld de,$040C
+00D98 0D98  4B                  ld c,e
+00D99 0D99  06 03               ld b,$03
+00D9B 0D9B  C5                  push bc
+00D9C 0D9C  21 20 B8            ld hl,$B820
+00D9F 0D9F  FD 21 60 C1         ld iy,$C160
+00DA3 0DA3  06 11               ld b,$11
+00DA5 0DA5  7E                  ld a,(hl)
+00DA6 0DA6  A3                  and e
+00DA7 0DA7  B9                  cp c
+00DA8 0DA8  38 07               jr c,$0DB1
+00DAA 0DAA  FD 7E 00            ld a,(iy+0)
+00DAD 0DAD  82                  add a,d
+00DAE 0DAE  FD 77 00            ld (iy+0),a
+00DB1 0DB1  23                  inc hl
+00DB2 0DB2  FD 23               inc iy
+00DB4 0DB4  10 EF               djnz $0DA5
+00DB6 0DB6  21 2C C0            ld hl,$C02C
+00DB9 0DB9  36 01               ld (hl),$01
+00DBB 0DBB  06 08               ld b,$08
+00DBD 0DBD  CD CE 0C            call $0CCE
+00DC0 0DC0  10 FB               djnz $0DBD
+00DC2 0DC2  C1                  pop bc
+00DC3 0DC3  79                  ld a,c
+00DC4 0DC4  92                  sub d
+00DC5 0DC5  4F                  ld c,a
+00DC6 0DC6  10 D3               djnz $0D9B
+00DC8 0DC8  C9                  ret
+00DC9 0DC9  CD C8 0F            call $0FC8
+00DCC 0DCC  CD 6C 47            call $476C
+00DCF 0DCF  CD B5 60            call $60B5
+00DD2 0DD2  CD CC 19            call $19CC
+00DD5 0DD5  3E 07               ld a,$07
+00DD7 0DD7  32 FF FF            ld ($FFFF),a
+00DDA 0DDA  CD C1 86            call $86C1
+00DDD 0DDD  CD F1 2B            call $2BF1
+00DE0 0DE0  21 1B C1            ld hl,$C11B
+00DE3 0DE3  34                  inc (hl)
+00DE4 0DE4  3E 02               ld a,$02
+00DE6 0DE6  CD 42 00            call $0042
+00DE9 0DE9  3A 1F C0            ld a,($C01F)
+00DEC 0DEC  FE 06               cp $06
+00DEE 0DEE  C0                  ret nz
+00DEF 0DEF  3A 1C C0            ld a,($C01C)
+00DF2 0DF2  E6 30               and $30
+00DF4 0DF4  C8                  ret z
+00DF5 0DF5  CB 6F               bit 5,a
+00DF7 0DF7  20 05               jr nz,$0DFE
+00DF9 0DF9  CB 67               bit 4,a
+00DFB 0DFB  20 07               jr nz,$0E04
+00DFD 0DFD  C9                  ret
+00DFE 0DFE  3E 09               ld a,$09
+00E00 0E00  32 1F C0            ld ($C01F),a
+00E03 0E03  C9                  ret
+00E04 0E04  21 B6 C1            ld hl,$C1B6
+00E07 0E07  CB 7E               bit 7,(hl)
+00E09 0E09  20 12               jr nz,$0E1D
+00E0B 0E0B  23                  inc hl
+00E0C 0E0C  CB 7E               bit 7,(hl)
+00E0E 0E0E  20 13               jr nz,$0E23
+00E10 0E10  23                  inc hl
+00E11 0E11  CB 7E               bit 7,(hl)
+00E13 0E13  20 31               jr nz,$0E46
+00E15 0E15  23                  inc hl
+00E16 0E16  23                  inc hl
+00E17 0E17  23                  inc hl
+00E18 0E18  CB 7E               bit 7,(hl)
+00E1A 0E1A  20 66               jr nz,$0E82
+00E1C 0E1C  C9                  ret
+00E1D 0E1D  CD D8 0E            call $0ED8
+00E20 0E20  C3 15 62            jp $6215
+00E23 0E23  CD D8 0E            call $0ED8
+00E26 0E26  3E AD               ld a,$AD
+00E28 0E28  CD 8F 1D            call $1D8F
+00E2B 0E2B  06 03               ld b,$03
+00E2D 0E2D  C5                  push bc
+00E2E 0E2E  CD E8 0A            call $0AE8
+00E31 0E31  21 30 C5            ld hl,$C530
+00E34 0E34  11 60 C1            ld de,$C160
+00E37 0E37  01 20 00            ld bc,$0020
+00E3A 0E3A  CD 19 0B            call $0B19
+00E3D 0E3D  CD C3 0A            call $0AC3
+00E40 0E40  C1                  pop bc
+00E41 0E41  10 EA               djnz $0E2D
+00E43 0E43  C3 FC 0E            jp $0EFC
+00E46 0E46  3A E2 C1            ld a,($C1E2)
+00E49 0E49  3D                  dec a
+00E4A 0E4A  32 E2 C1            ld ($C1E2),a
+00E4D 0E4D  CC D8 0E            call z,$0ED8
+00E50 0E50  3E 20               ld a,$20
+00E52 0E52  32 E3 C1            ld ($C1E3),a
+00E55 0E55  3E AB               ld a,$AB
+00E57 0E57  32 64 DE            ld ($DE64),a
+00E5A 0E5A  3E 07               ld a,$07
+00E5C 0E5C  32 FF FF            ld ($FFFF),a
+00E5F 0E5F  06 06               ld b,$06
+00E61 0E61  C5                  push bc
+00E62 0E62  21 B3 B9            ld hl,$B9B3
+00E65 0E65  CD 6F 0E            call $0E6F
+00E68 0E68  CD 6F 0E            call $0E6F
+00E6B 0E6B  C1                  pop bc
+00E6C 0E6C  10 F3               djnz $0E61
+00E6E 0E6E  C9                  ret
+00E6F 0E6F  11 70 C1            ld de,$C170
+00E72 0E72  01 10 00            ld bc,$0010
+00E75 0E75  CD 19 0B            call $0B19
+00E78 0E78  3E 01               ld a,$01
+00E7A 0E7A  32 2C C0            ld ($C02C),a
+00E7D 0E7D  06 06               ld b,$06
+00E7F 0E7F  C3 CD 64            jp $64CD
+00E82 0E82  3E A8               ld a,$A8
+00E84 0E84  32 64 DE            ld ($DE64),a
+00E87 0E87  3A 81 C1            ld a,($C181)
+00E8A 0E8A  FE 1F               cp $1F
+00E8C 0E8C  C0                  ret nz
+00E8D 0E8D  3A 0C C2            ld a,($C20C)
+00E90 0E90  E6 0F               and $0F
+00E92 0E92  C0                  ret nz
+00E93 0E93  3A DE C1            ld a,($C1DE)
+00E96 0E96  B7                  or a
+00E97 0E97  C0                  ret nz
+00E98 0E98  2A 84 C1            ld hl,($C184)
+00E9B 0E9B  3A 10 C2            ld a,($C210)
+00E9E 0E9E  4F                  ld c,a
+00E9F 0E9F  06 00               ld b,$00
+00EA1 0EA1  09                  add hl,bc
+00EA2 0EA2  7D                  ld a,l
+00EA3 0EA3  E6 F0               and $F0
+00EA5 0EA5  6F                  ld l,a
+00EA6 0EA6  29                  add hl,hl
+00EA7 0EA7  29                  add hl,hl
+00EA8 0EA8  EB                  ex de,hl
+00EA9 0EA9  2A 82 C1            ld hl,($C182)
+00EAC 0EAC  3A 11 C2            ld a,($C211)
+00EAF 0EAF  D6 08               sub $08
+00EB1 0EB1  4F                  ld c,a
+00EB2 0EB2  09                  add hl,bc
+00EB3 0EB3  CB 3C               srl h
+00EB5 0EB5  CB 1D               rr l
+00EB7 0EB7  CB 3C               srl h
+00EB9 0EB9  CB 1D               rr l
+00EBB 0EBB  CB 3C               srl h
+00EBD 0EBD  CB 1D               rr l
+00EBF 0EBF  CB 3C               srl h
+00EC1 0EC1  CB 1D               rr l
+00EC3 0EC3  19                  add hl,de
+00EC4 0EC4  7D                  ld a,l
+00EC5 0EC5  E6 7F               and $7F
+00EC7 0EC7  FE 40               cp $40
+00EC9 0EC9  C0                  ret nz
+00ECA 0ECA  32 DE C1            ld ($C1DE),a
+00ECD 0ECD  CD D4 1F            call $1FD4
+00ED0 0ED0  3E B5               ld a,$B5
+00ED2 0ED2  32 64 DE            ld ($DE64),a
+00ED5 0ED5  C3 7B 26            jp $267B
+00ED8 0ED8  AF                  xor a
+00ED9 0ED9  32 B5 C1            ld ($C1B5),a
+00EDC 0EDC  77                  ld (hl),a
+00EDD 0EDD  C9                  ret
+00EDE 0EDE  21 00 C1            ld hl,$C100
+00EE1 0EE1  11 01 C1            ld de,$C101
+00EE4 0EE4  01 FF 00            ld bc,$00FF
+00EE7 0EE7  75                  ld (hl),l
+00EE8 0EE8  CD 19 0B            call $0B19
+00EEB 0EEB  3E 01               ld a,$01
+00EED 0EED  32 A0 C1            ld ($C1A0),a
+00EF0 0EF0  21 E8 03            ld hl,$03E8
+00EF3 0EF3  22 25 C2            ld ($C225),hl
+00EF6 0EF6  21 00 00            ld hl,$0000
+00EF9 0EF9  22 27 C2            ld ($C227),hl
+00EFC 0EFC  AF                  xor a
+00EFD 0EFD  32 81 C1            ld ($C181),a
+00F00 0F00  3E 01               ld a,$01
+00F02 0F02  32 0C C2            ld ($C20C),a
+00F05 0F05  CD 7D 0F            call $0F7D
+00F08 0F08  3A 2A C2            ld a,($C22A)
+00F0B 0F0B  32 22 C2            ld ($C222),a
+00F0E 0F0E  21 80 01            ld hl,$0180
+00F11 0F11  11 00 00            ld de,$0000
+00F14 0F14  01 60 88            ld bc,$8860
+00F17 0F17  CD 54 26            call $2654
+00F1A 0F1A  21 08 03            ld hl,$0308
+00F1D 0F1D  11 90 01            ld de,$0190
+00F20 0F20  CD 60 26            call $2660
+00F23 0F23  CD 5B 0A            call $0A5B
+00F26 0F26  21 00 C1            ld hl,$C100
+00F29 0F29  11 01 C1            ld de,$C101
+00F2C 0F2C  01 0F 00            ld bc,$000F
+00F2F 0F2F  36 00               ld (hl),$00
+00F31 0F31  CD 19 0B            call $0B19
+00F34 0F34  CD 1F 1B            call $1B1F
+00F37 0F37  18 03               jr $0F3C
+00F39 0F39  CD 5B 0A            call $0A5B
+00F3C 0F3C  CD 7D 0F            call $0F7D
+00F3F 0F3F  CD 3F 1E            call $1E3F
+00F42 0F42  CD B2 1D            call $1DB2
+00F45 0F45  CD D4 1F            call $1FD4
+00F48 0F48  CD 63 1D            call $1D63
+00F4B 0F4B  CD 73 0B            call $0B73
+00F4E 0F4E  CD 7B 26            call $267B
+00F51 0F51  CD 7D 27            call $277D
+00F54 0F54  3A 18 C0            ld a,($C018)
+00F57 0F57  32 31 C0            ld ($C031),a
+00F5A 0F5A  21 45 05            ld hl,$0545
+00F5D 0F5D  22 22 C0            ld ($C022),hl
+00F60 0F60  3A 10 C0            ld a,($C010)
+00F63 0F63  F6 10               or $10
+00F65 0F65  32 10 C0            ld ($C010),a
+00F68 0F68  CD A7 0A            call $0AA7
+00F6B 0F6B  3E 06               ld a,$06
+00F6D 0F6D  32 1F C0            ld ($C01F),a
+00F70 0F70  C9                  ret
+00F71 0F71  CD 7B 26            call $267B
+00F74 0F74  CD 63 1D            call $1D63
+00F77 0F77  3E 06               ld a,$06
+00F79 0F79  32 1F C0            ld ($C01F),a
+00F7C 0F7C  C9                  ret
+00F7D 0F7D  21 18 B9            ld hl,$B918
+00F80 0F80  22 17 C2            ld ($C217),hl
+00F83 0F83  21 AA C1            ld hl,$C1AA
+00F86 0F86  AF                  xor a
+00F87 0F87  06 05               ld b,$05
+00F89 0F89  B6                  or (hl)
+00F8A 0F8A  23                  inc hl
+00F8B 0F8B  10 FC               djnz $0F89
+00F8D 0F8D  07                  rlca
+00F8E 0F8E  CB 11               rl c
+00F90 0F90  21 A4 C1            ld hl,$C1A4
+00F93 0F93  AF                  xor a
+00F94 0F94  06 05               ld b,$05
+00F96 0F96  B6                  or (hl)
+00F97 0F97  23                  inc hl
+00F98 0F98  10 FC               djnz $0F96
+00F9A 0F9A  07                  rlca
+00F9B 0F9B  CB 11               rl c
+00F9D 0F9D  3E 03               ld a,$03
+00F9F 0F9F  32 FF FF            ld ($FFFF),a
+00FA2 0FA2  79                  ld a,c
+00FA3 0FA3  E6 03               and $03
+00FA5 0FA5  21 00 90            ld hl,$9000
+00FA8 0FA8  DF                  rst $0018
+00FA9 0FA9  22 33 C0            ld ($C033),hl
+00FAC 0FAC  3E 01               ld a,$01
+00FAE 0FAE  CD E1 0F            call $0FE1
+00FB1 0FB1  3E 08               ld a,$08
+00FB3 0FB3  32 FF FF            ld ($FFFF),a
+00FB6 0FB6  CD E8 BE            call $BEE8
+00FB9 0FB9  3A C1 C1            ld a,($C1C1)
+00FBC 0FBC  07                  rlca
+00FBD 0FBD  D0                  ret nc
+00FBE 0FBE  3A BA C1            ld a,($C1BA)
+00FC1 0FC1  07                  rlca
+00FC2 0FC2  D8                  ret c
+00FC3 0FC3  AF                  xor a
+00FC4 0FC4  32 22 C2            ld ($C222),a
+00FC7 0FC7  C9                  ret
+00FC8 0FC8  3A 14 C2            ld a,($C214)
+00FCB 0FCB  F5                  push af
+00FCC 0FCC  DD 21 00 C2         ld ix,$C200
+00FD0 0FD0  ED 4B 1B C0         ld bc,($C01B)
+00FD4 0FD4  3A 00 C2            ld a,($C200)
+00FD7 0FD7  21 F7 0F            ld hl,$0FF7
+00FDA 0FDA  CF                  rst $0008
+00FDB 0FDB  F1                  pop af
+00FDC 0FDC  21 14 C2            ld hl,$C214
+00FDF 0FDF  AE                  xor (hl)
+00FE0 0FE0  C8                  ret z
+00FE1 0FE1  32 37 C0            ld ($C037),a
+00FE4 0FE4  0E 00               ld c,$00
+00FE6 0FE6  3A 14 C2            ld a,($C214)
+00FE9 0FE9  E6 07               and $07
+00FEB 0FEB  1F                  rra
+00FEC 0FEC  CB 19               rr c
+00FEE 0FEE  47                  ld b,a
+00FEF 0FEF  2A 33 C0            ld hl,($C033)
+00FF2 0FF2  09                  add hl,bc
+00FF3 0FF3  22 35 C0            ld ($C035),hl
+00FF6 0FF6  C9                  ret
+019CC 19CC  DD 21 30 C2         ld ix,$C230
+019D0 19D0  06 10               ld b,$10
+019D2 19D2  C5                  push bc
+019D3 19D3  DD 7E 00            ld a,(ix+0)
+019D6 19D6  B7                  or a
+019D7 19D7  CA CC 1A            jp z,$1ACC
+019DA 19DA  21 88 19            ld hl,$1988
+019DD 19DD  CF                  rst $0008
+019DE 19DE  01 00 00            ld bc,$0000
+019E1 19E1  DD CB 01 56         bit 2,(ix+1)
+019E5 19E5  C2 D7 1A            jp nz,$1AD7
+019E8 19E8  3A E3 C1            ld a,($C1E3)
+019EB 19EB  B7                  or a
+019EC 19EC  28 08               jr z,$19F6
+019EE 19EE  DD 5E 06            ld e,(ix+6)
+019F1 19F1  DD 56 07            ld d,(ix+7)
+019F4 19F4  18 45               jr $1A3B
+019F6 19F6  DD 6E 05            ld ixl,(ix+5)
+019F9 19F9  DD 66 06            ld ixh,(ix+6)
+019FC 19FC  DD 7E 07            ld a,(ix+7)
+019FF 19FF  DD 5E 0A            ld e,(ix+10)
+01A02 1A02  DD 56 0B            ld d,(ix+11)
+01A05 1A05  19                  add hl,de
+01A06 1A06  CB 7A               bit 7,d
+01A08 1A08  20 04               jr nz,$1A0E
+01A0A 1A0A  88                  adc a,b
+01A0B 1A0B  C3 10 1A            jp $1A10
+01A0E 1A0E  3F                  ccf
+01A0F 1A0F  98                  sbc a,b
+01A10 1A10  DD 75 05            ld (ix+5),ixl
+01A13 1A13  DD 74 06            ld (ix+6),ixh
+01A16 1A16  DD 77 07            ld (ix+7),a
+01A19 1A19  EB                  ex de,hl
+01A1A 1A1A  19                  add hl,de
+01A1B 1A1B  5A                  ld e,d
+01A1C 1A1C  57                  ld d,a
+01A1D 1A1D  7B                  ld a,e
+01A1E 1A1E  AC                  xor h
+01A1F 1A1F  E6 08               and $08
+01A21 1A21  28 18               jr z,$1A3B
+01A23 1A23  DD CB 01 EE         set 5,(ix+1)
+01A27 1A27  3E 04               ld a,$04
+01A29 1A29  83                  add a,e
+01A2A 1A2A  5F                  ld e,a
+01A2B 1A2B  30 01               jr nc,$1A2E
+01A2D 1A2D  14                  inc d
+01A2E 1A2E  E6 F8               and $F8
+01A30 1A30  5F                  ld e,a
+01A31 1A31  DD 72 07            ld (ix+7),d
+01A34 1A34  DD 73 06            ld (ix+6),e
+01A37 1A37  DD 36 05 00         ld (ix+5),$00
+01A3B 1A3B  2A 82 C1            ld hl,($C182)
+01A3E 1A3E  EB                  ex de,hl
+01A3F 1A3F  ED 52               sbc hl,de
+01A41 1A41  7C                  ld a,h
+01A42 1A42  B7                  or a
+01A43 1A43  20 01               jr nz,$1A46
+01A45 1A45  0C                  inc c
+01A46 1A46  7D                  ld a,l
+01A47 1A47  FE F8               cp $F8
+01A49 1A49  30 01               jr nc,$1A4C
+01A4B 1A4B  0C                  inc c
+01A4C 1A4C  C6 08               add a,$08
+01A4E 1A4E  DD 77 11            ld (ix+17),a
+01A51 1A51  3A E3 C1            ld a,($C1E3)
+01A54 1A54  B7                  or a
+01A55 1A55  28 08               jr z,$1A5F
+01A57 1A57  DD 5E 03            ld e,(ix+3)
+01A5A 1A5A  DD 56 04            ld d,(ix+4)
+01A5D 1A5D  18 45               jr $1AA4
+01A5F 1A5F  DD 6E 02            ld ixl,(ix+2)
+01A62 1A62  DD 66 03            ld ixh,(ix+3)
+01A65 1A65  DD 7E 04            ld a,(ix+4)
+01A68 1A68  DD 5E 08            ld e,(ix+8)
+01A6B 1A6B  DD 56 09            ld d,(ix+9)
+01A6E 1A6E  19                  add hl,de
+01A6F 1A6F  CB 7A               bit 7,d
+01A71 1A71  20 04               jr nz,$1A77
+01A73 1A73  88                  adc a,b
+01A74 1A74  C3 79 1A            jp $1A79
+01A77 1A77  3F                  ccf
+01A78 1A78  98                  sbc a,b
+01A79 1A79  DD 75 02            ld (ix+2),ixl
+01A7C 1A7C  DD 74 03            ld (ix+3),ixh
+01A7F 1A7F  DD 77 04            ld (ix+4),a
+01A82 1A82  EB                  ex de,hl
+01A83 1A83  19                  add hl,de
+01A84 1A84  5A                  ld e,d
+01A85 1A85  57                  ld d,a
+01A86 1A86  7B                  ld a,e
+01A87 1A87  AC                  xor h
+01A88 1A88  E6 08               and $08
+01A8A 1A8A  28 18               jr z,$1AA4
+01A8C 1A8C  DD CB 01 EE         set 5,(ix+1)
+01A90 1A90  3E 04               ld a,$04
+01A92 1A92  83                  add a,e
+01A93 1A93  5F                  ld e,a
+01A94 1A94  30 01               jr nc,$1A97
+01A96 1A96  14                  inc d
+01A97 1A97  E6 F8               and $F8
+01A99 1A99  5F                  ld e,a
+01A9A 1A9A  DD 72 04            ld (ix+4),d
+01A9D 1A9D  DD 73 03            ld (ix+3),e
+01AA0 1AA0  DD 36 02 00         ld (ix+2),$00
+01AA4 1AA4  2A 84 C1            ld hl,($C184)
+01AA7 1AA7  EB                  ex de,hl
+01AA8 1AA8  ED 52               sbc hl,de
+01AAA 1AAA  7C                  ld a,h
+01AAB 1AAB  B7                  or a
+01AAC 1AAC  20 01               jr nz,$1AAF
+01AAE 1AAE  0C                  inc c
+01AAF 1AAF  7D                  ld a,l
+01AB0 1AB0  FE B0               cp $B0
+01AB2 1AB2  30 01               jr nc,$1AB5
+01AB4 1AB4  0C                  inc c
+01AB5 1AB5  79                  ld a,c
+01AB6 1AB6  FE 04               cp $04
+01AB8 1AB8  20 0A               jr nz,$1AC4
+01ABA 1ABA  DD 75 10            ld (ix+16),ixl
+01ABD 1ABD  DD CB 01 86         res 0,(ix+1)
+01AC1 1AC1  C3 CC 1A            jp $1ACC
+01AC4 1AC4  DD CB 01 C6         set 0,(ix+1)
+01AC8 1AC8  DD 36 10 FF         ld (ix+16),$FF
+01ACC 1ACC  C1                  pop bc
+01ACD 1ACD  11 30 00            ld de,$0030
+01AD0 1AD0  DD 19               add ix,de
+01AD2 1AD2  05                  dec b
+01AD3 1AD3  C2 D2 19            jp nz,$19D2
+01AD6 1AD6  C9                  ret
+01AD7 1AD7  DD 35 0F            dec (ix+15)
+01ADA 1ADA  20 08               jr nz,$1AE4
+01ADC 1ADC  DD CB 01 96         res 2,(ix+1)
+01AE0 1AE0  DD CB 01 EE         set 5,(ix+1)
+01AE4 1AE4  DD 6E 06            ld ixl,(ix+6)
+01AE7 1AE7  DD 66 07            ld ixh,(ix+7)
+01AEA 1AEA  ED 5B 82 C1         ld de,($C182)
+01AEE 1AEE  B7                  or a
+01AEF 1AEF  ED 52               sbc hl,de
+01AF1 1AF1  7C                  ld a,h
+01AF2 1AF2  B7                  or a
+01AF3 1AF3  20 CF               jr nz,$1AC4
+01AF5 1AF5  7D                  ld a,l
+01AF6 1AF6  FE F8               cp $F8
+01AF8 1AF8  30 CA               jr nc,$1AC4
+01AFA 1AFA  C6 08               add a,$08
+01AFC 1AFC  DD 77 11            ld (ix+17),a
+01AFF 1AFF  DD 6E 03            ld ixl,(ix+3)
+01B02 1B02  DD 66 04            ld ixh,(ix+4)
+01B05 1B05  ED 5B 84 C1         ld de,($C184)
+01B09 1B09  B7                  or a
+01B0A 1B0A  ED 52               sbc hl,de
+01B0C 1B0C  7C                  ld a,h
+01B0D 1B0D  B7                  or a
+01B0E 1B0E  20 B4               jr nz,$1AC4
+01B10 1B10  7D                  ld a,l
+01B11 1B11  FE B0               cp $B0
+01B13 1B13  30 AF               jr nc,$1AC4
+01B15 1B15  DD 77 10            ld (ix+16),a
+01B18 1B18  DD CB 01 86         res 0,(ix+1)
+01B1C 1B1C  C3 CC 1A            jp $1ACC
+01B1F 1B1F  21 30 C2            ld hl,$C230
+01B22 1B22  11 31 C2            ld de,$C231
+01B25 1B25  01 FF 02            ld bc,$02FF
+01B28 1B28  36 00               ld (hl),$00
+01B2A 1B2A  CD 19 0B            call $0B19
+01B2D 1B2D  21 5F C2            ld hl,$C25F
+01B30 1B30  11 30 00            ld de,$0030
+01B33 1B33  06 10               ld b,$10
+01B35 1B35  3E 10               ld a,$10
+01B37 1B37  90                  sub b
+01B38 1B38  77                  ld (hl),a
+01B39 1B39  19                  add hl,de
+01B3A 1B3A  10 F9               djnz $1B35
+01B3C 1B3C  3E 07               ld a,$07
+01B3E 1B3E  32 FF FF            ld ($FFFF),a
+01B41 1B41  3A 81 C1            ld a,($C181)
+01B44 1B44  E6 7F               and $7F
+01B46 1B46  FE 16               cp $16
+01B48 1B48  30 50               jr nc,$1B9A
+01B4A 1B4A  21 3B BA            ld hl,$BA3B
+01B4D 1B4D  DF                  rst $0018
+01B4E 1B4E  DD 21 30 C2         ld ix,$C230
+01B52 1B52  7E                  ld a,(hl)
+01B53 1B53  B7                  or a
+01B54 1B54  28 44               jr z,$1B9A
+01B56 1B56  DD 77 00            ld (ix+0),a
+01B59 1B59  DD 77 29            ld (ix+41),a
+01B5C 1B5C  23                  inc hl
+01B5D 1B5D  7E                  ld a,(hl)
+01B5E 1B5E  DD 77 20            ld (ix+32),a
+01B61 1B61  CD 9B 1B            call $1B9B
+01B64 1B64  23                  inc hl
+01B65 1B65  E5                  push hl
+01B66 1B66  6E                  ld l,(hl)
+01B67 1B67  26 00               ld h,$00
+01B69 1B69  29                  add hl,hl
+01B6A 1B6A  29                  add hl,hl
+01B6B 1B6B  29                  add hl,hl
+01B6C 1B6C  11 08 00            ld de,$0008
+01B6F 1B6F  19                  add hl,de
+01B70 1B70  DD 75 06            ld (ix+6),ixl
+01B73 1B73  DD 74 07            ld (ix+7),ixh
+01B76 1B76  DD 75 2B            ld (ix+43),ixl
+01B79 1B79  DD 74 2C            ld (ix+44),ixh
+01B7C 1B7C  E1                  pop hl
+01B7D 1B7D  23                  inc hl
+01B7E 1B7E  E5                  push hl
+01B7F 1B7F  6E                  ld l,(hl)
+01B80 1B80  26 00               ld h,$00
+01B82 1B82  29                  add hl,hl
+01B83 1B83  29                  add hl,hl
+01B84 1B84  29                  add hl,hl
+01B85 1B85  DD 75 03            ld (ix+3),ixl
+01B88 1B88  DD 74 04            ld (ix+4),ixh
+01B8B 1B8B  DD 75 2D            ld (ix+45),ixl
+01B8E 1B8E  DD 74 2E            ld (ix+46),ixh
+01B91 1B91  E1                  pop hl
+01B92 1B92  23                  inc hl
+01B93 1B93  11 30 00            ld de,$0030
+01B96 1B96  DD 19               add ix,de
+01B98 1B98  18 B8               jr $1B52
+01B9A 1B9A  C9                  ret
+01B9B 1B9B  D5                  push de
+01B9C 1B9C  E5                  push hl
+01B9D 1B9D  87                  add a,a
+01B9E 1B9E  38 16               jr c,$1BB6
+01BA0 1BA0  DD 36 01 20         ld (ix+1),$20
+01BA4 1BA4  DD 36 21 04         ld (ix+33),$04
+01BA8 1BA8  DD 36 12 01         ld (ix+18),$01
+01BAC 1BAC  DD 36 0D 0A         ld (ix+13),$0A
+01BB0 1BB0  DD 36 0E 0A         ld (ix+14),$0A
+01BB4 1BB4  18 4C               jr $1C02
+01BB6 1BB6  6F                  ld l,a
+01BB7 1BB7  26 00               ld h,$00
+01BB9 1BB9  5D                  ld e,l
+01BBA 1BBA  54                  ld d,h
+01BBB 1BBB  29                  add hl,hl
+01BBC 1BBC  29                  add hl,hl
+01BBD 1BBD  19                  add hl,de
+01BBE 1BBE  11 05 1C            ld de,$1C05
+01BC1 1BC1  19                  add hl,de
+01BC2 1BC2  7E                  ld a,(hl)
+01BC3 1BC3  DD 77 21            ld (ix+33),a
+01BC6 1BC6  23                  inc hl
+01BC7 1BC7  7E                  ld a,(hl)
+01BC8 1BC8  DD 77 22            ld (ix+34),a
+01BCB 1BCB  DD 77 2A            ld (ix+42),a
+01BCE 1BCE  23                  inc hl
+01BCF 1BCF  7E                  ld a,(hl)
+01BD0 1BD0  DD 77 23            ld (ix+35),a
+01BD3 1BD3  23                  inc hl
+01BD4 1BD4  7E                  ld a,(hl)
+01BD5 1BD5  DD 77 24            ld (ix+36),a
+01BD8 1BD8  23                  inc hl
+01BD9 1BD9  7E                  ld a,(hl)
+01BDA 1BDA  DD 77 25            ld (ix+37),a
+01BDD 1BDD  23                  inc hl
+01BDE 1BDE  7E                  ld a,(hl)
+01BDF 1BDF  DD 77 26            ld (ix+38),a
+01BE2 1BE2  23                  inc hl
+01BE3 1BE3  7E                  ld a,(hl)
+01BE4 1BE4  DD 77 27            ld (ix+39),a
+01BE7 1BE7  23                  inc hl
+01BE8 1BE8  7E                  ld a,(hl)
+01BE9 1BE9  DD 77 28            ld (ix+40),a
+01BEC 1BEC  23                  inc hl
+01BED 1BED  7E                  ld a,(hl)
+01BEE 1BEE  DD 77 17            ld (ix+23),a
+01BF1 1BF1  23                  inc hl
+01BF2 1BF2  7E                  ld a,(hl)
+01BF3 1BF3  DD 77 18            ld (ix+24),a
+01BF6 1BF6  DD 36 12 01         ld (ix+18),$01
+01BFA 1BFA  DD 36 01 20         ld (ix+1),$20
+01BFE 1BFE  DD 36 0E 01         ld (ix+14),$01
+01C02 1C02  E1                  pop hl
+01C03 1C03  D1                  pop de
+01C04 1C04  C9                  ret
+01D63 1D63  3A DF C1            ld a,($C1DF)
+01D66 1D66  B7                  or a
+01D67 1D67  28 04               jr z,$1D6D
+01D69 1D69  3E 0D               ld a,$0D
+01D6B 1D6B  18 0A               jr $1D77
+01D6D 1D6D  3A 81 C1            ld a,($C181)
+01D70 1D70  FE 15               cp $15
+01D72 1D72  28 22               jr z,$1D96
+01D74 1D74  CD BA 42            call $42BA
+01D77 1D77  21 A2 1D            ld hl,$1DA2
+01D7A 1D7A  85                  add a,l
+01D7B 1D7B  6F                  ld l,a
+01D7C 1D7C  30 01               jr nc,$1D7F
+01D7E 1D7E  24                  inc h
+01D7F 1D7F  3A 2D C0            ld a,($C02D)
+01D82 1D82  BE                  cp (hl)
+01D83 1D83  C8                  ret z
+01D84 1D84  E5                  push hl
+01D85 1D85  3E 02               ld a,$02
+01D87 1D87  32 FF FF            ld ($FFFF),a
+01D8A 1D8A  CD 03 88            call $8803
+01D8D 1D8D  E1                  pop hl
+01D8E 1D8E  7E                  ld a,(hl)
+01D8F 1D8F  32 64 DE            ld ($DE64),a
+01D92 1D92  32 2D C0            ld ($C02D),a
+01D95 1D95  C9                  ret
+01D96 1D96  3A DB C1            ld a,($C1DB)
+01D99 1D99  E6 40               and $40
+01D9B 1D9B  3E 0E               ld a,$0E
+01D9D 1D9D  28 D8               jr z,$1D77
+01D9F 1D9F  3C                  inc a
+01DA0 1DA0  18 D5               jr $1D77
+01DB2 1DB2  3E 03               ld a,$03
+01DB4 1DB4  32 FF FF            ld ($FFFF),a
+01DB7 1DB7  21 28 91            ld hl,$9128
+01DBA 1DBA  11 C0 5E            ld de,$5EC0
+01DBD 1DBD  CD 95 06            call $0695
+01DC0 1DC0  21 4A 91            ld hl,$914A
+01DC3 1DC3  11 00 54            ld de,$5400
+01DC6 1DC6  0E 3E               ld c,$3E
+01DC8 1DC8  CD A1 0B            call $0BA1
+01DCB 1DCB  21 2A 95            ld hl,$952A
+01DCE 1DCE  11 E0 5C            ld de,$5CE0
+01DD1 1DD1  3E 03               ld a,$03
+01DD3 1DD3  32 FF FF            ld ($FFFF),a
+01DD6 1DD6  CD 95 06            call $0695
+01DD9 1DD9  3A 81 C1            ld a,($C181)
+01DDC 1DDC  E6 7F               and $7F
+01DDE 1DDE  FE 0C               cp $0C
+01DE0 1DE0  30 25               jr nc,$1E07
+01DE2 1DE2  6F                  ld l,a
+01DE3 1DE3  26 00               ld h,$00
+01DE5 1DE5  29                  add hl,hl
+01DE6 1DE6  85                  add a,l
+01DE7 1DE7  6F                  ld l,a
+01DE8 1DE8  30 01               jr nc,$1DEB
+01DEA 1DEA  24                  inc h
+01DEB 1DEB  11 15 1E            ld de,$1E15
+01DEE 1DEE  19                  add hl,de
+01DEF 1DEF  7E                  ld a,(hl)
+01DF0 1DF0  32 FF FF            ld ($FFFF),a
+01DF3 1DF3  23                  inc hl
+01DF4 1DF4  7E                  ld a,(hl)
+01DF5 1DF5  23                  inc hl
+01DF6 1DF6  66                  ld h,(hl)
+01DF7 1DF7  6F                  ld l,a
+01DF8 1DF8  11 60 C1            ld de,$C160
+01DFB 1DFB  01 10 00            ld bc,$0010
+01DFE 1DFE  CD 19 0B            call $0B19
+01E01 1E01  11 00 40            ld de,$4000
+01E04 1E04  C3 95 06            jp $0695
+01E07 1E07  FE 15               cp $15
+01E09 1E09  28 05               jr z,$1E10
+01E0B 1E0B  21 39 1E            ld hl,$1E39
+01E0E 1E0E  18 DF               jr $1DEF
+01E10 1E10  21 3C 1E            ld hl,$1E3C
+01E13 1E13  18 DA               jr $1DEF
+01E3F 1E3F  21 E7 18            ld hl,$18E7
+01E42 1E42  11 00 60            ld de,$6000
+01E45 1E45  01 80 03            ld bc,$0380
+01E48 1E48  CD D4 06            call $06D4
+01E4B 1E4B  3E 04               ld a,$04
+01E4D 1E4D  32 FF FF            ld ($FFFF),a
+01E50 1E50  21 99 BF            ld hl,$BF99
+01E53 1E53  11 00 77            ld de,$7700
+01E56 1E56  01 0B 00            ld bc,$000B
+01E59 1E59  CD C1 06            call $06C1
+01E5C 1E5C  11 80 77            ld de,$7780
+01E5F 1E5F  01 14 00            ld bc,$0014
+01E62 1E62  CD C1 06            call $06C1
+01E65 1E65  3E 03               ld a,$03
+01E67 1E67  32 FF FF            ld ($FFFF),a
+01E6A 1E6A  21 08 90            ld hl,$9008
+01E6D 1E6D  11 E0 76            ld de,$76E0
+01E70 1E70  01 20 00            ld bc,$0020
+01E73 1E73  CD C1 06            call $06C1
+01E76 1E76  11 20 77            ld de,$7720
+01E79 1E79  01 60 00            ld bc,$0060
+01E7C 1E7C  CD C1 06            call $06C1
+01E7F 1E7F  11 A0 77            ld de,$77A0
+01E82 1E82  01 60 00            ld bc,$0060
+01E85 1E85  CD C1 06            call $06C1
+01E88 1E88  11 40 7F            ld de,$7F40
+01E8B 1E8B  01 40 00            ld bc,$0040
+01E8E 1E8E  CD C1 06            call $06C1
+01E91 1E91  3E 04               ld a,$04
+01E93 1E93  32 FF FF            ld ($FFFF),a
+01E96 1E96  11 80 67            ld de,$6780
+01E99 1E99  0E 01               ld c,$01
+01E9B 1E9B  3A 81 C1            ld a,($C181)
+01E9E 1E9E  E6 7F               and $7F
+01EA0 1EA0  FE 16               cp $16
+01EA2 1EA2  D0                  ret nc
+01EA3 1EA3  21 A8 1E            ld hl,$1EA8
+01EA6 1EA6  CF                  rst $0008
+01EA7 1EA7  C9                  ret
+01FD4 1FD4  CD E3 1F            call $1FE3
+01FD7 1FD7  3A 98 C1            ld a,($C198)
+01FDA 1FDA  B7                  or a
+01FDB 1FDB  C8                  ret z
+01FDC 1FDC  21 20 03            ld hl,$0320
+01FDF 1FDF  22 8A C1            ld ($C18A),hl
+01FE2 1FE2  C9                  ret
+01FE3 1FE3  3A 81 C1            ld a,($C181)
+01FE6 1FE6  21 33 25            ld hl,$2533
+01FE9 1FE9  DF                  rst $0018
+01FEA 1FEA  7E                  ld a,(hl)
+01FEB 1FEB  32 FF FF            ld ($FFFF),a
+01FEE 1FEE  23                  inc hl
+01FEF 1FEF  5E                  ld e,(hl)
+01FF0 1FF0  23                  inc hl
+01FF1 1FF1  56                  ld d,(hl)
+01FF2 1FF2  E5                  push hl
+01FF3 1FF3  EB                  ex de,hl
+01FF4 1FF4  11 00 C6            ld de,$C600
+01FF7 1FF7  CD 20 0C            call $0C20
+01FFA 1FFA  3A FC FF            ld a,($FFFC)
+01FFD 1FFD  F6 08               or $08
+01FFF 1FFF  32 FC FF            ld ($FFFC),a
+08329 8329  DD 34 0B            inc (ix+11)
+0832C 832C  DD 7E 0A            ld a,(ix+10)
+0832F 832F  DD 96 0B            sub (ix+11)
+08332 8332  20 0F               jr nz,$8343
+08334 8334  CD 51 83            call $8351
+08337 8337  3E 0E               ld a,$0E
+08339 8339  D3 F0               out ($F0),a
+0833B 833B  DD 7E 10            ld a,(ix+16)
+0833E 833E  F6 20               or $20
+08340 8340  D3 F1               out ($F1),a
+08342 8342  C9                  ret
+08343 8343  FE 02               cp $02
+08345 8345  C0                  ret nz
+08346 8346  3E 0E               ld a,$0E
+08348 8348  D3 F0               out ($F0),a
+0834A 834A  CD 83 88            call $8883
+0834D 834D  AF                  xor a
+0834E 834E  D3 F1               out ($F1),a
+08350 8350  C9                  ret
+08351 8351  DD 5E 03            ld e,(ix+3)
+08354 8354  DD 56 04            ld d,(ix+4)
+08357 8357  1A                  ld a,(de)
+08358 8358  13                  inc de
+08359 8359  FE E0               cp $E0
+0835B 835B  D2 75 83            jp nc,$8375
+0835E 835E  FE 7F               cp $7F
+08360 8360  DA 43 85            jp c,$8543
+08363 8363  CB 6F               bit 5,a
+08365 8365  28 02               jr z,$8369
+08367 8367  F6 01               or $01
+08369 8369  CB 57               bit 2,a
+0836B 836B  28 02               jr z,$836F
+0836D 836D  F6 10               or $10
+0836F 836F  DD 77 10            ld (ix+16),a
+08372 8372  C3 35 85            jp $8535
+08375 8375  21 7B 83            ld hl,$837B
+08378 8378  C3 E9 85            jp $85E9
+0837F 837F  DD 34 0B            inc (ix+11)
+08382 8382  DD 7E 0A            ld a,(ix+10)
+08385 8385  DD 96 0B            sub (ix+11)
+08388 8388  CC F1 84            call z,$84F1
+0838B 838B  32 6D DE            ld ($DE6D),a
+0838E 838E  FE 80               cp $80
+08390 8390  CA E8 83            jp z,$83E8
+08393 8393  DD CB 00 6E         bit 5,(ix+0)
+08397 8397  CA E8 83            jp z,$83E8
+0839A 839A  D9                  exx
+0839B 839B  36 80               ld (hl),$80
+0839D 839D  D9                  exx
+0839E 839E  DD CB 00 5E         bit 3,(ix+0)
+083A2 83A2  C2 C8 83            jp nz,$83C8
+083A5 83A5  DD 7E 11            ld a,(ix+17)
+083A8 83A8  CB 7F               bit 7,a
+083AA 83AA  28 0E               jr z,$83BA
+083AC 83AC  DD 86 0E            add a,(ix+14)
+083AF 83AF  38 34               jr c,$83E5
+083B1 83B1  DD 35 0F            dec (ix+15)
+083B4 83B4  DD 35 0F            dec (ix+15)
+083B7 83B7  C3 E1 83            jp $83E1
+083BA 83BA  DD 86 0E            add a,(ix+14)
+083BD 83BD  30 26               jr nc,$83E5
+083BF 83BF  DD 34 0F            inc (ix+15)
+083C2 83C2  DD 34 0F            inc (ix+15)
+083C5 83C5  C3 E1 83            jp $83E1
+083C8 83C8  DD 7E 11            ld a,(ix+17)
+083CB 83CB  CB 7F               bit 7,a
+083CD 83CD  28 0A               jr z,$83D9
+083CF 83CF  DD 86 0E            add a,(ix+14)
+083D2 83D2  38 11               jr c,$83E5
+083D4 83D4  DD 35 0F            dec (ix+15)
+083D7 83D7  18 08               jr $83E1
+083D9 83D9  DD 86 0E            add a,(ix+14)
+083DC 83DC  30 07               jr nc,$83E5
+083DE 83DE  DD 34 0F            inc (ix+15)
+083E1 83E1  DD CB 07 CE         set 1,(ix+7)
+083E5 83E5  DD 77 0E            ld (ix+14),a
+083E8 83E8  DD CB 00 56         bit 2,(ix+0)
+083EC 83EC  C0                  ret nz
+083ED 83ED  DD 7E 13            ld a,(ix+19)
+083F0 83F0  FE 1F               cp $1F
+083F2 83F2  C8                  ret z
+083F3 83F3  3A 6D DE            ld a,($DE6D)
+083F6 83F6  DD CB 07 46         bit 0,(ix+7)
+083FA 83FA  20 05               jr nz,$8401
+083FC 83FC  FE 02               cp $02
+083FE 83FE  DA 88 84            jp c,$8488
+08401 8401  B7                  or a
+08402 8402  FA 12 84            jp m,$8412
+08405 8405  DD CB 14 7E         bit 7,(ix+20)
+08409 8409  C0                  ret nz
+0840A 840A  DD 4E 06            ld c,(ix+6)
+0840D 840D  0D                  dec c
+0840E 840E  F2 16 84            jp p,$8416
+08411 8411  C9                  ret
+08412 8412  DD 4E 06            ld c,(ix+6)
+08415 8415  0D                  dec c
+08416 8416  DD 6E 0E            ld ixl,(ix+14)
+08419 8419  DD 66 0F            ld ixh,(ix+15)
+0841C 841C  FA 35 84            jp m,$8435
+0841F 841F  7D                  ld a,l
+08420 8420  B4                  or h
+08421 8421  20 08               jr nz,$842B
+08423 8423  3E FF               ld a,$FF
+08425 8425  DD 77 14            ld (ix+20),a
+08428 8428  C3 35 84            jp $8435
+0842B 842B  EB                  ex de,hl
+0842C 842C  21 2F 8C            ld hl,$8C2F
+0842F 842F  CD 9D 84            call $849D
+08432 8432  CD A9 84            call $84A9
+08435 8435  DD CB 00 5E         bit 3,(ix+0)
+08439 8439  C4 90 85            call nz,$8590
+0843C 843C  0E F1               ld c,$F1
+0843E 843E  DD 7E 01            ld a,(ix+1)
+08441 8441  D3 F0               out ($F0),a
+08443 8443  C6 10               add a,$10
+08445 8445  CD 83 88            call $8883
+08448 8448  CD 83 88            call $8883
+0844B 844B  ED 69               out (c),l
+0844D 844D  CD 83 88            call $8883
+08450 8450  D9                  exx
+08451 8451  CB 7E               bit 7,(hl)
+08453 8453  D9                  exx
+08454 8454  D3 F0               out ($F0),a
+08456 8456  20 0F               jr nz,$8467
+08458 8458  DD CB 07 46         bit 0,(ix+7)
+0845C 845C  28 09               jr z,$8467
+0845E 845E  DD CB 07 4E         bit 1,(ix+7)
+08462 8462  C8                  ret z
+08463 8463  DD CB 07 8E         res 1,(ix+7)
+08467 8467  DD CB 07 56         bit 2,(ix+7)
+0846B 846B  28 02               jr z,$846F
+0846D 846D  CB EC               set 5,h
+0846F 846F  ED 61               out (c),h
+08471 8471  C9                  ret
+08472 8472  DD 7E 01            ld a,(ix+1)
+08475 8475  C6 20               add a,$20
+08477 8477  D3 F0               out ($F0),a
+08479 8479  DD 7E 07            ld a,(ix+7)
+0847C 847C  E6 F0               and $F0
+0847E 847E  4F                  ld c,a
+0847F 847F  DD 7E 08            ld a,(ix+8)
+08482 8482  E6 0F               and $0F
+08484 8484  B1                  or c
+08485 8485  D3 F1               out ($F1),a
+08487 8487  C9                  ret
+08488 8488  DD 36 13 1F         ld (ix+19),$1F
+0848C 848C  DD 7E 01            ld a,(ix+1)
+0848F 848F  C6 10               add a,$10
+08491 8491  D3 F0               out ($F0),a
+08493 8493  CD 83 88            call $8883
+08496 8496  CD 83 88            call $8883
+08499 8499  AF                  xor a
+0849A 849A  D3 F1               out ($F1),a
+0849C 849C  C9                  ret
+0849D 849D  06 00               ld b,$00
+0849F 849F  09                  add hl,bc
+084A0 84A0  09                  add hl,bc
+084A1 84A1  7E                  ld a,(hl)
+084A2 84A2  23                  inc hl
+084A3 84A3  66                  ld h,(hl)
+084A4 84A4  6F                  ld l,a
+084A5 84A5  C9                  ret
+084A6 84A6  DD 77 0D            ld (ix+13),a
+084A9 84A9  E5                  push hl
+084AA 84AA  DD 4E 0D            ld c,(ix+13)
+084AD 84AD  06 00               ld b,$00
+084AF 84AF  09                  add hl,bc
+084B0 84B0  4D                  ld c,l
+084B1 84B1  44                  ld b,h
+084B2 84B2  E1                  pop hl
+084B3 84B3  0A                  ld a,(bc)
+084B4 84B4  CB 7F               bit 7,a
+084B6 84B6  CA D6 84            jp z,$84D6
+084B9 84B9  FE 83               cp $83
+084BB 84BB  28 0E               jr z,$84CB
+084BD 84BD  D2 D2 84            jp nc,$84D2
+084C0 84C0  FE 80               cp $80
+084C2 84C2  28 0B               jr z,$84CF
+084C4 84C4  3E FF               ld a,$FF
+084C6 84C6  DD 77 14            ld (ix+20),a
+084C9 84C9  E1                  pop hl
+084CA 84CA  C9                  ret
+084CB 84CB  03                  inc bc
+084CC 84CC  0A                  ld a,(bc)
+084CD 84CD  18 D7               jr $84A6
+084CF 84CF  AF                  xor a
+084D0 84D0  18 D4               jr $84A6
+084D2 84D2  26 FF               ld h,$FF
+084D4 84D4  18 02               jr $84D8
+084D6 84D6  26 00               ld h,$00
+084D8 84D8  6F                  ld l,a
+084D9 84D9  DD 34 0D            inc (ix+13)
+084DC 84DC  19                  add hl,de
+084DD 84DD  3A 60 DE            ld a,($DE60)
+084E0 84E0  B7                  or a
+084E1 84E1  28 0A               jr z,$84ED
+084E3 84E3  7C                  ld a,h
+084E4 84E4  DD BE 10            cp (ix+16)
+084E7 84E7  28 04               jr z,$84ED
+084E9 84E9  DD CB 07 CE         set 1,(ix+7)
+084ED 84ED  DD 77 10            ld (ix+16),a
+084F0 84F0  C9                  ret
+084F1 84F1  DD 5E 03            ld e,(ix+3)
+084F4 84F4  DD 56 04            ld d,(ix+4)
+084F7 84F7  1A                  ld a,(de)
+084F8 84F8  13                  inc de
+084F9 84F9  FE E0               cp $E0
+084FB 84FB  D2 E6 85            jp nc,$85E6
+084FE 84FE  DD CB 00 5E         bit 3,(ix+0)
+08502 8502  C2 6C 85            jp nz,$856C
+08505 8505  FE 80               cp $80
+08507 8507  DA 43 85            jp c,$8543
+0850A 850A  20 00               jr nz,$850C
+0850C 850C  CD CF 85            call $85CF
+0850F 850F  7E                  ld a,(hl)
+08510 8510  DD 77 0E            ld (ix+14),a
+08513 8513  23                  inc hl
+08514 8514  7E                  ld a,(hl)
+08515 8515  DD 77 0F            ld (ix+15),a
+08518 8518  DD CB 00 6E         bit 5,(ix+0)
+0851C 851C  CA 35 85            jp z,$8535
+0851F 851F  1A                  ld a,(de)
+08520 8520  13                  inc de
+08521 8521  DD 77 12            ld (ix+18),a
+08524 8524  DD 77 11            ld (ix+17),a
+08527 8527  DD CB 00 5E         bit 3,(ix+0)
+0852B 852B  1A                  ld a,(de)
+0852C 852C  20 14               jr nz,$8542
+0852E 852E  DD 77 11            ld (ix+17),a
+08531 8531  13                  inc de
+08532 8532  1A                  ld a,(de)
+08533 8533  18 0D               jr $8542
+08535 8535  1A                  ld a,(de)
+08536 8536  B7                  or a
+08537 8537  F2 42 85            jp p,$8542
+0853A 853A  DD 7E 15            ld a,(ix+21)
+0853D 853D  DD 77 0A            ld (ix+10),a
+08540 8540  18 11               jr $8553
+08542 8542  13                  inc de
+08543 8543  DD 46 02            ld b,(ix+2)
+08546 8546  05                  dec b
+08547 8547  28 04               jr z,$854D
+08549 8549  4F                  ld c,a
+0854A 854A  81                  add a,c
+0854B 854B  10 FD               djnz $854A
+0854D 854D  DD 77 0A            ld (ix+10),a
+08550 8550  DD 77 15            ld (ix+21),a
+08553 8553  AF                  xor a
+08554 8554  DD 77 0C            ld (ix+12),a
+08557 8557  DD 77 0D            ld (ix+13),a
+0855A 855A  DD 77 0B            ld (ix+11),a
+0855D 855D  DD 77 13            ld (ix+19),a
+08560 8560  DD 77 14            ld (ix+20),a
+08563 8563  DD 73 03            ld (ix+3),e
+08566 8566  DD 72 04            ld (ix+4),d
+08569 8569  3E 80               ld a,$80
+0856B 856B  C9                  ret
+0856C 856C  67                  ld h,a
+0856D 856D  1A                  ld a,(de)
+0856E 856E  13                  inc de
+0856F 856F  6F                  ld l,a
+08570 8570  B4                  or h
+08571 8571  28 14               jr z,$8587
+08573 8573  DD 7E 05            ld a,(ix+5)
+08576 8576  B7                  or a
+08577 8577  28 0E               jr z,$8587
+08579 8579  F2 82 85            jp p,$8582
+0857C 857C  85                  add a,l
+0857D 857D  38 07               jr c,$8586
+0857F 857F  25                  dec h
+08580 8580  18 04               jr $8586
+08582 8582  85                  add a,l
+08583 8583  30 01               jr nc,$8586
+08585 8585  24                  inc h
+08586 8586  6F                  ld l,a
+08587 8587  DD 75 0E            ld (ix+14),ixl
+0858A 858A  DD 74 0F            ld (ix+15),ixh
+0858D 858D  C3 18 85            jp $8518
+08590 8590  D5                  push de
+08591 8591  7C                  ld a,h
+08592 8592  B7                  or a
+08593 8593  28 0E               jr z,$85A3
+08595 8595  FE 02               cp $02
+08597 8597  3E 12               ld a,$12
+08599 8599  38 21               jr c,$85BC
+0859B 859B  CB 3C               srl h
+0859D 859D  CB 1D               rr l
+0859F 859F  3E 10               ld a,$10
+085A1 85A1  18 19               jr $85BC
+085A3 85A3  7D                  ld a,l
+085A4 85A4  B7                  or a
+085A5 85A5  CA CD 85            jp z,$85CD
+085A8 85A8  01 00 04            ld bc,$0400
+085AB 85AB  07                  rlca
+085AC 85AC  0C                  inc c
+085AD 85AD  38 02               jr c,$85B1
+085AF 85AF  10 FA               djnz $85AB
+085B1 85B1  41                  ld b,c
+085B2 85B2  3E 12               ld a,$12
+085B4 85B4  3C                  inc a
+085B5 85B5  3C                  inc a
+085B6 85B6  CB 25               sla l
+085B8 85B8  CB 14               rl h
+085BA 85BA  10 F8               djnz $85B4
+085BC 85BC  11 57 07            ld de,$0757
+085BF 85BF  EB                  ex de,hl
+085C0 85C0  B7                  or a
+085C1 85C1  ED 52               sbc hl,de
+085C3 85C3  CB 4C               bit 1,h
+085C5 85C5  28 02               jr z,$85C9
+085C7 85C7  CB C4               set 0,h
+085C9 85C9  57                  ld d,a
+085CA 85CA  1E 00               ld e,$00
+085CC 85CC  19                  add hl,de
+085CD 85CD  D1                  pop de
+085CE 85CE  C9                  ret
+085CF 85CF  D6 80               sub $80
+085D1 85D1  28 03               jr z,$85D6
+085D3 85D3  DD 86 05            add a,(ix+5)
+085D6 85D6  21 58 8A            ld hl,$8A58
+085D9 85D9  08                  ex af,af'
+085DA 85DA  28 03               jr z,$85DF
+085DC 85DC  21 EA 8A            ld hl,$8AEA
+085DF 85DF  08                  ex af,af'
+085E0 85E0  4F                  ld c,a
+085E1 85E1  06 00               ld b,$00
+085E3 85E3  09                  add hl,bc
+085E4 85E4  09                  add hl,bc
+085E5 85E5  C9                  ret
+085E6 85E6  21 FC 85            ld hl,$85FC
+085E9 85E9  E5                  push hl
+085EA 85EA  D6 EC               sub $EC
+085EC 85EC  DA 8D 86            jp c,$868D
+085EF 85EF  21 00 86            ld hl,$8600
+085F2 85F2  87                  add a,a
+085F3 85F3  4F                  ld c,a
+085F4 85F4  06 00               ld b,$00
+085F6 85F6  09                  add hl,bc
+085F7 85F7  4E                  ld c,(hl)
+085F8 85F8  23                  inc hl
+085F9 85F9  66                  ld h,(hl)
+085FA 85FA  69                  ld l,c
+085FB 85FB  E9                  jp (hl)
+08628 8628  08                  ex af,af'
+08629 8629  20 05               jr nz,$8630
+0862B 862B  08                  ex af,af'
+0862C 862C  1A                  ld a,(de)
+0862D 862D  13                  inc de
+0862E 862E  18 03               jr $8633
+08630 8630  08                  ex af,af'
+08631 8631  13                  inc de
+08632 8632  1A                  ld a,(de)
+08633 8633  DD 86 02            add a,(ix+2)
+08636 8636  DD 77 02            ld (ix+2),a
+08639 8639  C9                  ret
+0863A 863A  3A 6A DE            ld a,($DE6A)
+0863D 863D  B7                  or a
+0863E 863E  C0                  ret nz
+0863F 863F  1A                  ld a,(de)
+08640 8640  DD 86 08            add a,(ix+8)
+08643 8643  C3 94 86            jp $8694
+08646 8646  DD 7E 01            ld a,(ix+1)
+08649 8649  C6 10               add a,$10
+0864B 864B  D3 F0               out ($F0),a
+0864D 864D  62                  ld h,d
+0864E 864E  6B                  ld l,e
+0864F 864F  06 08               ld b,$08
+08651 8651  AF                  xor a
+08652 8652  0E F1               ld c,$F1
+08654 8654  ED 79               out (c),a
+08656 8656  CD 83 88            call $8883
+08659 8659  D3 F0               out ($F0),a
+0865B 865B  3C                  inc a
+0865C 865C  CD 83 88            call $8883
+0865F 865F  ED A3               outi
+08661 8661  20 F3               jr nz,$8656
+08663 8663  54                  ld d,h
+08664 8664  5D                  ld e,l
+08665 8665  1B                  dec de
+08666 8666  C9                  ret
+08667 8667  3A 6A DE            ld a,($DE6A)
+0866A 866A  B7                  or a
+0866B 866B  C0                  ret nz
+0866C 866C  3A 60 DE            ld a,($DE60)
+0866F 866F  B7                  or a
+08670 8670  C8                  ret z
+08671 8671  1A                  ld a,(de)
+08672 8672  DD 86 08            add a,(ix+8)
+08675 8675  DD 77 08            ld (ix+8),a
+08678 8678  C3 9E 86            jp $869E
+0867B 867B  08                  ex af,af'
+0867C 867C  20 05               jr nz,$8683
+0867E 867E  08                  ex af,af'
+0867F 867F  1A                  ld a,(de)
+08680 8680  13                  inc de
+08681 8681  18 03               jr $8686
+08683 8683  08                  ex af,af'
+08684 8684  13                  inc de
+08685 8685  1A                  ld a,(de)
+08686 8686  DD 86 05            add a,(ix+5)
+08689 8689  DD 77 05            ld (ix+5),a
+0868C 868C  C9                  ret
+0868D 868D  1B                  dec de
+0868E 868E  3A 6A DE            ld a,($DE6A)
+08691 8691  B7                  or a
+08692 8692  C0                  ret nz
+08693 8693  1A                  ld a,(de)
+08694 8694  E6 0F               and $0F
+08696 8696  DD 77 08            ld (ix+8),a
+08699 8699  DD CB 00 56         bit 2,(ix+0)
+0869D 869D  C0                  ret nz
+0869E 869E  08                  ex af,af'
+0869F 869F  C2 A6 86            jp nz,$86A6
+086A2 86A2  08                  ex af,af'
+086A3 86A3  C3 4B 8A            jp $8A4B
+086A6 86A6  08                  ex af,af'
+086A7 86A7  C3 72 84            jp $8472
+086AA 86AA  1A                  ld a,(de)
+086AB 86AB  F6 E0               or $E0
+086AD 86AD  D3 7F               out ($7F),a
+086AF 86AF  F6 FC               or $FC
+086B1 86B1  3C                  inc a
+086B2 86B2  20 05               jr nz,$86B9
+086B4 86B4  DD CB 00 B6         res 6,(ix+0)
+086B8 86B8  C9                  ret
+086B9 86B9  DD CB 00 F6         set 6,(ix+0)
+086BD 86BD  21 EF DE            ld hl,$DEEF
+086C0 86C0  CB 96               res 2,(hl)
+086C2 86C2  C9                  ret
+086C3 86C3  08                  ex af,af'
+086C4 86C4  20 0A               jr nz,$86D0
+086C6 86C6  08                  ex af,af'
+086C7 86C7  1A                  ld a,(de)
+086C8 86C8  13                  inc de
+086C9 86C9  FE 80               cp $80
+086CB 86CB  C8                  ret z
+086CC 86CC  DD 77 07            ld (ix+7),a
+086CF 86CF  C9                  ret
+086D0 86D0  08                  ex af,af'
+086D1 86D1  13                  inc de
+086D2 86D2  3A 6A DE            ld a,($DE6A)
+086D5 86D5  B7                  or a
+086D6 86D6  C0                  ret nz
+086D7 86D7  1A                  ld a,(de)
+086D8 86D8  FE 04               cp $04
+086DA 86DA  C8                  ret z
+086DB 86DB  DD 77 07            ld (ix+7),a
+086DE 86DE  C3 72 84            jp $8472
+086E1 86E1  1A                  ld a,(de)
+086E2 86E2  DD 77 06            ld (ix+6),a
+086E5 86E5  C9                  ret
+086E6 86E6  EB                  ex de,hl
+086E7 86E7  5E                  ld e,(hl)
+086E8 86E8  23                  inc hl
+086E9 86E9  56                  ld d,(hl)
+086EA 86EA  1B                  dec de
+086EB 86EB  C9                  ret
+086EC 86EC  1A                  ld a,(de)
+086ED 86ED  FE 01               cp $01
+086EF 86EF  28 1E               jr z,$870F
+086F1 86F1  DD 7E 17            ld a,(ix+23)
+086F4 86F4  DD 77 05            ld (ix+5),a
+086F7 86F7  DD 7E 1B            ld a,(ix+27)
+086FA 86FA  DD 77 08            ld (ix+8),a
+086FD 86FD  DD CB 00 AE         res 5,(ix+0)
+08701 8701  3A 60 DE            ld a,($DE60)
+08704 8704  B7                  or a
+08705 8705  C8                  ret z
+08706 8706  DD 7E 16            ld a,(ix+22)
+08709 8709  DD 77 07            ld (ix+7),a
+0870C 870C  C3 72 84            jp $8472
+0870F 870F  DD CB 00 EE         set 5,(ix+0)
+08713 8713  DD 7E 05            ld a,(ix+5)
+08716 8716  DD 77 17            ld (ix+23),a
+08719 8719  AF                  xor a
+0871A 871A  DD 77 05            ld (ix+5),a
+0871D 871D  DD 7E 08            ld a,(ix+8)
+08720 8720  DD 77 1B            ld (ix+27),a
+08723 8723  DD 36 08 03         ld (ix+8),$03
+08727 8727  3A 60 DE            ld a,($DE60)
+0872A 872A  B7                  or a
+0872B 872B  C8                  ret z
+0872C 872C  3E 12               ld a,$12
+0872E 872E  DD 77 05            ld (ix+5),a
+08731 8731  DD 7E 07            ld a,(ix+7)
+08734 8734  DD 77 16            ld (ix+22),a
+08737 8737  DD 36 07 53         ld (ix+7),$53
+0873B 873B  C3 72 84            jp $8472
+0873E 873E  AF                  xor a
+0873F 873F  32 67 DE            ld ($DE67),a
+08742 8742  DD 77 00            ld (ix+0),a
+08745 8745  08                  ex af,af'
+08746 8746  C2 8B 87            jp nz,$878B
+08749 8749  08                  ex af,af'
+0874A 874A  DD 7E 01            ld a,(ix+1)
+0874D 874D  C6 1F               add a,$1F
+0874F 874F  D3 7F               out ($7F),a
+08751 8751  FE DF               cp $DF
+08753 8753  D2 6F 87            jp nc,$876F
+08756 8756  FE 9F               cp $9F
+08758 8758  C2 65 87            jp nz,$8765
+0875B 875B  21 AF DE            ld hl,$DEAF
+0875E 875E  CB 96               res 2,(hl)
+08760 8760  21 C2 DE            ld hl,$DEC2
+08763 8763  18 20               jr $8785
+08765 8765  21 CF DE            ld hl,$DECF
+08768 8768  CB 96               res 2,(hl)
+0876A 876A  21 E2 DE            ld hl,$DEE2
+0876D 876D  18 16               jr $8785
+0876F 876F  21 0F DF            ld hl,$DF0F
+08772 8772  CB 96               res 2,(hl)
+08774 8774  3E DF               ld a,$DF
+08776 8776  D3 7F               out ($7F),a
+08778 8778  3A 68 DE            ld a,($DE68)
+0877B 877B  D3 7F               out ($7F),a
+0877D 877D  21 EF DE            ld hl,$DEEF
+08780 8780  CB 96               res 2,(hl)
+08782 8782  21 02 DF            ld hl,$DF02
+08785 8785  3E 1F               ld a,$1F
+08787 8787  77                  ld (hl),a
+08788 8788  E1                  pop hl
+08789 8789  E1                  pop hl
+0878A 878A  C9                  ret
+0878B 878B  08                  ex af,af'
+0878C 878C  DD 7E 01            ld a,(ix+1)
+0878F 878F  C6 10               add a,$10
+08791 8791  CD 84 81            call $8184
+08794 8794  DD 7E 01            ld a,(ix+1)
+08797 8797  FE 14               cp $14
+08799 8799  20 1F               jr nz,$87BA
+0879B 879B  21 EF DE            ld hl,$DEEF
+0879E 879E  7E                  ld a,(hl)
+0879F 879F  B7                  or a
+087A0 87A0  F2 88 87            jp p,$8788
+087A3 87A3  CB 96               res 2,(hl)
+087A5 87A5  3E 34               ld a,$34
+087A7 87A7  D3 F0               out ($F0),a
+087A9 87A9  21 F6 DE            ld hl,$DEF6
+087AC 87AC  7E                  ld a,(hl)
+087AD 87AD  E6 F0               and $F0
+087AF 87AF  4F                  ld c,a
+087B0 87B0  23                  inc hl
+087B1 87B1  7E                  ld a,(hl)
+087B2 87B2  E6 0F               and $0F
+087B4 87B4  B1                  or c
+087B5 87B5  D3 F1               out ($F1),a
+087B7 87B7  C3 88 87            jp $8788
+087BA 87BA  C3 88 87            jp $8788
+087BD 87BD  1A                  ld a,(de)
+087BE 87BE  4F                  ld c,a
+087BF 87BF  13                  inc de
+087C0 87C0  1A                  ld a,(de)
+087C1 87C1  47                  ld b,a
+087C2 87C2  C5                  push bc
+087C3 87C3  DD E5               push ix
+087C5 87C5  E1                  pop hl
+087C6 87C6  DD 35 09            dec (ix+9)
+087C9 87C9  DD 4E 09            ld c,(ix+9)
+087CC 87CC  DD 35 09            dec (ix+9)
+087CF 87CF  06 00               ld b,$00
+087D1 87D1  09                  add hl,bc
+087D2 87D2  72                  ld (hl),d
+087D3 87D3  2B                  dec hl
+087D4 87D4  73                  ld (hl),e
+087D5 87D5  D1                  pop de
+087D6 87D6  1B                  dec de
+087D7 87D7  C9                  ret
+087D8 87D8  DD E5               push ix
+087DA 87DA  E1                  pop hl
+087DB 87DB  DD 4E 09            ld c,(ix+9)
+087DE 87DE  06 00               ld b,$00
+087E0 87E0  09                  add hl,bc
+087E1 87E1  5E                  ld e,(hl)
+087E2 87E2  23                  inc hl
+087E3 87E3  56                  ld d,(hl)
+087E4 87E4  DD 34 09            inc (ix+9)
+087E7 87E7  DD 34 09            inc (ix+9)
+087EA 87EA  C9                  ret
+087EB 87EB  1A                  ld a,(de)
+087EC 87EC  13                  inc de
+087ED 87ED  C6 18               add a,$18
+087EF 87EF  4F                  ld c,a
+087F0 87F0  06 00               ld b,$00
+087F2 87F2  DD E5               push ix
+087F4 87F4  E1                  pop hl
+087F5 87F5  09                  add hl,bc
+087F6 87F6  7E                  ld a,(hl)
+087F7 87F7  B7                  or a
+087F8 87F8  20 02               jr nz,$87FC
+087FA 87FA  1A                  ld a,(de)
+087FB 87FB  77                  ld (hl),a
+087FC 87FC  13                  inc de
+087FD 87FD  35                  dec (hl)
+087FE 87FE  C2 E6 86            jp nz,$86E6
+08801 8801  13                  inc de
+08802 8802  C9                  ret
+08883 8883  00                  nop
+08884 8884  00                  nop
+08885 8885  00                  nop
+08886 8886  E5                  push hl
+08887 8887  E1                  pop hl
+08888 8888  C9                  ret
+08889 8889  DD 34 0B            inc (ix+11)
+0888C 888C  DD 7E 0A            ld a,(ix+10)
+0888F 888F  DD 96 0B            sub (ix+11)
+08892 8892  CC B2 88            call z,$88B2
+08895 8895  DD CB 00 56         bit 2,(ix+0)
+08899 8899  C0                  ret nz
+0889A 889A  DD CB 13 66         bit 4,(ix+19)
+0889E 889E  C0                  ret nz
+0889F 889F  DD 4E 07            ld c,(ix+7)
+088A2 88A2  0D                  dec c
+088A3 88A3  F8                  ret m
+088A4 88A4  21 7D 8B            ld hl,$8B7D
+088A7 88A7  CD 9D 84            call $849D
+088AA 88AA  CD 13 8A            call $8A13
+088AD 88AD  F6 F0               or $F0
+088AF 88AF  D3 7F               out ($7F),a
+088B1 88B1  C9                  ret
+088B2 88B2  DD 5E 03            ld e,(ix+3)
+088B5 88B5  DD 56 04            ld d,(ix+4)
+088B8 88B8  1A                  ld a,(de)
+088B9 88B9  13                  inc de
+088BA 88BA  FE E0               cp $E0
+088BC 88BC  D2 DC 88            jp nc,$88DC
+088BF 88BF  FE 80               cp $80
+088C1 88C1  DA 43 85            jp c,$8543
+088C4 88C4  CD E6 88            call $88E6
+088C7 88C7  1A                  ld a,(de)
+088C8 88C8  13                  inc de
+088C9 88C9  FE 80               cp $80
+088CB 88CB  DA 43 85            jp c,$8543
+088CE 88CE  1B                  dec de
+088CF 88CF  DD 7E 15            ld a,(ix+21)
+088D2 88D2  DD 77 0A            ld (ix+10),a
+088D5 88D5  C3 53 85            jp $8553
+088DC 88DC  21 E2 88            ld hl,$88E2
+088DF 88DF  C3 E9 85            jp $85E9
+088E6 88E6  CB 5F               bit 3,a
+088E8 88E8  20 1E               jr nz,$8908
+088EA 88EA  CB 6F               bit 5,a
+088EC 88EC  20 23               jr nz,$8911
+088EE 88EE  CB 4F               bit 1,a
+088F0 88F0  20 1F               jr nz,$8911
+088F2 88F2  CB 47               bit 0,a
+088F4 88F4  20 2B               jr nz,$8921
+088F6 88F6  CB 57               bit 2,a
+088F8 88F8  20 27               jr nz,$8921
+088FA 88FA  DD CB 00 56         bit 2,(ix+0)
+088FE 88FE  C0                  ret nz
+088FF 88FF  DD 36 07 00         ld (ix+7),$00
+08903 8903  3E FF               ld a,$FF
+08905 8905  D3 7F               out ($7F),a
+08907 8907  C9                  ret
+08908 8908  08                  ex af,af'
+08909 8909  3E 02               ld a,$02
+0890B 890B  06 02               ld b,$02
+0890D 890D  0E E5               ld c,$E5
+0890F 890F  18 1D               jr $892E
+08911 8911  0E 04               ld c,$04
+08913 8913  CB 47               bit 0,a
+08915 8915  20 02               jr nz,$8919
+08917 8917  0E 03               ld c,$03
+08919 8919  08                  ex af,af'
+0891A 891A  79                  ld a,c
+0891B 891B  06 03               ld b,$03
+0891D 891D  0E E4               ld c,$E4
+0891F 891F  18 0D               jr $892E
+08921 8921  0E E4               ld c,$E4
+08923 8923  CB 57               bit 2,a
+08925 8925  28 02               jr z,$8929
+08927 8927  0E E6               ld c,$E6
+08929 8929  08                  ex af,af'
+0892A 892A  3E 01               ld a,$01
+0892C 892C  06 04               ld b,$04
+0892E 892E  DD 77 07            ld (ix+7),a
+08931 8931  08                  ex af,af'
+08932 8932  CB 57               bit 2,a
+08934 8934  28 02               jr z,$8938
+08936 8936  05                  dec b
+08937 8937  05                  dec b
+08938 8938  DD 70 08            ld (ix+8),b
+0893B 893B  79                  ld a,c
+0893C 893C  32 68 DE            ld ($DE68),a
+0893F 893F  DD CB 00 56         bit 2,(ix+0)
+08943 8943  C0                  ret nz
+08944 8944  D3 7F               out ($7F),a
+08946 8946  C9                  ret
+08947 8947  DD 34 0B            inc (ix+11)
+0894A 894A  DD 7E 0A            ld a,(ix+10)
+0894D 894D  DD 96 0B            sub (ix+11)
+08950 8950  CC F1 84            call z,$84F1
+08953 8953  32 6D DE            ld ($DE6D),a
+08956 8956  FE 80               cp $80
+08958 8958  CA 82 89            jp z,$8982
+0895B 895B  DD CB 00 6E         bit 5,(ix+0)
+0895F 895F  CA 82 89            jp z,$8982
+08962 8962  D9                  exx
+08963 8963  36 80               ld (hl),$80
+08965 8965  D9                  exx
+08966 8966  DD 7E 12            ld a,(ix+18)
+08969 8969  CB 7F               bit 7,a
+0896B 896B  28 0A               jr z,$8977
+0896D 896D  DD 86 0E            add a,(ix+14)
+08970 8970  38 0D               jr c,$897F
+08972 8972  DD 35 0F            dec (ix+15)
+08975 8975  18 08               jr $897F
+08977 8977  DD 86 0E            add a,(ix+14)
+0897A 897A  30 03               jr nc,$897F
+0897C 897C  DD 34 0F            inc (ix+15)
+0897F 897F  DD 77 0E            ld (ix+14),a
+08982 8982  DD CB 00 56         bit 2,(ix+0)
+08986 8986  C0                  ret nz
+08987 8987  DD 7E 13            ld a,(ix+19)
+0898A 898A  FE 1F               cp $1F
+0898C 898C  C8                  ret z
+0898D 898D  18 0B               jr $899A
+0898F 898F  3E 1F               ld a,$1F
+08991 8991  DD 77 13            ld (ix+19),a
+08994 8994  DD 86 01            add a,(ix+1)
+08997 8997  D3 7F               out ($7F),a
+08999 8999  C9                  ret
+0899A 899A  DD 7E 13            ld a,(ix+19)
+0899D 899D  FE FF               cp $FF
+0899F 899F  CA B9 89            jp z,$89B9
+089A2 89A2  DD 4E 07            ld c,(ix+7)
+089A5 89A5  0D                  dec c
+089A6 89A6  FA B9 89            jp m,$89B9
+089A9 89A9  21 7D 8B            ld hl,$8B7D
+089AC 89AC  CD 9D 84            call $849D
+089AF 89AF  CD 13 8A            call $8A13
+089B2 89B2  DD B6 01            or (ix+1)
+089B5 89B5  C6 10               add a,$10
+089B7 89B7  D3 7F               out ($7F),a
+089B9 89B9  3A 6D DE            ld a,($DE6D)
+089BC 89BC  B7                  or a
+089BD 89BD  FA CD 89            jp m,$89CD
+089C0 89C0  DD CB 14 7E         bit 7,(ix+20)
+089C4 89C4  C0                  ret nz
+089C5 89C5  DD 4E 06            ld c,(ix+6)
+089C8 89C8  0D                  dec c
+089C9 89C9  F2 D1 89            jp p,$89D1
+089CC 89CC  C9                  ret
+089CD 89CD  DD 4E 06            ld c,(ix+6)
+089D0 89D0  0D                  dec c
+089D1 89D1  DD 6E 0E            ld ixl,(ix+14)
+089D4 89D4  DD 66 0F            ld ixh,(ix+15)
+089D7 89D7  FA F0 89            jp m,$89F0
+089DA 89DA  7D                  ld a,l
+089DB 89DB  B4                  or h
+089DC 89DC  20 08               jr nz,$89E6
+089DE 89DE  3E FF               ld a,$FF
+089E0 89E0  DD 77 14            ld (ix+20),a
+089E3 89E3  C3 F0 89            jp $89F0
+089E6 89E6  EB                  ex de,hl
+089E7 89E7  21 2F 8C            ld hl,$8C2F
+089EA 89EA  CD 9D 84            call $849D
+089ED 89ED  CD A9 84            call $84A9
+089F0 89F0  DD CB 00 76         bit 6,(ix+0)
+089F4 89F4  C0                  ret nz
+089F5 89F5  DD 7E 01            ld a,(ix+1)
+089F8 89F8  FE E0               cp $E0
+089FA 89FA  20 02               jr nz,$89FE
+089FC 89FC  3E C0               ld a,$C0
+089FE 89FE  4F                  ld c,a
+089FF 89FF  7D                  ld a,l
+08A00 8A00  E6 0F               and $0F
+08A02 8A02  B1                  or c
+08A03 8A03  D3 7F               out ($7F),a
+08A05 8A05  7D                  ld a,l
+08A06 8A06  E6 F0               and $F0
+08A08 8A08  B4                  or h
+08A09 8A09  0F                  rrca
+08A0A 8A0A  0F                  rrca
+08A0B 8A0B  0F                  rrca
+08A0C 8A0C  0F                  rrca
+08A0D 8A0D  D3 7F               out ($7F),a
+08A0F 8A0F  C9                  ret
+08A10 8A10  DD 77 0C            ld (ix+12),a
+08A13 8A13  E5                  push hl
+08A14 8A14  DD 4E 0C            ld c,(ix+12)
+08A17 8A17  06 00               ld b,$00
+08A19 8A19  09                  add hl,bc
+08A1A 8A1A  4D                  ld c,l
+08A1B 8A1B  44                  ld b,h
+08A1C 8A1C  E1                  pop hl
+08A1D 8A1D  0A                  ld a,(bc)
+08A1E 8A1E  CB 7F               bit 7,a
+08A20 8A20  28 1D               jr z,$8A3F
+08A22 8A22  FE 82               cp $82
+08A24 8A24  28 0C               jr z,$8A32
+08A26 8A26  FE 81               cp $81
+08A28 8A28  28 0F               jr z,$8A39
+08A2A 8A2A  FE 80               cp $80
+08A2C 8A2C  28 08               jr z,$8A36
+08A2E 8A2E  03                  inc bc
+08A2F 8A2F  0A                  ld a,(bc)
+08A30 8A30  18 DE               jr $8A10
+08A32 8A32  E1                  pop hl
+08A33 8A33  C3 8F 89            jp $898F
+08A36 8A36  AF                  xor a
+08A37 8A37  18 D7               jr $8A10
+08A39 8A39  DD 36 13 FF         ld (ix+19),$FF
+08A3D 8A3D  E1                  pop hl
+08A3E 8A3E  C9                  ret
+08A3F 8A3F  DD 34 0C            inc (ix+12)
+08A42 8A42  DD 86 08            add a,(ix+8)
+08A45 8A45  CB 67               bit 4,a
+08A47 8A47  C8                  ret z
+08A48 8A48  3E 0F               ld a,$0F
+08A4A 8A4A  C9                  ret
+08A4B 8A4B  DD 7E 08            ld a,(ix+8)
+08A4E 8A4E  E6 0F               and $0F
+08A50 8A50  DD B6 01            or (ix+1)
+08A53 8A53  C6 10               add a,$10
+08A55 8A55  D3 7F               out ($7F),a
+08A57 8A57  C9                  ret
+
+; ANCHORED NON-CODE TABLES (byte digests in regions.json)
+; 08600-08627 (40 bytes): 20 little-endian event-handler addresses, indexed at $85EF
+08600 DATA  8E 86 EC 86 28 86 3A 86 7B 86 7B 86 3E 87 AA 86
+08610 DATA  E1 86 C3 86 E6 86 EB 87 BD 87 D8 87 8D 86 7B 86
+08620 DATA  3E 87 3E 87 67 86 46 86
+; 08A58-08B7B (292 bytes): two ROM address-calculation lookup arrays referenced at $85D6/$85DC
+08A58 DATA  00 00 FF 03 C7 03 90 03 5D 03 2D 03 FF 02 D4 02
+08A68 DATA  AB 02 85 02 61 02 3F 02 1E 02 00 02 E3 01 C8 01
+08A78 DATA  AF 01 96 01 80 01 6A 01 56 01 43 01 30 01 1F 01
+08A88 DATA  0F 01 00 01 F2 00 E4 00 D7 00 CB 00 C0 00 B5 00
+08A98 DATA  AB 00 A1 00 98 00 90 00 88 00 80 00 79 00 72 00
+08AA8 DATA  6C 00 66 00 60 00 5B 00 55 00 51 00 4C 00 48 00
+08AB8 DATA  44 00 40 00 3C 00 39 00 36 00 33 00 30 00 2D 00
+08AC8 DATA  2B 00 28 00 26 00 24 00 22 00 20 00 1E 00 1C 00
+08AD8 DATA  1B 00 19 00 18 00 16 00 15 00 14 00 13 00 12 00
+08AE8 DATA  11 00 00 00 57 11 6B 11 81 11 98 11 B0 11 CA 11
+08AF8 DATA  E5 11 01 13 10 13 20 13 31 13 43 13 57 13 6B 13
+08B08 DATA  81 13 98 13 B0 13 CA 13 E5 13 01 15 10 15 20 15
+08B18 DATA  31 15 43 15 57 15 6B 15 81 15 98 15 B0 15 CA 15
+08B28 DATA  E5 15 01 17 10 17 20 17 31 17 43 17 57 17 6B 17
+08B38 DATA  81 17 98 17 B0 17 CA 17 E5 17 01 19 10 19 20 19
+08B48 DATA  31 19 43 19 57 19 6B 19 81 19 98 19 B0 19 CA 19
+08B58 DATA  E5 19 01 1B 10 1B 20 1B 31 1B 43 1B 57 1B 6B 1B
+08B68 DATA  81 1B 98 1B B0 1B CA 1B E5 1B 01 1D 10 1D 20 1D
+08B78 DATA  31 1D 43 1D
+; 08B7C-08C2E (179 bytes): one marker, 17 pointers, and indexed audio modulation/envelope streams; subformat unresolved
+08B7C DATA  FF 9F 8B A2 8B AB 8B AF 8B B4 8B BF 8B CC 8B D5
+08B8C DATA  8B E4 8B F0 8B F5 8B 00 8C 07 8C 13 8C 1D 8C 21
+08B9C DATA  8C 2A 8C 02 06 82 00 01 02 04 05 06 07 0A 82 03
+08BAC DATA  02 08 82 02 00 05 08 82 02 01 00 01 02 02 03 03
+08BBC DATA  04 04 81 01 00 01 02 03 03 04 04 05 05 06 06 82
+08BCC DATA  04 04 03 03 02 02 01 01 82 00 00 01 01 02 02 02
+08BDC DATA  03 03 03 03 04 04 05 81 07 04 00 01 01 02 04 03
+08BEC DATA  02 02 83 04 02 00 01 02 81 04 01 00 01 03 01 02
+08BFC DATA  03 04 05 81 07 00 07 00 07 00 80 04 02 00 03 02
+08C0C DATA  01 00 00 01 02 83 04 04 00 00 01 01 02 03 02 83
+08C1C DATA  03 03 03 03 82 04 04 04 04 04 04 04 04 82 00 03
+08C2C DATA  06 09 82
+; 08C2F-08C8E (96 bytes): five pointers and associated modulation bytes referenced at $842C
+08C2F DATA  39 8C 52 8C 68 8C 80 8C 89 8C 02 01 01 01 01 01
+08C3F DATA  01 00 00 00 01 01 01 00 00 00 01 01 00 00 00 00
+08C4F DATA  FF FF FE FD FD FC FE FF 00 00 00 01 02 03 02 01
+08C5F DATA  00 00 FF FF FE FE FD 83 1D 03 01 01 01 01 01 00
+08C6F DATA  00 FF FE FD FD FE FF 00 01 02 03 04 03 02 01 83
+08C7F DATA  0D FA FF 00 06 00 00 03 83 04 57 18 11 00 3F 01
+; 08C8F-08CFD (111 bytes): one $80 marker plus 55 little-endian song pointers; destination mapper state unresolved
+08C8F DATA  80 77 AA 9C AA C1 AA E6 AA 0B AB 30 AB 55 AB 7A
+08C9F DATA  AB 9F AB C4 AB E9 AB 0E AC 33 AC 58 AC 7D AC A2
+08CAF DATA  AC C7 AC EC AC 11 AD 36 AD 5B AD 77 AA 77 AA 77
+08CBF DATA  AA 77 AA 77 AA 77 AA 77 AA 77 AA 77 AA 77 AA 19
+08CCF DATA  B3 2F B3 5A B3 83 B3 B2 B3 E2 B3 01 B4 22 B4 53
+08CDF DATA  B4 70 B4 97 B4 AF B4 E8 B4 04 B5 54 B5 74 B5 8C
+08CEF DATA  B5 B1 B5 D2 B5 F1 B5 24 B6 77 B6 A2 B6 CA B6
+; 08D02-08D3F (62 bytes): observed prefix of the audio priority lookup; full extent unresolved
+08D02 DATA  80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 80
+08D12 DATA  80 80 80 80 80 80 80 80 80 80 80 80 80 80 80 60
+08D22 DATA  60 68 50 70 70 70 70 60 70 70 70 70 70 80 70 70
+08D32 DATA  68 60 60 68 60 70 60 00 80 80 80 80 80 80

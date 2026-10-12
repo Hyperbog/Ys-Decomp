@@ -1,0 +1,273 @@
+; Phase 3: ROM-backed, explicit bounded ranges. Not an assembled ROM.
+; Offset  CPU     Bytes              Decoded Z80 instruction
+
+; IM1 $01AC-dispatch target implementations, including bank 3 selection | bank 0 | file 001B4-001EA
+001B4  01B4  CD 27 04           call $0427
+001B7  01B7  C3 E8 03           jp $03E8
+001BA  01BA  CD 27 04           call $0427
+001BD  01BD  CD F9 27           call $27F9
+001C0  01C0  3A 98 C1           ld a,($C198)
+001C3  01C3  B7                 or a
+001C4  01C4  28 08              jr z,$01CE
+001C6  01C6  3E 07              ld a,$07
+001C8  01C8  32 FF FF           ld ($FFFF),a
+001CB  01CB  C3 19 88           jp $8819
+001CE  01CE  CD 64 28           call $2864
+001D1  01D1  CD 99 28           call $2899
+001D4  01D4  C3 06 04           jp $0406
+001D7  01D7  CD 27 04           call $0427
+001DA  01DA  3E 03              ld a,$03
+001DC  01DC  32 FF FF           ld ($FFFF),a
+001DF  01DF  3A 05 C1           ld a,($C105)
+001E2  01E2  21 EB 01           ld hl,$01EB
+001E5  01E5  CF                 rst $0008
+001E6  01E6  AF                 xor a
+001E7  01E7  32 05 C1           ld ($C105),a
+001EA  01EA  C9                 ret
+
+; empty substate target and initial tile transfer routine | bank 0 | file 001FD-0025F
+001FD  01FD  C9                 ret
+001FE  01FE  2A 0A C1           ld hl,($C10A)
+00201  0201  ED 5B 08 C1        ld de,($C108)
+00205  0205  42                 ld b,d
+00206  0206  3A 0C C1           ld a,($C10C)
+00209  0209  B7                 or a
+0020A  020A  28 2C              jr z,$0238
+0020C  020C  3C                 inc a
+0020D  020D  BB                 cp e
+0020E  020E  28 50              jr z,$0260
+00210  0210  CD A9 03           call $03A9
+00213  0213  78                 ld a,b
+00214  0214  BA                 cp d
+00215  0215  28 0E              jr z,$0225
+00217  0217  FE 01              cp $01
+00219  0219  28 14              jr z,$022F
+0021B  021B  3E E7              ld a,$E7
+0021D  021D  D3 BE              out ($BE),a
+0021F  021F  3E 18              ld a,$18
+00221  0221  D3 BE              out ($BE),a
+00223  0223  10 EB              djnz $0210
+00225  0225  3E EA              ld a,$EA
+00227  0227  D3 BE              out ($BE),a
+00229  0229  3E 18              ld a,$18
+0022B  022B  D3 BE              out ($BE),a
+0022D  022D  10 E1              djnz $0210
+0022F  022F  3E EA              ld a,$EA
+00231  0231  D3 BE              out ($BE),a
+00233  0233  3E 1A              ld a,$1A
+00235  0235  D3 BE              out ($BE),a
+00237  0237  C9                 ret
+00238  0238  CD A9 03           call $03A9
+0023B  023B  78                 ld a,b
+0023C  023C  BA                 cp d
+0023D  023D  28 0E              jr z,$024D
+0023F  023F  FE 01              cp $01
+00241  0241  28 14              jr z,$0257
+00243  0243  3E E9              ld a,$E9
+00245  0245  D3 BE              out ($BE),a
+00247  0247  3E 18              ld a,$18
+00249  0249  D3 BE              out ($BE),a
+0024B  024B  10 EB              djnz $0238
+0024D  024D  3E E8              ld a,$E8
+0024F  024F  D3 BE              out ($BE),a
+00251  0251  3E 18              ld a,$18
+00253  0253  D3 BE              out ($BE),a
+00255  0255  10 E1              djnz $0238
+00257  0257  3E E8              ld a,$E8
+00259  0259  D3 BE              out ($BE),a
+0025B  025B  3E 1A              ld a,$1A
+0025D  025D  D3 BE              out ($BE),a
+0025F  025F  C9                 ret
+
+; interrupt VDP upload and staging paths | bank 0 | file 003B8-00405
+003B8  03B8  CD 27 04           call $0427
+003BB  03BB  CD 64 28           call $2864
+003BE  03BE  CD 99 28           call $2899
+003C1  03C1  3A 0E C1           ld a,($C10E)
+003C4  03C4  B7                 or a
+003C5  03C5  C4 89 03           call nz,$0389
+003C8  03C8  AF                 xor a
+003C9  03C9  32 0E C1           ld ($C10E),a
+003CC  03CC  3A 0D C1           ld a,($C10D)
+003CF  03CF  B7                 or a
+003D0  03D0  C8                 ret z
+003D1  03D1  21 40 C0           ld hl,$C040
+003D4  03D4  0E BF              ld c,$BF
+003D6  03D6  ED A3              outi
+003D8  03D8  ED A3              outi
+003DA  03DA  0D                 dec c
+003DB  03DB  ED A3              outi
+003DD  03DD  ED A3              outi
+003DF  03DF  0C                 inc c
+003E0  03E0  3D                 dec a
+003E1  03E1  C2 D6 03           jp nz,$03D6
+003E4  03E4  32 0D C1           ld ($C10D),a
+003E7  03E7  C9                 ret
+003E8  03E8  3A 2C C0           ld a,($C02C)
+003EB  03EB  B7                 or a
+003EC  03EC  C8                 ret z
+003ED  03ED  AF                 xor a
+003EE  03EE  32 2C C0           ld ($C02C),a
+003F1  03F1  06 C0              ld b,$C0
+003F3  03F3  10 FE              djnz $03F3
+003F5  03F5  D3 BF              out ($BF),a
+003F7  03F7  3E C0              ld a,$C0
+003F9  03F9  D3 BF              out ($BF),a
+003FB  03FB  21 60 C1           ld hl,$C160
+003FE  03FE  01 BE 40           ld bc,$40BE
+00401  0401  ED A3              outi
+00403  0403  10 FC              djnz $0401
+00405  0405  C9                 ret
+
+; interrupt VDP transfer with temporary bank 3 and mapper restore | bank 0 | file 005F2-00623
+005F2  05F2  3A 37 C0           ld a,($C037)
+005F5  05F5  B7                 or a
+005F6  05F6  C8                 ret z
+005F7  05F7  3A FF FF           ld a,($FFFF)
+005FA  05FA  F5                 push af
+005FB  05FB  3A FC FF           ld a,($FFFC)
+005FE  05FE  F5                 push af
+005FF  05FF  3E 03              ld a,$03
+00601  0601  32 FF FF           ld ($FFFF),a
+00604  0604  AF                 xor a
+00605  0605  32 FC FF           ld ($FFFC),a
+00608  0608  32 37 C0           ld ($C037),a
+0060B  060B  D3 BF              out ($BF),a
+0060D  060D  3E 67              ld a,$67
+0060F  060F  D3 BF              out ($BF),a
+00611  0611  2A 35 C0           ld hl,($C035)
+00614  0614  01 BE 00           ld bc,$00BE
+00617  0617  ED A3              outi
+00619  0619  10 FC              djnz $0617
+0061B  061B  F1                 pop af
+0061C  061C  32 FC FF           ld ($FFFC),a
+0061F  061F  F1                 pop af
+00620  0620  32 FF FF           ld ($FFFF),a
+00623  0623  C9                 ret
+
+; bank 2 frame-update entry and first three helpers | bank 2 | file 08000-080F0
+08000  8000  D9                 exx
+08001  8001  3A 60 DE           ld a,($DE60)
+08004  8004  B7                 or a
+08005  8005  08                 ex af,af'
+08006  8006  21 6D DE           ld hl,$DE6D
+08009  8009  D9                 exx
+0800A  800A  CD 67 80           call $8067
+0800D  800D  CD 80 80           call $8080
+08010  8010  CD C0 80           call $80C0
+08013  8013  CD D9 81           call $81D9
+08016  8016  3A 60 DE           ld a,($DE60)
+08019  8019  B7                 or a
+0801A  801A  CA 42 80           jp z,$8042
+0801D  801D  DD 21 6F DE        ld ix,$DE6F
+08021  8021  06 08              ld b,$08
+08023  8023  C5                 push bc
+08024  8024  3E 03              ld a,$03
+08026  8026  B8                 cp b
+08027  8027  28 10              jr z,$8039
+08029  8029  DD CB 00 7E        bit 7,(ix+0)
+0802D  802D  C4 7F 83           call nz,$837F
+08030  8030  11 20 00           ld de,$0020
+08033  8033  DD 19              add ix,de
+08035  8035  C1                 pop bc
+08036  8036  10 EB              djnz $8023
+08038  8038  C9                 ret
+08039  8039  DD CB 00 7E        bit 7,(ix+0)
+0803D  803D  C4 29 83           call nz,$8329
+08040  8040  18 EE              jr $8030
+08042  8042  DD 21 AF DE        ld ix,$DEAF
+08046  8046  06 06              ld b,$06
+08048  8048  C5                 push bc
+08049  8049  3E 03              ld a,$03
+0804B  804B  B8                 cp b
+0804C  804C  28 10              jr z,$805E
+0804E  804E  DD CB 00 7E        bit 7,(ix+0)
+08052  8052  C4 47 89           call nz,$8947
+08055  8055  11 20 00           ld de,$0020
+08058  8058  DD 19              add ix,de
+0805A  805A  C1                 pop bc
+0805B  805B  10 EB              djnz $8048
+0805D  805D  C9                 ret
+0805E  805E  DD CB 00 7E        bit 7,(ix+0)
+08062  8062  C4 89 88           call nz,$8889
+08065  8065  18 EE              jr $8055
+08067  8067  21 61 DE           ld hl,$DE61
+0806A  806A  7E                 ld a,(hl)
+0806B  806B  B7                 or a
+0806C  806C  C8                 ret z
+0806D  806D  35                 dec (hl)
+0806E  806E  C0                 ret nz
+0806F  806F  3A 62 DE           ld a,($DE62)
+08072  8072  77                 ld (hl),a
+08073  8073  21 79 DE           ld hl,$DE79
+08076  8076  11 20 00           ld de,$0020
+08079  8079  06 06              ld b,$06
+0807B  807B  34                 inc (hl)
+0807C  807C  19                 add hl,de
+0807D  807D  10 FC              djnz $807B
+0807F  807F  C9                 ret
+08080  8080  11 64 DE           ld de,$DE64
+08083  8083  CD 8F 80           call $808F
+08086  8086  13                 inc de
+08087  8087  CD 8F 80           call $808F
+0808A  808A  13                 inc de
+0808B  808B  CD 8F 80           call $808F
+0808E  808E  C9                 ret
+0808F  808F  1A                 ld a,(de)
+08090  8090  CB 7F              bit 7,a
+08092  8092  C8                 ret z
+08093  8093  E6 7F              and $7F
+08095  8095  21 02 8D           ld hl,$8D02
+08098  8098  3D                 dec a
+08099  8099  06 00              ld b,$00
+0809B  809B  4F                 ld c,a
+0809C  809C  09                 add hl,bc
+0809D  809D  CB 7E              bit 7,(hl)
+0809F  809F  28 0C              jr z,$80AD
+080A1  80A1  1A                 ld a,(de)
+080A2  80A2  32 63 DE           ld ($DE63),a
+080A5  80A5  AF                 xor a
+080A6  80A6  12                 ld (de),a
+080A7  80A7  E1                 pop hl
+080A8  80A8  E1                 pop hl
+080A9  80A9  C3 13 80           jp $8013
+080AC  80AC  C9                 ret
+080AD  80AD  3A 67 DE           ld a,($DE67)
+080B0  80B0  BE                 cp (hl)
+080B1  80B1  28 02              jr z,$80B5
+080B3  80B3  30 08              jr nc,$80BD
+080B5  80B5  1A                 ld a,(de)
+080B6  80B6  32 63 DE           ld ($DE63),a
+080B9  80B9  7E                 ld a,(hl)
+080BA  80BA  32 67 DE           ld ($DE67),a
+080BD  80BD  AF                 xor a
+080BE  80BE  12                 ld (de),a
+080BF  80BF  C9                 ret
+080C0  80C0  3A 6A DE           ld a,($DE6A)
+080C3  80C3  B7                 or a
+080C4  80C4  C8                 ret z
+080C5  80C5  3A 6B DE           ld a,($DE6B)
+080C8  80C8  3D                 dec a
+080C9  80C9  28 04              jr z,$80CF
+080CB  80CB  32 6B DE           ld ($DE6B),a
+080CE  80CE  C9                 ret
+080CF  80CF  3A 6C DE           ld a,($DE6C)
+080D2  80D2  32 6B DE           ld ($DE6B),a
+080D5  80D5  3A 6A DE           ld a,($DE6A)
+080D8  80D8  3D                 dec a
+080D9  80D9  32 6A DE           ld ($DE6A),a
+080DC  80DC  CA 03 88           jp z,$8803
+080DF  80DF  21 77 DE           ld hl,$DE77
+080E2  80E2  11 20 00           ld de,$0020
+080E5  80E5  06 05              ld b,$05
+080E7  80E7  7E                 ld a,(hl)
+080E8  80E8  3C                 inc a
+080E9  80E9  FE 10              cp $10
+080EB  80EB  28 01              jr z,$80EE
+080ED  80ED  77                 ld (hl),a
+080EE  80EE  19                 add hl,de
+080EF  80EF  10 F6              djnz $80E7
+
+; data: 9-entry secondary dispatch table indexed by C105 at 01D7 (entry 0 -> 01FD (RET); entries 1..8 -> 01FE,0288,02B1,02C2,032A,0339,035D,0389; other indices unproven)
+001EB  ----  FD 01 FE 01 88 02 B1 02 C2 02 2A 03 39 03 5D 03 89 03
+
