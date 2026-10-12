@@ -1,0 +1,33 @@
+; Ys SMS: physical ROM bank 04, 16-KiB banking
+; Generated from ROM-checked mnemonic listings, not original bytes.
+; A matching build is not proof these paths execute at runtime.
+
+org $807C ; physical ROM $1007C
+    add a,a                   ; ROM $1007C (phase8/banked_code.lst)
+    add a,a                   ; ROM $1007D (phase8/banked_code.lst)
+    ld l,a                    ; ROM $1007E (phase8/banked_code.lst)
+    ld h,$80                  ; ROM $1007F (phase8/banked_code.lst)
+    ld a,(hl)                 ; ROM $10081 (phase8/banked_code.lst)
+    inc l                     ; ROM $10082 (phase8/banked_code.lst)
+    add a,(ix+17)             ; ROM $10083 (phase8/banked_code.lst)
+    ret nc                    ; ROM $10086 (phase8/banked_code.lst)
+    cp c                      ; ROM $10087 (phase8/banked_code.lst)
+    jr z,$8091                ; ROM $10088 (phase8/banked_code.lst)
+    ret nc                    ; ROM $1008A (phase8/banked_code.lst)
+    add a,(hl)                ; ROM $1008B (phase8/banked_code.lst)
+    jr c,$80A0                ; ROM $1008C (phase8/banked_code.lst)
+    cp b                      ; ROM $1008E (phase8/banked_code.lst)
+    jr c,$80A0                ; ROM $1008F (phase8/banked_code.lst)
+    inc l                     ; ROM $10091 (phase8/banked_code.lst)
+    ld a,(hl)                 ; ROM $10092 (phase8/banked_code.lst)
+    add a,(ix+16)             ; ROM $10093 (phase8/banked_code.lst)
+    ret nc                    ; ROM $10096 (phase8/banked_code.lst)
+    cp e                      ; ROM $10097 (phase8/banked_code.lst)
+    jr z,$80A0                ; ROM $10098 (phase8/banked_code.lst)
+    ret nc                    ; ROM $1009A (phase8/banked_code.lst)
+    inc l                     ; ROM $1009B (phase8/banked_code.lst)
+    add a,(hl)                ; ROM $1009C (phase8/banked_code.lst)
+    jr c,$80A0                ; ROM $1009D (phase8/banked_code.lst)
+    cp d                      ; ROM $1009F (phase8/banked_code.lst)
+    ccf                       ; ROM $100A0 (phase8/banked_code.lst)
+    ret                       ; ROM $100A1 (phase8/banked_code.lst)
