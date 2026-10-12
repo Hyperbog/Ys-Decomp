@@ -1,0 +1,580 @@
+{
+  "schema": "ys-bank13-vdp-consumer-m16-v1",
+  "fixed_bank_sha256": "3bc23bce4f0bdcf88669187f949c7a89dea9341a9653fb21025fe704e8ce872b",
+  "bank13_sha256": "00227b5f7b913280a53e60ad90743371b82381a30c8514aa4d92a287e062b39e",
+  "validated_opcode_spans": 9,
+  "indexed_directory_cpu": 49034,
+  "consumer_entry_cpu": 15052,
+  "decompressor_entry_cpu": 1685,
+  "vdp_control_port": 191,
+  "vdp_data_port": 190,
+  "consumer_vram_start": 288,
+  "indexed_resource_count": 50,
+  "decoded_plane_count": 200,
+  "compressed_resource_bytes": 10659,
+  "decoded_vdp_bytes": 14400,
+  "pages": [
+    {
+      "page": 0,
+      "directory_start_index": 0,
+      "resource_count": 26,
+      "vram_start": 288,
+      "vram_end_exclusive": 7776,
+      "first_tile": 9,
+      "tile_count": 234,
+      "output_bytes": 7488,
+      "output_sha256": "112a2a9ec2c99c05f528c3dd42682952130f8922d1337d72599d6e9dd93d0162"
+    },
+    {
+      "page": 1,
+      "directory_start_index": 26,
+      "resource_count": 24,
+      "vram_start": 288,
+      "vram_end_exclusive": 7200,
+      "first_tile": 9,
+      "tile_count": 216,
+      "output_bytes": 6912,
+      "output_sha256": "3e6a9616976c53a187b4b0b6b519b162f03fc22ac8dfaaca7218b146ec10619f"
+    }
+  ],
+  "resources": [
+    {
+      "directory_index": 0,
+      "bank13_cpu_source": 32768,
+      "source_end_exclusive": 32928,
+      "page": 0,
+      "vram_write_command": 16672,
+      "first_tile_index": 9,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "c769707d00f349a41daa2ba97e57584cf38b6b064f808a9d50cb91c54b8a6a3b"
+    },
+    {
+      "directory_index": 1,
+      "bank13_cpu_source": 32928,
+      "source_end_exclusive": 33094,
+      "page": 0,
+      "vram_write_command": 16960,
+      "first_tile_index": 18,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "44223a7117170f4efde30cb265e5e1abf6b19dad5e8480a7749770a646f5c022"
+    },
+    {
+      "directory_index": 2,
+      "bank13_cpu_source": 33094,
+      "source_end_exclusive": 33260,
+      "page": 0,
+      "vram_write_command": 17248,
+      "first_tile_index": 27,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "cd66167f61b2097afec5af80a3b47d5db89b1a8a93c748100e1de414ef9aa786"
+    },
+    {
+      "directory_index": 3,
+      "bank13_cpu_source": 33260,
+      "source_end_exclusive": 33416,
+      "page": 0,
+      "vram_write_command": 17536,
+      "first_tile_index": 36,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "9f5f53055eab17527272fdad56d9622ea95ff75a8404d0c8e6879cd9ebae2d84"
+    },
+    {
+      "directory_index": 4,
+      "bank13_cpu_source": 33416,
+      "source_end_exclusive": 33633,
+      "page": 0,
+      "vram_write_command": 17824,
+      "first_tile_index": 45,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "bf6d173d4237d19fc56658dc5936fbc68d13faf6866c608aea2f24e29aefa676"
+    },
+    {
+      "directory_index": 5,
+      "bank13_cpu_source": 34954,
+      "source_end_exclusive": 35174,
+      "page": 0,
+      "vram_write_command": 18112,
+      "first_tile_index": 54,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "f632b62e619874698d6fbe6d38e5ae7142bb2270c69570cbfb139a07628807c6"
+    },
+    {
+      "directory_index": 6,
+      "bank13_cpu_source": 35174,
+      "source_end_exclusive": 35385,
+      "page": 0,
+      "vram_write_command": 18400,
+      "first_tile_index": 63,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "6c1c2337ea9d39def214a3cb6c3fe519321f9e2e2f04810e3e52ddded58a0d52"
+    },
+    {
+      "directory_index": 7,
+      "bank13_cpu_source": 35385,
+      "source_end_exclusive": 35651,
+      "page": 0,
+      "vram_write_command": 18688,
+      "first_tile_index": 72,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "4e4897347752d89766db8258890db4d496f48eda821d193acc8daa54799390c0"
+    },
+    {
+      "directory_index": 8,
+      "bank13_cpu_source": 35651,
+      "source_end_exclusive": 35928,
+      "page": 0,
+      "vram_write_command": 18976,
+      "first_tile_index": 81,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "1040e22c05b69430841067c987c5ad8229574f564c432773c151c56210fba6cd"
+    },
+    {
+      "directory_index": 9,
+      "bank13_cpu_source": 35928,
+      "source_end_exclusive": 36202,
+      "page": 0,
+      "vram_write_command": 19264,
+      "first_tile_index": 90,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "2fc32f9ad699734986e3b914cf2123b347ead06768c395c065961d4851ca3f74"
+    },
+    {
+      "directory_index": 10,
+      "bank13_cpu_source": 33633,
+      "source_end_exclusive": 33905,
+      "page": 0,
+      "vram_write_command": 19552,
+      "first_tile_index": 99,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "78f5709a676d7a76072fad4d4e9c630b429e2b0805e7334e459ca2cefc0f4d6a"
+    },
+    {
+      "directory_index": 11,
+      "bank13_cpu_source": 33905,
+      "source_end_exclusive": 34171,
+      "page": 0,
+      "vram_write_command": 19840,
+      "first_tile_index": 108,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "316d5bea8ff2fc7a67e361a28f9ebe273b23a037af73d5968f63a1b103b82b79"
+    },
+    {
+      "directory_index": 12,
+      "bank13_cpu_source": 34171,
+      "source_end_exclusive": 34424,
+      "page": 0,
+      "vram_write_command": 20128,
+      "first_tile_index": 117,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "599c73b69ffd00e06ac63e42f302859a65ffa9eb3fcec0a85f9efc7c5feedd3a"
+    },
+    {
+      "directory_index": 13,
+      "bank13_cpu_source": 34424,
+      "source_end_exclusive": 34700,
+      "page": 0,
+      "vram_write_command": 20416,
+      "first_tile_index": 126,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "7a90abc85691c8e6a822ac54c9ee4a09040fbf5b76e51594be81e3da95f8cac4"
+    },
+    {
+      "directory_index": 14,
+      "bank13_cpu_source": 34700,
+      "source_end_exclusive": 34954,
+      "page": 0,
+      "vram_write_command": 20704,
+      "first_tile_index": 135,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "837d1242552660a80ae55169cbb011ed23da4a50e0b77c982cb32821757c4451"
+    },
+    {
+      "directory_index": 15,
+      "bank13_cpu_source": 36202,
+      "source_end_exclusive": 36374,
+      "page": 0,
+      "vram_write_command": 20992,
+      "first_tile_index": 144,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "aab81aba43e1ee2b9a3235d8a36ed3d636c51efff0587def9ce4809c8b9c4306"
+    },
+    {
+      "directory_index": 16,
+      "bank13_cpu_source": 36374,
+      "source_end_exclusive": 36594,
+      "page": 0,
+      "vram_write_command": 21280,
+      "first_tile_index": 153,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "42a2c6ba7d28b89b6dfe4624bd10a69a527d33120967dbf88e29b0b957a5da9b"
+    },
+    {
+      "directory_index": 17,
+      "bank13_cpu_source": 36594,
+      "source_end_exclusive": 36835,
+      "page": 0,
+      "vram_write_command": 21568,
+      "first_tile_index": 162,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "4828598128a2bd7935614d868b6efffb0b80a501f1ce47c2a7f43302e81e0854"
+    },
+    {
+      "directory_index": 18,
+      "bank13_cpu_source": 36835,
+      "source_end_exclusive": 37092,
+      "page": 0,
+      "vram_write_command": 21856,
+      "first_tile_index": 171,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "2dcd2aa98e82a0400c5e4932750242ffb536a7ab741a35277101dc2296686ad5"
+    },
+    {
+      "directory_index": 19,
+      "bank13_cpu_source": 37092,
+      "source_end_exclusive": 37259,
+      "page": 0,
+      "vram_write_command": 22144,
+      "first_tile_index": 180,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "64a0e189562ae8dd92a6ddb575b486bf4ae4d2a0c3df36ab2527589a5692f6a1"
+    },
+    {
+      "directory_index": 20,
+      "bank13_cpu_source": 37259,
+      "source_end_exclusive": 37433,
+      "page": 0,
+      "vram_write_command": 22432,
+      "first_tile_index": 189,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "a7771128816a0054fb36f44be500ad6c872cc8d077f3fbf41c02df0de74dd3fe"
+    },
+    {
+      "directory_index": 21,
+      "bank13_cpu_source": 37433,
+      "source_end_exclusive": 37645,
+      "page": 0,
+      "vram_write_command": 22720,
+      "first_tile_index": 198,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "e0134085cec7fc639af792fd763a20d28e24ff17ec0485d6f229c442d8fa9ee0"
+    },
+    {
+      "directory_index": 22,
+      "bank13_cpu_source": 37645,
+      "source_end_exclusive": 37875,
+      "page": 0,
+      "vram_write_command": 23008,
+      "first_tile_index": 207,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "3ea8930502768ffe62feee2fbdb1045da3b55b63196b518996d0abfca1b818b8"
+    },
+    {
+      "directory_index": 23,
+      "bank13_cpu_source": 37875,
+      "source_end_exclusive": 38088,
+      "page": 0,
+      "vram_write_command": 23296,
+      "first_tile_index": 216,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "a76bb09edd330a6fe090669abc01421dab370e23d872a6e37eae223219050aa3"
+    },
+    {
+      "directory_index": 24,
+      "bank13_cpu_source": 38088,
+      "source_end_exclusive": 38304,
+      "page": 0,
+      "vram_write_command": 23584,
+      "first_tile_index": 225,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "57d21c5cb0eacc8429682b968f8e834069c66dd2ea32a8566da1725e6a467008"
+    },
+    {
+      "directory_index": 25,
+      "bank13_cpu_source": 38304,
+      "source_end_exclusive": 38512,
+      "page": 0,
+      "vram_write_command": 23872,
+      "first_tile_index": 234,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "25abb9598c516ae59f94e3746c707a7bd9a5280aeb38668dca4003ac65e2363e"
+    },
+    {
+      "directory_index": 26,
+      "bank13_cpu_source": 38512,
+      "source_end_exclusive": 38748,
+      "page": 1,
+      "vram_write_command": 16672,
+      "first_tile_index": 9,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "7ddd7b3829572f90d70263ca1bff132c69052813b0d23b7b7736527f7a375c50"
+    },
+    {
+      "directory_index": 27,
+      "bank13_cpu_source": 38748,
+      "source_end_exclusive": 38972,
+      "page": 1,
+      "vram_write_command": 16960,
+      "first_tile_index": 18,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "61ea4d5da0beed37ca39b6c5f2c316c41b49c3fc9cba5a03cd11e06132ef373c"
+    },
+    {
+      "directory_index": 28,
+      "bank13_cpu_source": 38972,
+      "source_end_exclusive": 39212,
+      "page": 1,
+      "vram_write_command": 17248,
+      "first_tile_index": 27,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "5ab6e2600eb237e2ca7099ff6264b787b61e5d8f426bf7412aa69b827e92d2df"
+    },
+    {
+      "directory_index": 29,
+      "bank13_cpu_source": 39212,
+      "source_end_exclusive": 39478,
+      "page": 1,
+      "vram_write_command": 17536,
+      "first_tile_index": 36,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "e73f1bd79b5406ead7c8c26b386f23f8a09f28fcbafbbe47a45f9b4bb0b4d4ed"
+    },
+    {
+      "directory_index": 30,
+      "bank13_cpu_source": 39478,
+      "source_end_exclusive": 39691,
+      "page": 1,
+      "vram_write_command": 17824,
+      "first_tile_index": 45,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "87d02dc4bca8a1d4ce6e44e2d8eef59bc29c411b0ed42b976cd0b628cbb5b436"
+    },
+    {
+      "directory_index": 31,
+      "bank13_cpu_source": 39691,
+      "source_end_exclusive": 39888,
+      "page": 1,
+      "vram_write_command": 18112,
+      "first_tile_index": 54,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "e2fbb9677e9ff578bcf99b85623da71a6585b7400cdd168137eedc55d34d600a"
+    },
+    {
+      "directory_index": 32,
+      "bank13_cpu_source": 39888,
+      "source_end_exclusive": 40076,
+      "page": 1,
+      "vram_write_command": 18400,
+      "first_tile_index": 63,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "5b9d77cfbffa4ba333e999f3c1c477bc7fab0a5af5e23d3f75e9cf14151e251b"
+    },
+    {
+      "directory_index": 33,
+      "bank13_cpu_source": 40076,
+      "source_end_exclusive": 40177,
+      "page": 1,
+      "vram_write_command": 18688,
+      "first_tile_index": 72,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "a74e984466e195749937a50f5baafb1daac338b3f37cdb9bab41a9b4e621cd86"
+    },
+    {
+      "directory_index": 34,
+      "bank13_cpu_source": 40177,
+      "source_end_exclusive": 40343,
+      "page": 1,
+      "vram_write_command": 18976,
+      "first_tile_index": 81,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "6aae92f9683f2ee0a1400073f1b837aeaaa6951cfa7d027e799ace10f8736ecf"
+    },
+    {
+      "directory_index": 35,
+      "bank13_cpu_source": 40343,
+      "source_end_exclusive": 40529,
+      "page": 1,
+      "vram_write_command": 19264,
+      "first_tile_index": 90,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "e29456b2f2566522517c45bcc66115fe0be9efea39dbca96595f99ef42d707ea"
+    },
+    {
+      "directory_index": 36,
+      "bank13_cpu_source": 40529,
+      "source_end_exclusive": 40702,
+      "page": 1,
+      "vram_write_command": 19552,
+      "first_tile_index": 99,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "a21a098e53cc3433d76917964711c670b1b6b35111792262b98948a22066a421"
+    },
+    {
+      "directory_index": 37,
+      "bank13_cpu_source": 40702,
+      "source_end_exclusive": 40891,
+      "page": 1,
+      "vram_write_command": 19840,
+      "first_tile_index": 108,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "db2948c69391a3441d4e07467c1f6b8d7ac9575e3ee9843bcb72548261315d6e"
+    },
+    {
+      "directory_index": 38,
+      "bank13_cpu_source": 40891,
+      "source_end_exclusive": 41078,
+      "page": 1,
+      "vram_write_command": 20128,
+      "first_tile_index": 117,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "7a5caccf509bde7ccedf259071f76cf385690e71eb468f783dd5cb8a05433bd5"
+    },
+    {
+      "directory_index": 39,
+      "bank13_cpu_source": 41078,
+      "source_end_exclusive": 41245,
+      "page": 1,
+      "vram_write_command": 20416,
+      "first_tile_index": 126,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "6f264952067ca9989121eaa8859d86742a1bb319dc3d2b2c696ac69585d6dc27"
+    },
+    {
+      "directory_index": 40,
+      "bank13_cpu_source": 41245,
+      "source_end_exclusive": 41481,
+      "page": 1,
+      "vram_write_command": 20704,
+      "first_tile_index": 135,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "7a6de800de3510c4466941eef4a531816924e6e5037287a3a185a1b78b0dce60"
+    },
+    {
+      "directory_index": 41,
+      "bank13_cpu_source": 41481,
+      "source_end_exclusive": 41689,
+      "page": 1,
+      "vram_write_command": 20992,
+      "first_tile_index": 144,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "b3e83a5227a11e7758934fc59785f331d56c0dfecc5f8ca5eee00fbee341fffc"
+    },
+    {
+      "directory_index": 42,
+      "bank13_cpu_source": 41689,
+      "source_end_exclusive": 41896,
+      "page": 1,
+      "vram_write_command": 21280,
+      "first_tile_index": 153,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "acbdab49059bcd226bcfd2a7f43c20a98b73ae928c7fb37652e1649518b452a1"
+    },
+    {
+      "directory_index": 43,
+      "bank13_cpu_source": 41896,
+      "source_end_exclusive": 42085,
+      "page": 1,
+      "vram_write_command": 21568,
+      "first_tile_index": 162,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "c205dbad7c24247102bf23e1b91bf628820cb863afd5ee579921292420322bf9"
+    },
+    {
+      "directory_index": 44,
+      "bank13_cpu_source": 42085,
+      "source_end_exclusive": 42300,
+      "page": 1,
+      "vram_write_command": 21856,
+      "first_tile_index": 171,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "7a201b824da5b365de2170300004fa1c97f1ea4f1208de06feaf94cc46d8126a"
+    },
+    {
+      "directory_index": 45,
+      "bank13_cpu_source": 42300,
+      "source_end_exclusive": 42564,
+      "page": 1,
+      "vram_write_command": 22144,
+      "first_tile_index": 180,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "aa7cb2c625fc1e85e30f7599e843e704ac7f4f0a568aaee3ac19495a1899b1c8"
+    },
+    {
+      "directory_index": 46,
+      "bank13_cpu_source": 43223,
+      "source_end_exclusive": 43427,
+      "page": 1,
+      "vram_write_command": 22432,
+      "first_tile_index": 189,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "038701f89f0ef65005ccd603c703d1c250cc1551348614d4bf43de1043432d06"
+    },
+    {
+      "directory_index": 47,
+      "bank13_cpu_source": 42564,
+      "source_end_exclusive": 42802,
+      "page": 1,
+      "vram_write_command": 22720,
+      "first_tile_index": 198,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "51800c651e9324226c4f74c8be87aeca1b20201afc730d42cb5cb566053dd9bb"
+    },
+    {
+      "directory_index": 48,
+      "bank13_cpu_source": 42802,
+      "source_end_exclusive": 43003,
+      "page": 1,
+      "vram_write_command": 23008,
+      "first_tile_index": 207,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "1a4f59b37b39ca6c811b7e16aa17c1492e1a02fc2c9374a4a5120d7d7ec9d02b"
+    },
+    {
+      "directory_index": 49,
+      "bank13_cpu_source": 43003,
+      "source_end_exclusive": 43223,
+      "page": 1,
+      "vram_write_command": 23296,
+      "first_tile_index": 216,
+      "tile_count": 9,
+      "vdp_bytes_sha256": "fb649c7f116c6cd00deb47d792039774489485c16b1752e3c985d219ec67c094"
+    }
+  ],
+  "unresolved_tail_cpu_start": 43427,
+  "tail_region_bytes": 5607,
+  "tail_region_sha256": "acac1ec8f2126c6ad96c54ea64fcaf020419ab511adc089b5d747df2fa5ab4e2",
+  "direct_call_tail_rle_sources": [
+    {
+      "source_start": 43427,
+      "source_end_exclusive": 43962,
+      "compressed_bytes": 535,
+      "decoded_plane_bytes": 160,
+      "decoded_vdp_bytes": 640,
+      "tile_count": 20,
+      "vdp_write_commands": [
+        22016,
+        28672
+      ],
+      "vdp_bytes_sha256": "57d3e70dc29a8b19d4d60887bc01aaa21e583f5d62c0e0a4487f39914bfdca3e"
+    },
+    {
+      "source_start": 48119,
+      "source_end_exclusive": 48163,
+      "compressed_bytes": 44,
+      "decoded_plane_bytes": 32,
+      "decoded_vdp_bytes": 128,
+      "tile_count": 4,
+      "vdp_write_commands": [
+        30208
+      ],
+      "vdp_bytes_sha256": "e6256ec59ab0915be4e1f0815b3a858552d66410f1537c5b8b160aa2d7467c96"
+    }
+  ],
+  "recovered_tail_rle_bytes": 579,
+  "not_yet_attributed_tail_bytes": 5028,
+  "limitations": [
+    "Anchored opcode inspection and independent bounded data replay, not live Z80 execution.",
+    "VRAM destinations are tile-pattern bytes, not proof of final palette selection.",
+    "Two UI loads reuse the same VRAM tile slots; they are not simultaneous resident assets.",
+    "The remaining tail bytes have not been assigned semantic format or ownership."
+  ]
+}
