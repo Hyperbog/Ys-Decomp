@@ -1,0 +1,129 @@
+{
+  "schema": "ys-phase16-source-overlay-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "rom_bytes": 262144,
+  "z80_source_bytes": 14025,
+  "phase15_structured_source_bytes": 678,
+  "phase16_new_structured_source_bytes": 7902,
+  "source_backed_bytes": 22605,
+  "fallback_bytes": 239539,
+  "source_backed_percentage": 8.6231,
+  "structured_data_modules": [
+    {
+      "bank": 4,
+      "path": "src/phase16/bank04_records.asm",
+      "bytes": 124
+    },
+    {
+      "bank": 6,
+      "path": "src/phase16/bank06_records.asm",
+      "bytes": 6370
+    },
+    {
+      "bank": 7,
+      "path": "src/phase16/bank07_secondary.asm",
+      "bytes": 1408
+    }
+  ],
+  "symbolic_equivalent_modules": {
+    "src/phase16/bank00_symbolic.asm": {
+      "bytes": 7935,
+      "symbolic_bindings": 6
+    },
+    "src/phase16/bank06_symbolic.asm": {
+      "bytes": 403,
+      "symbolic_bindings": 3
+    },
+    "src/phase16/bank06_handlers_symbolic.asm": {
+      "bytes": 241,
+      "symbolic_bindings": 0
+    }
+  },
+  "per_bank": [
+    {
+      "bank": 0,
+      "source_bytes": 8035,
+      "fallback_bytes": 8349
+    },
+    {
+      "bank": 1,
+      "source_bytes": 779,
+      "fallback_bytes": 15605
+    },
+    {
+      "bank": 2,
+      "source_bytes": 2541,
+      "fallback_bytes": 13843
+    },
+    {
+      "bank": 3,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 4,
+      "source_bytes": 162,
+      "fallback_bytes": 16222
+    },
+    {
+      "bank": 5,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 6,
+      "source_bytes": 7192,
+      "fallback_bytes": 9192
+    },
+    {
+      "bank": 7,
+      "source_bytes": 3575,
+      "fallback_bytes": 12809
+    },
+    {
+      "bank": 8,
+      "source_bytes": 138,
+      "fallback_bytes": 16246
+    },
+    {
+      "bank": 9,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 10,
+      "source_bytes": 75,
+      "fallback_bytes": 16309
+    },
+    {
+      "bank": 11,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 12,
+      "source_bytes": 108,
+      "fallback_bytes": 16276
+    },
+    {
+      "bank": 13,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 14,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 15,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    }
+  ],
+  "prior_candidate_coverage_bytes": 58133,
+  "source_only_build": false,
+  "external_assembler_verified": false,
+  "rom_fallback_required": true,
+  "note": "7,902 previously classified bytes converted to structured source; no new unique ROM classification. Data is stored in a field-level derived JSON representation; original asset values are now included. Symbolic assembly views are equivalent aliases, not additional code coverage."
+}

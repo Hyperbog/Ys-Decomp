@@ -1,0 +1,112 @@
+{
+  "schema": "ys-phase17-source-overlay-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "rom_bytes": 262144,
+  "z80_source_bytes": 14025,
+  "phase15_tables_bytes": 678,
+  "phase16_semantic_records_bytes": 7902,
+  "phase17_graphics_source_bytes": 15688,
+  "source_backed_bytes": 38293,
+  "fallback_bytes": 223851,
+  "source_backed_percent": 14.6076,
+  "source_backed_modules": [
+    {
+      "bank": 3,
+      "file": "src/phase17/bank03_tiles.asm",
+      "source_bytes": 5632
+    },
+    {
+      "bank": 7,
+      "file": "src/phase17/bank07_graphics.asm",
+      "source_bytes": 10056
+    }
+  ],
+  "per_bank": [
+    {
+      "bank": 0,
+      "source_bytes": 8035,
+      "fallback_bytes": 8349
+    },
+    {
+      "bank": 1,
+      "source_bytes": 779,
+      "fallback_bytes": 15605
+    },
+    {
+      "bank": 2,
+      "source_bytes": 2541,
+      "fallback_bytes": 13843
+    },
+    {
+      "bank": 3,
+      "source_bytes": 5632,
+      "fallback_bytes": 10752
+    },
+    {
+      "bank": 4,
+      "source_bytes": 162,
+      "fallback_bytes": 16222
+    },
+    {
+      "bank": 5,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 6,
+      "source_bytes": 7192,
+      "fallback_bytes": 9192
+    },
+    {
+      "bank": 7,
+      "source_bytes": 13631,
+      "fallback_bytes": 2753
+    },
+    {
+      "bank": 8,
+      "source_bytes": 138,
+      "fallback_bytes": 16246
+    },
+    {
+      "bank": 9,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 10,
+      "source_bytes": 75,
+      "fallback_bytes": 16309
+    },
+    {
+      "bank": 11,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 12,
+      "source_bytes": 108,
+      "fallback_bytes": 16276
+    },
+    {
+      "bank": 13,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 14,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 15,
+      "source_bytes": 0,
+      "fallback_bytes": 16384
+    }
+  ],
+  "prior_candidate_classification_bytes": 58133,
+  "new_distinct_classified_bytes": 0,
+  "source_only_full_rom": false,
+  "independent_external_assembler_verified": false,
+  "emulator_runtime_trace_verified": false,
+  "note": "Source-backed 15,688 previously classified graphics bytes; pixel-level source from user ROM, not new discovery. Original ROM required as template for remaining bytes."
+}
