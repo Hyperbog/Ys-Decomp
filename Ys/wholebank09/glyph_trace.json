@@ -1,0 +1,208 @@
+{
+  "schema": "ys-bank09-vdp-six-byte-bounded-v1",
+  "cases": 24,
+  "bytes_written": 288,
+  "entry_cpu": "BF2C",
+  "mapper_bank": 9,
+  "port": "BE",
+  "six_byte_records": 8,
+  "execution_results": [
+    {
+      "index": 0,
+      "pointer": "BF52",
+      "separator": 0,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "cc0eb8b730f442f58d378f8ac47c31823a24bbad5a4ea320c4219ac2621e33c5"
+    },
+    {
+      "index": 1,
+      "pointer": "BF5E",
+      "separator": 0,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "8ac380f52e7165704f172b6e6ca4c5a97a952729eea0a0ce732b421603b86da5"
+    },
+    {
+      "index": 2,
+      "pointer": "BF58",
+      "separator": 0,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "931ee62919f9e552161879d61822c404123821e89a913e6d0ec9bdcf451534e2"
+    },
+    {
+      "index": 3,
+      "pointer": "BF64",
+      "separator": 0,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "9b96a0468ba2aa2bcb9741ccf84012e707306b625b93e6dd177789d3bff1bb31"
+    },
+    {
+      "index": 4,
+      "pointer": "BF6A",
+      "separator": 0,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "25fdb618ef60247f8cc77008359e9683d8d7814bd5fa2618cf96a76dd6a4e47f"
+    },
+    {
+      "index": 5,
+      "pointer": "BF70",
+      "separator": 0,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "a04ba104e089a29f9493bc9073ba7df72a53954792365154e8e5529881668ca4"
+    },
+    {
+      "index": 6,
+      "pointer": "BF76",
+      "separator": 0,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "ba2bfdb2cc2e849758e0a855202c92056783fe07d3c4697fb5611bc8b2d8d7a8"
+    },
+    {
+      "index": 7,
+      "pointer": "BF4C",
+      "separator": 0,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "89f60f6c79bdce68383e8bbde67727072b9581b919ac1288394d08a4711d7205"
+    },
+    {
+      "index": 0,
+      "pointer": "BF52",
+      "separator": 46,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "fcde082aec610692f26580778ca61ba46fabbff22dced2168da679cb4d8c8104"
+    },
+    {
+      "index": 1,
+      "pointer": "BF5E",
+      "separator": 46,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "263ce47d81fc6e05f7823cc427594b3d4f668f8c666553165cb329c651ce2e11"
+    },
+    {
+      "index": 2,
+      "pointer": "BF58",
+      "separator": 46,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "9737668f27b8cd222472bfeb582e65a36d16edb8049568546f66eeec0df0bb1e"
+    },
+    {
+      "index": 3,
+      "pointer": "BF64",
+      "separator": 46,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "b94e01ddbeff55e19981d46ae074c46b0a7963b7889b45f8cfac8e93ebaeecb0"
+    },
+    {
+      "index": 4,
+      "pointer": "BF6A",
+      "separator": 46,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "a55568a7bad40d6f976a49c36e51fd627f44ea42e36304eacd919106ff310a23"
+    },
+    {
+      "index": 5,
+      "pointer": "BF70",
+      "separator": 46,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "fa3d43acc35c5ce9ca89f3b8f823d42540777fce4a5f2a374bbc1778f1a18c82"
+    },
+    {
+      "index": 6,
+      "pointer": "BF76",
+      "separator": 46,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "155b2a367ade9ceb00175c5c1ee7fa29b6bd7d18eeea480a83c4d8497993b6b1"
+    },
+    {
+      "index": 7,
+      "pointer": "BF4C",
+      "separator": 46,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "9260c18f9191bf34cccced6f516ba4e03f417645181d7fb8c3f591c65f358f39"
+    },
+    {
+      "index": 0,
+      "pointer": "BF52",
+      "separator": 167,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "c2bacf6e9f1a64d8f4e6602fee5f97404aaf38d51de303063df49ba45a77e6e8"
+    },
+    {
+      "index": 1,
+      "pointer": "BF5E",
+      "separator": 167,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "9e3c869b89740f403b04e3861f1bfca84cc2138330cf829a8919558dfc6a4eb1"
+    },
+    {
+      "index": 2,
+      "pointer": "BF58",
+      "separator": 167,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "35be480c81cc66f6676ef97f967aa62c71f447c14949031b34831efc3c861d0f"
+    },
+    {
+      "index": 3,
+      "pointer": "BF64",
+      "separator": 167,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "8e8db442e5426c481328a8f643022569ff15da7a2d56790aabb7c1387e85d013"
+    },
+    {
+      "index": 4,
+      "pointer": "BF6A",
+      "separator": 167,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "09c0247b6ab4a95ce266d0acede2c44e988238ff1502094af889e254d4c32d06"
+    },
+    {
+      "index": 5,
+      "pointer": "BF70",
+      "separator": 167,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "661369c1ef30319850274bbebd74791f89bb8145a2d0602cd53a91e30caa0bca"
+    },
+    {
+      "index": 6,
+      "pointer": "BF76",
+      "separator": 167,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "3f6a0c258d4d97bda4f1c95986c8e5f323bf2d7fe4730e541ff42271591d8720"
+    },
+    {
+      "index": 7,
+      "pointer": "BF4C",
+      "separator": 167,
+      "steps": 39,
+      "output_bytes": 12,
+      "sha256": "33f590d1f1ef2cc4ebf9d9260582b123036120f922f09755294f0584aa33c941"
+    }
+  ],
+  "limitations": [
+    "Runs ROM opcode loop with manually selected HL, bank 9 mapper, RAM separator and VRAM address.",
+    "RST $18/$28 caller setup, gameplay state, frames and cycle timing are not modeled.",
+    "Candidate glyph identities/encoding are not decoded."
+  ]
+}

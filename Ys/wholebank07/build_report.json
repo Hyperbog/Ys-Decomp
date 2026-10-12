@@ -1,0 +1,123 @@
+{
+  "schema": "ys-whole-bank07-system-overlay-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "total_rom_bytes": 262144,
+  "bank_size_bytes": 16384,
+  "bank_count": 16,
+  "whole_source_only_banks": [
+    7
+  ],
+  "whole_bank07_sha256": "86c86574d85f58dbde305325f8ea0d6c92c75a53bdcebf222e2909f1932bfce4",
+  "prior_source_backed_bytes": 46349,
+  "new_source_backed_bytes": 2753,
+  "source_backed_bytes": 49102,
+  "source_backed_percent": 18.7309,
+  "fallback_bytes": 213042,
+  "source_only_complete_rom": false,
+  "candidate_classification_bytes": 60155,
+  "new_structurally_bounded_bytes": 1665,
+  "new_semantically_unresolved_bytes": 1088,
+  "new_instruction_bytes": 173,
+  "new_bounded_structured_and_padding_bytes": 1492,
+  "independent_wla_dx_verified": false,
+  "full_system_emulator_verified": false,
+  "per_bank": [
+    {
+      "bank": 0,
+      "source_bytes": 8242,
+      "fallback_bytes": 8142,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 1,
+      "source_bytes": 779,
+      "fallback_bytes": 15605,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 2,
+      "source_bytes": 3785,
+      "fallback_bytes": 12599,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 3,
+      "source_bytes": 12237,
+      "fallback_bytes": 4147,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 4,
+      "source_bytes": 162,
+      "fallback_bytes": 16222,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 5,
+      "source_bytes": 0,
+      "fallback_bytes": 16384,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 6,
+      "source_bytes": 7192,
+      "fallback_bytes": 9192,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 7,
+      "source_bytes": 16384,
+      "fallback_bytes": 0,
+      "whole_bank_source_only": true
+    },
+    {
+      "bank": 8,
+      "source_bytes": 138,
+      "fallback_bytes": 16246,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 9,
+      "source_bytes": 0,
+      "fallback_bytes": 16384,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 10,
+      "source_bytes": 75,
+      "fallback_bytes": 16309,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 11,
+      "source_bytes": 0,
+      "fallback_bytes": 16384,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 12,
+      "source_bytes": 108,
+      "fallback_bytes": 16276,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 13,
+      "source_bytes": 0,
+      "fallback_bytes": 16384,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 14,
+      "source_bytes": 0,
+      "fallback_bytes": 16384,
+      "whole_bank_source_only": false
+    },
+    {
+      "bank": 15,
+      "source_bytes": 0,
+      "fallback_bytes": 16384,
+      "whole_bank_source_only": false
+    }
+  ],
+  "note": "Bank7 is source-only and byte-complete. 1088 late-bank data bytes are reversible, deliberately semantically unresolved. Full ROM still contains 213042 ROM-template bytes from other banks."
+}

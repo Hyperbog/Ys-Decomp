@@ -1,0 +1,15 @@
+{
+  "schema": "ys-bank10-decimal-bounded-v1",
+  "tested_values": 265,
+  "start_pc": "BEF8",
+  "subroutine": "BF35",
+  "port": "BE",
+  "bytes_per_value": 10,
+  "max_instructions_per_case": 193,
+  "output_sha256": "61e819790e16d63ee19dd9eea6cbce60c0fb186bf45a9e64aa4f1e08d70120de",
+  "limitations": [
+    "First byte RST $28 at $BEF7 and its fixed-bank handler are excluded.",
+    "No VDP address/control behavior modeled; only byte writes to port BE.",
+    "Original bank10 instruction bytes are executed with manually supplied HL and C026 state."
+  ]
+}

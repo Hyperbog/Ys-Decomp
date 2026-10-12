@@ -1,0 +1,7 @@
+{
+  "bank_sha256": "d0ef995a86a68bf2230380320ab919212558d938e588e2c31e54084166613577",
+  "new_data_sha256": "f01ca2d39e857865c5c855e88048123c0956ec95054aec4c3f4ba23830bdfc5c",
+  "new_source_backed_bytes": 16384,
+  "new_mnemonic_bytes": 65,
+  "unresolved_semantics": true
+}
