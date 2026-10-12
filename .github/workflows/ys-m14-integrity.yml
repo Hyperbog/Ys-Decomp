@@ -1,4 +1,4 @@
-name: Ys M14 source integrity
+name: Ys source integrity (M13–M16)
 
 on:
   push:
@@ -47,9 +47,13 @@ jobs:
         working-directory: Ys
         run: python3 tools/bank13_semantic_source_m15.py --check
 
-      - name: Run Milestone 13, 14 and 15 unit regressions
+      - name: Verify Milestone 16 Bank 13 graphics consumer report
         working-directory: Ys
-        run: python3 -m unittest -v tests_semantic_debt_m13 tests_bank13_rle_m14 tests_bank13_semantic_source_m15
+        run: python3 tools/bank13_vdp_consumer_m16.py --check
+
+      - name: Run Milestone 13–16 unit regressions
+        working-directory: Ys
+        run: python3 -m unittest -v tests_semantic_debt_m13 tests_bank13_rle_m14 tests_bank13_semantic_source_m15 tests_bank13_vdp_consumer_m16
 
       - name: Ensure verification did not modify tracked sources
         run: git diff --exit-code
