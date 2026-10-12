@@ -1,0 +1,27 @@
+{
+  "schema": "cross-project-toolkit-check-v1",
+  "original_rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "original_binary_not_included": true,
+  "ys_full_system_regressions": {
+    "passed": 31,
+    "total": 31
+  },
+  "shared_toolkit_unit_tests": 22,
+  "ys_partition_audit": {
+    "partition_count": 16,
+    "valid": true,
+    "full_digest_verified": true,
+    "source_backed_bytes": 53249,
+    "fallback_bytes": 208895,
+    "source_only_parts": [
+      "physical_bank_03",
+      "physical_bank_07"
+    ]
+  },
+  "limitations": [
+    "External assembler not executed by this research adoption",
+    "Not an independent full-system emulator verification",
+    "No new source-only game bytes gained",
+    "Other game repositories not modified"
+  ]
+}

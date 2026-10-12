@@ -1,0 +1,17 @@
+{
+  "schema": "decomp-task-v1",
+  "project": "SET_PROJECT",
+  "target": {"binary_sha256": "SET_HASH", "partition": "SET_BANK_OR_SECTION", "start_offset": 0, "end_offset_exclusive": 0},
+  "architecture": "SET_CPU_OR_ABI",
+  "compiler_or_assembler": {"name": "UNKNOWN", "version": "UNKNOWN", "pinned_flags": [], "independent_toolchain_required": true},
+  "known_entry_points": [],
+  "known_incoming_references": [],
+  "known_side_effects": [],
+  "candidate_semantics": "UNRESOLVED",
+  "reference_lock_files": ["path/to/target.s", "path/to/build.sh"],
+  "evaluation": {"score_direction": "higher_better", "max_stalls": 2, "binary_identical_required": true,
+    "source_only_required": true, "runtime_or_emulator_evidence_required": false},
+  "last_observed_score": null,
+  "unresolved_questions": [],
+  "handoff_notes": "On halt, document mismatch addresses, rejected hypotheses, and next diagnostic action"
+}

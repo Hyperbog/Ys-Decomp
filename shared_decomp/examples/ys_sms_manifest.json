@@ -1,0 +1,207 @@
+{
+  "schema": "decomp-project-v1",
+  "project": "Ys: The Vanished Omens \u2014 SMS",
+  "binary": {
+    "size": 262144,
+    "sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9"
+  },
+  "partitions": [
+    {
+      "name": "physical_bank_00",
+      "offset": 0,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "partial",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "3bc23bce4f0bdcf88669187f949c7a89dea9341a9653fb21025fe704e8ce872b"
+    },
+    {
+      "name": "physical_bank_01",
+      "offset": 16384,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "partial",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "e91fa8fb9109dc13555967e208cb4650972d1965c2c9088be8d748ea177b4505"
+    },
+    {
+      "name": "physical_bank_02",
+      "offset": 32768,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "partial",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "78b8ac016f2574ffece7f944f9b7680e873eb33f8481c31bbc0a480c4c74a4d8"
+    },
+    {
+      "name": "physical_bank_03",
+      "offset": 49152,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "partial",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "b9ade48d112c574b642f026fd770e78cb939bb717328e4c6a3fdc228cc7c2c15"
+    },
+    {
+      "name": "physical_bank_04",
+      "offset": 65536,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "partial",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "bd2e9c90792a9f462a3f8ff42763c676ffc9568d9913227e3460c592beb42354"
+    },
+    {
+      "name": "physical_bank_05",
+      "offset": 81920,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "unresolved",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "56986e4eab31e4a3d968326b9ab6002accb08e66e20f77b3d17adcc94f6f8170"
+    },
+    {
+      "name": "physical_bank_06",
+      "offset": 98304,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "partial",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "cd64e2820b24ee57c2d909b9edf871246d37fc5e9e6dc889c0d58116a92524eb"
+    },
+    {
+      "name": "physical_bank_07",
+      "offset": 114688,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "partial",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "86c86574d85f58dbde305325f8ea0d6c92c75a53bdcebf222e2909f1932bfce4"
+    },
+    {
+      "name": "physical_bank_08",
+      "offset": 131072,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "partial",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "3ef67b48f3b9e55adc980894ab1a4bfc932556f9f3e1a315204eb7456d4f53fa"
+    },
+    {
+      "name": "physical_bank_09",
+      "offset": 147456,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "unresolved",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "d0ef995a86a68bf2230380320ab919212558d938e588e2c31e54084166613577"
+    },
+    {
+      "name": "physical_bank_10",
+      "offset": 163840,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "partial",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "d8e67566e6b8ec634d346a88426fcbf6975ed8021037b74895d0aa0d6057f9db"
+    },
+    {
+      "name": "physical_bank_11",
+      "offset": 180224,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "unresolved",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "9855397ba6805317c97ac6dfd67219fcb931eb5721a5ac3daa0893cb4746b6df"
+    },
+    {
+      "name": "physical_bank_12",
+      "offset": 196608,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "unresolved",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "a39ff12117caebd7e626200107d04f5cc92f8507eff743607baca41a1ce8760b"
+    },
+    {
+      "name": "physical_bank_13",
+      "offset": 212992,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "unresolved",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "00227b5f7b913280a53e60ad90743371b82381a30c8514aa4d92a287e062b39e"
+    },
+    {
+      "name": "physical_bank_14",
+      "offset": 229376,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "unresolved",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "2178d9364b03203d4bb38ffdd41416c3fdf8d9efad1cb63090bee31f8a241b59"
+    },
+    {
+      "name": "physical_bank_15",
+      "offset": 245760,
+      "length": 16384,
+      "source_backed_bytes": 16384,
+      "fallback_bytes": 0,
+      "source_only_complete": true,
+      "semantic_status": "unresolved",
+      "external_assembler_verified": false,
+      "runtime_verified": false,
+      "sha256": "cc2164854a09b17dcdbcf8a33d2f632e25bac5a0907c5ad22fc2595f37228b1a"
+    }
+  ],
+  "context_sources": {
+    "symbols": "../../Ys/phase15/symbols.json",
+    "references": "../../Ys/phase14/crossrefs.json"
+  },
+  "provenance": "Snapshot derived from Ys/whole_system/build_report.json at git dff8743. Regenerate when that ledger changes. These are accounting and not executable checks."
+}
