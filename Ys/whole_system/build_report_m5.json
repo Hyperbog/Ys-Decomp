@@ -1,0 +1,499 @@
+{
+  "schema": "ys-whole-system-five-banks-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "rom_bytes": 262144,
+  "bank_count": 16,
+  "source_only_complete_banks": [
+    0,
+    2,
+    3,
+    6,
+    7
+  ],
+  "complete_source_only_bank_bytes": 81920,
+  "prior_source_backed_bytes": 70583,
+  "new_source_backed_bytes": 12599,
+  "new_bank2_z80_instruction_bytes": 16,
+  "new_bank2_data_bytes": 12583,
+  "source_backed_bytes": 83182,
+  "source_backed_pct": 31.7314,
+  "original_rom_fallback_bytes": 178962,
+  "bank2_new_data_segments": [
+    {
+      "cpu_start": 33201,
+      "cpu_end_exclusive": 33241,
+      "bytes": 40,
+      "kind": "unresolved_init_sequence"
+    },
+    {
+      "cpu_start": 34304,
+      "cpu_end_exclusive": 34344,
+      "bytes": 40,
+      "kind": "sound_dispatch_words_20"
+    },
+    {
+      "cpu_start": 34936,
+      "cpu_end_exclusive": 34947,
+      "bytes": 11,
+      "kind": "unresolved_channel_constants"
+    },
+    {
+      "cpu_start": 35416,
+      "cpu_end_exclusive": 35562,
+      "bytes": 146,
+      "kind": "psg_note_periods_73_words"
+    },
+    {
+      "cpu_start": 35562,
+      "cpu_end_exclusive": 35708,
+      "bytes": 146,
+      "kind": "fm_note_registers_73_words"
+    },
+    {
+      "cpu_start": 35708,
+      "cpu_end_exclusive": 35709,
+      "bytes": 1,
+      "kind": "lookup_sentinel"
+    },
+    {
+      "cpu_start": 35709,
+      "cpu_end_exclusive": 35743,
+      "bytes": 34,
+      "kind": "sequence_directory_17"
+    },
+    {
+      "cpu_start": 35743,
+      "cpu_end_exclusive": 35746,
+      "bytes": 3,
+      "kind": "unresolved_sequence_0"
+    },
+    {
+      "cpu_start": 35746,
+      "cpu_end_exclusive": 35755,
+      "bytes": 9,
+      "kind": "unresolved_sequence_1"
+    },
+    {
+      "cpu_start": 35755,
+      "cpu_end_exclusive": 35759,
+      "bytes": 4,
+      "kind": "unresolved_sequence_2"
+    },
+    {
+      "cpu_start": 35759,
+      "cpu_end_exclusive": 35764,
+      "bytes": 5,
+      "kind": "unresolved_sequence_3"
+    },
+    {
+      "cpu_start": 35764,
+      "cpu_end_exclusive": 35775,
+      "bytes": 11,
+      "kind": "unresolved_sequence_4"
+    },
+    {
+      "cpu_start": 35775,
+      "cpu_end_exclusive": 35788,
+      "bytes": 13,
+      "kind": "unresolved_sequence_5"
+    },
+    {
+      "cpu_start": 35788,
+      "cpu_end_exclusive": 35797,
+      "bytes": 9,
+      "kind": "unresolved_sequence_6"
+    },
+    {
+      "cpu_start": 35797,
+      "cpu_end_exclusive": 35812,
+      "bytes": 15,
+      "kind": "unresolved_sequence_7"
+    },
+    {
+      "cpu_start": 35812,
+      "cpu_end_exclusive": 35824,
+      "bytes": 12,
+      "kind": "unresolved_sequence_8"
+    },
+    {
+      "cpu_start": 35824,
+      "cpu_end_exclusive": 35829,
+      "bytes": 5,
+      "kind": "unresolved_sequence_9"
+    },
+    {
+      "cpu_start": 35829,
+      "cpu_end_exclusive": 35840,
+      "bytes": 11,
+      "kind": "unresolved_sequence_10"
+    },
+    {
+      "cpu_start": 35840,
+      "cpu_end_exclusive": 35847,
+      "bytes": 7,
+      "kind": "unresolved_sequence_11"
+    },
+    {
+      "cpu_start": 35847,
+      "cpu_end_exclusive": 35859,
+      "bytes": 12,
+      "kind": "unresolved_sequence_12"
+    },
+    {
+      "cpu_start": 35859,
+      "cpu_end_exclusive": 35869,
+      "bytes": 10,
+      "kind": "unresolved_sequence_13"
+    },
+    {
+      "cpu_start": 35869,
+      "cpu_end_exclusive": 35873,
+      "bytes": 4,
+      "kind": "unresolved_sequence_14"
+    },
+    {
+      "cpu_start": 35873,
+      "cpu_end_exclusive": 35882,
+      "bytes": 9,
+      "kind": "unresolved_sequence_15"
+    },
+    {
+      "cpu_start": 35882,
+      "cpu_end_exclusive": 35887,
+      "bytes": 5,
+      "kind": "unresolved_sequence_16"
+    },
+    {
+      "cpu_start": 35887,
+      "cpu_end_exclusive": 35897,
+      "bytes": 10,
+      "kind": "shape_directory_5"
+    },
+    {
+      "cpu_start": 35897,
+      "cpu_end_exclusive": 35922,
+      "bytes": 25,
+      "kind": "unresolved_shape_0"
+    },
+    {
+      "cpu_start": 35922,
+      "cpu_end_exclusive": 35944,
+      "bytes": 22,
+      "kind": "unresolved_shape_1"
+    },
+    {
+      "cpu_start": 35944,
+      "cpu_end_exclusive": 35968,
+      "bytes": 24,
+      "kind": "unresolved_shape_2"
+    },
+    {
+      "cpu_start": 35968,
+      "cpu_end_exclusive": 35977,
+      "bytes": 9,
+      "kind": "unresolved_shape_3"
+    },
+    {
+      "cpu_start": 35977,
+      "cpu_end_exclusive": 35984,
+      "bytes": 7,
+      "kind": "unresolved_shape_4"
+    },
+    {
+      "cpu_start": 36094,
+      "cpu_end_exclusive": 43639,
+      "bytes": 7545,
+      "kind": "unresolved_sound_tables_and_events"
+    },
+    {
+      "cpu_start": 44416,
+      "cpu_end_exclusive": 45849,
+      "bytes": 1433,
+      "kind": "unresolved_audio_event_streams"
+    },
+    {
+      "cpu_start": 46824,
+      "cpu_end_exclusive": 48727,
+      "bytes": 1903,
+      "kind": "unresolved_post_song_data"
+    },
+    {
+      "cpu_start": 45859,
+      "cpu_end_exclusive": 45871,
+      "bytes": 12,
+      "kind": "unresolved_song_event_31"
+    },
+    {
+      "cpu_start": 45890,
+      "cpu_end_exclusive": 45914,
+      "bytes": 24,
+      "kind": "unresolved_song_event_32"
+    },
+    {
+      "cpu_start": 45933,
+      "cpu_end_exclusive": 45955,
+      "bytes": 22,
+      "kind": "unresolved_song_event_33"
+    },
+    {
+      "cpu_start": 45974,
+      "cpu_end_exclusive": 46002,
+      "bytes": 28,
+      "kind": "unresolved_song_event_34"
+    },
+    {
+      "cpu_start": 46021,
+      "cpu_end_exclusive": 46050,
+      "bytes": 29,
+      "kind": "unresolved_song_event_35"
+    },
+    {
+      "cpu_start": 46060,
+      "cpu_end_exclusive": 46081,
+      "bytes": 21,
+      "kind": "unresolved_song_event_36"
+    },
+    {
+      "cpu_start": 46100,
+      "cpu_end_exclusive": 46114,
+      "bytes": 14,
+      "kind": "unresolved_song_event_37"
+    },
+    {
+      "cpu_start": 46133,
+      "cpu_end_exclusive": 46163,
+      "bytes": 30,
+      "kind": "unresolved_song_event_38"
+    },
+    {
+      "cpu_start": 46182,
+      "cpu_end_exclusive": 46192,
+      "bytes": 10,
+      "kind": "unresolved_song_event_39"
+    },
+    {
+      "cpu_start": 46211,
+      "cpu_end_exclusive": 46231,
+      "bytes": 20,
+      "kind": "unresolved_song_event_40"
+    },
+    {
+      "cpu_start": 46241,
+      "cpu_end_exclusive": 46255,
+      "bytes": 14,
+      "kind": "unresolved_song_event_41"
+    },
+    {
+      "cpu_start": 46274,
+      "cpu_end_exclusive": 46312,
+      "bytes": 38,
+      "kind": "unresolved_song_event_42"
+    },
+    {
+      "cpu_start": 46322,
+      "cpu_end_exclusive": 46340,
+      "bytes": 18,
+      "kind": "unresolved_song_event_43"
+    },
+    {
+      "cpu_start": 46359,
+      "cpu_end_exclusive": 46420,
+      "bytes": 61,
+      "kind": "unresolved_song_event_44"
+    },
+    {
+      "cpu_start": 46430,
+      "cpu_end_exclusive": 46452,
+      "bytes": 22,
+      "kind": "unresolved_song_event_45"
+    },
+    {
+      "cpu_start": 46462,
+      "cpu_end_exclusive": 46476,
+      "bytes": 14,
+      "kind": "unresolved_song_event_46"
+    },
+    {
+      "cpu_start": 46486,
+      "cpu_end_exclusive": 46513,
+      "bytes": 27,
+      "kind": "unresolved_song_event_47"
+    },
+    {
+      "cpu_start": 46523,
+      "cpu_end_exclusive": 46546,
+      "bytes": 23,
+      "kind": "unresolved_song_event_48"
+    },
+    {
+      "cpu_start": 46556,
+      "cpu_end_exclusive": 46577,
+      "bytes": 21,
+      "kind": "unresolved_song_event_49"
+    },
+    {
+      "cpu_start": 46587,
+      "cpu_end_exclusive": 46628,
+      "bytes": 41,
+      "kind": "unresolved_song_event_50"
+    },
+    {
+      "cpu_start": 46647,
+      "cpu_end_exclusive": 46711,
+      "bytes": 64,
+      "kind": "unresolved_song_event_51"
+    },
+    {
+      "cpu_start": 46730,
+      "cpu_end_exclusive": 46754,
+      "bytes": 24,
+      "kind": "unresolved_song_event_52"
+    },
+    {
+      "cpu_start": 46773,
+      "cpu_end_exclusive": 46794,
+      "bytes": 21,
+      "kind": "unresolved_song_event_53"
+    },
+    {
+      "cpu_start": 46804,
+      "cpu_end_exclusive": 46824,
+      "bytes": 20,
+      "kind": "unresolved_song_event_54"
+    },
+    {
+      "cpu_start": 48727,
+      "cpu_end_exclusive": 49152,
+      "bytes": 425,
+      "kind": "ff_padding"
+    }
+  ],
+  "variable_song_event_record_count": 24,
+  "psg_note_register_words": 73,
+  "fm_note_register_words": 73,
+  "sequence_directory_words": 17,
+  "shape_directory_words": 5,
+  "source_only_complete_rom": false,
+  "external_wla_dx_verified": false,
+  "full_emulator_verified": false,
+  "sound_engine_fully_semantically_decoded": false,
+  "per_bank": [
+    {
+      "bank": 0,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "3bc23bce4f0bdcf88669187f949c7a89dea9341a9653fb21025fe704e8ce872b"
+    },
+    {
+      "bank": 1,
+      "source_backed_bytes": 779,
+      "original_rom_fallback_bytes": 15605,
+      "source_only_complete": false,
+      "sha256": "e91fa8fb9109dc13555967e208cb4650972d1965c2c9088be8d748ea177b4505"
+    },
+    {
+      "bank": 2,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "78b8ac016f2574ffece7f944f9b7680e873eb33f8481c31bbc0a480c4c74a4d8"
+    },
+    {
+      "bank": 3,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "b9ade48d112c574b642f026fd770e78cb939bb717328e4c6a3fdc228cc7c2c15"
+    },
+    {
+      "bank": 4,
+      "source_backed_bytes": 162,
+      "original_rom_fallback_bytes": 16222,
+      "source_only_complete": false,
+      "sha256": "bd2e9c90792a9f462a3f8ff42763c676ffc9568d9913227e3460c592beb42354"
+    },
+    {
+      "bank": 5,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "56986e4eab31e4a3d968326b9ab6002accb08e66e20f77b3d17adcc94f6f8170"
+    },
+    {
+      "bank": 6,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "cd64e2820b24ee57c2d909b9edf871246d37fc5e9e6dc889c0d58116a92524eb"
+    },
+    {
+      "bank": 7,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "86c86574d85f58dbde305325f8ea0d6c92c75a53bdcebf222e2909f1932bfce4"
+    },
+    {
+      "bank": 8,
+      "source_backed_bytes": 138,
+      "original_rom_fallback_bytes": 16246,
+      "source_only_complete": false,
+      "sha256": "3ef67b48f3b9e55adc980894ab1a4bfc932556f9f3e1a315204eb7456d4f53fa"
+    },
+    {
+      "bank": 9,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "d0ef995a86a68bf2230380320ab919212558d938e588e2c31e54084166613577"
+    },
+    {
+      "bank": 10,
+      "source_backed_bytes": 75,
+      "original_rom_fallback_bytes": 16309,
+      "source_only_complete": false,
+      "sha256": "d8e67566e6b8ec634d346a88426fcbf6975ed8021037b74895d0aa0d6057f9db"
+    },
+    {
+      "bank": 11,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "9855397ba6805317c97ac6dfd67219fcb931eb5721a5ac3daa0893cb4746b6df"
+    },
+    {
+      "bank": 12,
+      "source_backed_bytes": 108,
+      "original_rom_fallback_bytes": 16276,
+      "source_only_complete": false,
+      "sha256": "a39ff12117caebd7e626200107d04f5cc92f8507eff743607baca41a1ce8760b"
+    },
+    {
+      "bank": 13,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "00227b5f7b913280a53e60ad90743371b82381a30c8514aa4d92a287e062b39e"
+    },
+    {
+      "bank": 14,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "2178d9364b03203d4bb38ffdd41416c3fdf8d9efad1cb63090bee31f8a241b59"
+    },
+    {
+      "bank": 15,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "cc2164854a09b17dcdbcf8a33d2f632e25bac5a0907c5ad22fc2595f37228b1a"
+    }
+  ],
+  "limitations": [
+    "Five banks reconstruct without original ROM; eleven remaining banks still require original-ROM fallback.",
+    "Most bank2 event payloads and late-bank data remain byte-preserving but semantically unresolved.",
+    "No complete musical playback/emulator trace has been performed, and external WLA-DX has not executed."
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "schema": "ys-whole-system-seven-banks-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "rom_bytes": 262144,
+  "bank_count": 16,
+  "source_only_complete_banks": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+  ],
+  "complete_source_only_bank_bytes": 114688,
+  "prior_source_backed_bytes": 98787,
+  "new_source_backed_bytes": 16222,
+  "new_bank4_source_data_bytes": 16222,
+  "bank4_known_collision_descriptor_bytes": 124,
+  "bank4_known_collision_code_bytes": 38,
+  "bank4_four_lane_group_count": 502,
+  "bank4_unresolved_data_bytes": 16150,
+  "bank4_padding_bytes": 72,
+  "bank4_source_inventory": [
+    {
+      "start": 32930,
+      "end_exclusive": 48994,
+      "meaning": "candidate graphics 4-byte lanes (NOT confirmed tiles)",
+      "bytes": 16064
+    },
+    {
+      "start": 48994,
+      "end_exclusive": 49080,
+      "meaning": "unresolved trailer",
+      "bytes": 86
+    },
+    {
+      "start": 49080,
+      "end_exclusive": 49152,
+      "meaning": "72-byte FF pad",
+      "bytes": 72
+    }
+  ],
+  "source_backed_bytes": 115009,
+  "source_backed_pct": 43.8725,
+  "original_rom_fallback_bytes": 147135,
+  "source_only_complete_rom": false,
+  "external_wla_dx_verified": false,
+  "full_emulator_verified": false,
+  "bank4_graphics_format_decoded": false,
+  "per_bank": [
+    {
+      "bank": 0,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "3bc23bce4f0bdcf88669187f949c7a89dea9341a9653fb21025fe704e8ce872b"
+    },
+    {
+      "bank": 1,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "e91fa8fb9109dc13555967e208cb4650972d1965c2c9088be8d748ea177b4505"
+    },
+    {
+      "bank": 2,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "78b8ac016f2574ffece7f944f9b7680e873eb33f8481c31bbc0a480c4c74a4d8"
+    },
+    {
+      "bank": 3,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "b9ade48d112c574b642f026fd770e78cb939bb717328e4c6a3fdc228cc7c2c15"
+    },
+    {
+      "bank": 4,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "bd2e9c90792a9f462a3f8ff42763c676ffc9568d9913227e3460c592beb42354"
+    },
+    {
+      "bank": 5,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "56986e4eab31e4a3d968326b9ab6002accb08e66e20f77b3d17adcc94f6f8170"
+    },
+    {
+      "bank": 6,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "cd64e2820b24ee57c2d909b9edf871246d37fc5e9e6dc889c0d58116a92524eb"
+    },
+    {
+      "bank": 7,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "86c86574d85f58dbde305325f8ea0d6c92c75a53bdcebf222e2909f1932bfce4"
+    },
+    {
+      "bank": 8,
+      "source_backed_bytes": 138,
+      "original_rom_fallback_bytes": 16246,
+      "source_only_complete": false,
+      "sha256": "3ef67b48f3b9e55adc980894ab1a4bfc932556f9f3e1a315204eb7456d4f53fa"
+    },
+    {
+      "bank": 9,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "d0ef995a86a68bf2230380320ab919212558d938e588e2c31e54084166613577"
+    },
+    {
+      "bank": 10,
+      "source_backed_bytes": 75,
+      "original_rom_fallback_bytes": 16309,
+      "source_only_complete": false,
+      "sha256": "d8e67566e6b8ec634d346a88426fcbf6975ed8021037b74895d0aa0d6057f9db"
+    },
+    {
+      "bank": 11,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "9855397ba6805317c97ac6dfd67219fcb931eb5721a5ac3daa0893cb4746b6df"
+    },
+    {
+      "bank": 12,
+      "source_backed_bytes": 108,
+      "original_rom_fallback_bytes": 16276,
+      "source_only_complete": false,
+      "sha256": "a39ff12117caebd7e626200107d04f5cc92f8507eff743607baca41a1ce8760b"
+    },
+    {
+      "bank": 13,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "00227b5f7b913280a53e60ad90743371b82381a30c8514aa4d92a287e062b39e"
+    },
+    {
+      "bank": 14,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "2178d9364b03203d4bb38ffdd41416c3fdf8d9efad1cb63090bee31f8a241b59"
+    },
+    {
+      "bank": 15,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "cc2164854a09b17dcdbcf8a33d2f632e25bac5a0907c5ad22fc2595f37228b1a"
+    }
+  ],
+  "limitations": [
+    "Seven banks generated from source; nine banks remain dependent on original-ROM fallback.",
+    "Bank4 502 grouping x32 is organizational only; actual graphics encoding and source format not proven.",
+    "Collision routine bounded executions are not whole-system gameplay or timing verification.",
+    "Independent WLA-DX assembly remains unverified."
+  ]
+}

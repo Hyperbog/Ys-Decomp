@@ -1,0 +1,232 @@
+{
+  "schema": "ys-whole-system-four-complete-banks-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "rom_bytes": 262144,
+  "bank_count": 16,
+  "source_only_complete_banks": [
+    0,
+    3,
+    6,
+    7
+  ],
+  "complete_source_only_bank_bytes": 65536,
+  "prior_source_backed_bytes": 61391,
+  "new_source_backed_bytes": 9192,
+  "source_backed_bytes": 70583,
+  "source_backed_pct": 26.9253,
+  "original_rom_fallback_bytes": 191561,
+  "bank6_new_region_cpu_start": "9C18",
+  "bank6_new_region_cpu_end_exclusive": "C000",
+  "bank6_new_segments": [
+    {
+      "start": 39960,
+      "end_exclusive": 47368,
+      "type": "unresolved graphics bytes in eight-byte lanes",
+      "bytes": 7408
+    },
+    {
+      "start": 47368,
+      "end_exclusive": 47560,
+      "type": "tile indices A",
+      "bytes": 192
+    },
+    {
+      "start": 47560,
+      "end_exclusive": 47568,
+      "type": "layout pointers A",
+      "bytes": 8
+    },
+    {
+      "start": 47568,
+      "end_exclusive": 47608,
+      "type": "sprite layout A",
+      "bytes": 40
+    },
+    {
+      "start": 47608,
+      "end_exclusive": 47651,
+      "type": "sprite layout A",
+      "bytes": 43
+    },
+    {
+      "start": 47651,
+      "end_exclusive": 47691,
+      "type": "sprite layout A",
+      "bytes": 40
+    },
+    {
+      "start": 47691,
+      "end_exclusive": 47707,
+      "type": "tile indices middle",
+      "bytes": 16
+    },
+    {
+      "start": 47707,
+      "end_exclusive": 47715,
+      "type": "layout pointers B",
+      "bytes": 8
+    },
+    {
+      "start": 47715,
+      "end_exclusive": 47740,
+      "type": "sprite layout B",
+      "bytes": 25
+    },
+    {
+      "start": 47740,
+      "end_exclusive": 47771,
+      "type": "sprite layout B",
+      "bytes": 31
+    },
+    {
+      "start": 47771,
+      "end_exclusive": 47802,
+      "type": "sprite layout B",
+      "bytes": 31
+    },
+    {
+      "start": 47802,
+      "end_exclusive": 47833,
+      "type": "sprite layout B",
+      "bytes": 31
+    },
+    {
+      "start": 47833,
+      "end_exclusive": 49145,
+      "type": "tile indices tail",
+      "bytes": 1312
+    },
+    {
+      "start": 49145,
+      "end_exclusive": 49152,
+      "type": "padding",
+      "bytes": 7
+    }
+  ],
+  "bank6_new_mnemonic_instruction_bytes": 0,
+  "bank6_new_count_prefixed_triplet_records": 7,
+  "bank6_new_layout_pointer_words": 8,
+  "bank6_new_unresolved_visual_bytes": 7408,
+  "external_wla_dx_verified": false,
+  "full_system_emulator_verified": false,
+  "full_rom_source_only": false,
+  "per_bank": [
+    {
+      "bank": 0,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "3bc23bce4f0bdcf88669187f949c7a89dea9341a9653fb21025fe704e8ce872b"
+    },
+    {
+      "bank": 1,
+      "source_backed_bytes": 779,
+      "original_rom_fallback_bytes": 15605,
+      "source_only_complete": false,
+      "sha256": "e91fa8fb9109dc13555967e208cb4650972d1965c2c9088be8d748ea177b4505"
+    },
+    {
+      "bank": 2,
+      "source_backed_bytes": 3785,
+      "original_rom_fallback_bytes": 12599,
+      "source_only_complete": false,
+      "sha256": "78b8ac016f2574ffece7f944f9b7680e873eb33f8481c31bbc0a480c4c74a4d8"
+    },
+    {
+      "bank": 3,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "b9ade48d112c574b642f026fd770e78cb939bb717328e4c6a3fdc228cc7c2c15"
+    },
+    {
+      "bank": 4,
+      "source_backed_bytes": 162,
+      "original_rom_fallback_bytes": 16222,
+      "source_only_complete": false,
+      "sha256": "bd2e9c90792a9f462a3f8ff42763c676ffc9568d9913227e3460c592beb42354"
+    },
+    {
+      "bank": 5,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "56986e4eab31e4a3d968326b9ab6002accb08e66e20f77b3d17adcc94f6f8170"
+    },
+    {
+      "bank": 6,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "cd64e2820b24ee57c2d909b9edf871246d37fc5e9e6dc889c0d58116a92524eb"
+    },
+    {
+      "bank": 7,
+      "source_backed_bytes": 16384,
+      "original_rom_fallback_bytes": 0,
+      "source_only_complete": true,
+      "sha256": "86c86574d85f58dbde305325f8ea0d6c92c75a53bdcebf222e2909f1932bfce4"
+    },
+    {
+      "bank": 8,
+      "source_backed_bytes": 138,
+      "original_rom_fallback_bytes": 16246,
+      "source_only_complete": false,
+      "sha256": "3ef67b48f3b9e55adc980894ab1a4bfc932556f9f3e1a315204eb7456d4f53fa"
+    },
+    {
+      "bank": 9,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "d0ef995a86a68bf2230380320ab919212558d938e588e2c31e54084166613577"
+    },
+    {
+      "bank": 10,
+      "source_backed_bytes": 75,
+      "original_rom_fallback_bytes": 16309,
+      "source_only_complete": false,
+      "sha256": "d8e67566e6b8ec634d346a88426fcbf6975ed8021037b74895d0aa0d6057f9db"
+    },
+    {
+      "bank": 11,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "9855397ba6805317c97ac6dfd67219fcb931eb5721a5ac3daa0893cb4746b6df"
+    },
+    {
+      "bank": 12,
+      "source_backed_bytes": 108,
+      "original_rom_fallback_bytes": 16276,
+      "source_only_complete": false,
+      "sha256": "a39ff12117caebd7e626200107d04f5cc92f8507eff743607baca41a1ce8760b"
+    },
+    {
+      "bank": 13,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "00227b5f7b913280a53e60ad90743371b82381a30c8514aa4d92a287e062b39e"
+    },
+    {
+      "bank": 14,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "2178d9364b03203d4bb38ffdd41416c3fdf8d9efad1cb63090bee31f8a241b59"
+    },
+    {
+      "bank": 15,
+      "source_backed_bytes": 0,
+      "original_rom_fallback_bytes": 16384,
+      "source_only_complete": false,
+      "sha256": "cc2164854a09b17dcdbcf8a33d2f632e25bac5a0907c5ad22fc2595f37228b1a"
+    }
+  ],
+  "limitations": [
+    "Four banks byte-rebuild without original ROM; other twelve remain input-ROM-backed.",
+    "Count-prefixed triplets have proven boundaries but uncertain field semantics; eight-byte visual lanes preserve bytes rather than prove a pixel format.",
+    "Existing bounded sprite tests are not complete-game emulator runs; WLA-DX external validation not executed."
+  ]
+}
