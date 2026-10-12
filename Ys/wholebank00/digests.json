@@ -1,0 +1,9 @@
+{
+  "bank_sha256": "3bc23bce4f0bdcf88669187f949c7a89dea9341a9653fb21025fe704e8ce872b",
+  "new_code_sha256": "08a11557a5b42a9bc98cc828ca834c68b9b69d5ea2fd7eeca3bbbaf36e557162",
+  "new_data_sha256": "05ff72c04410a54454dc42bcac9d534f8f2a17d228afc142ff792f8477505adc",
+  "new_code_bytes": 6518,
+  "new_data_bytes": 1624,
+  "new_structured_bytes": 463,
+  "unresolved_bytes": 1161
+}

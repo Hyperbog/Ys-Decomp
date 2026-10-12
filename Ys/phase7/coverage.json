@@ -1,0 +1,87 @@
+{
+  "source_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "interpretation": "Bank-1 CFG is conditional on mapper state; bank-3 non-padding spans are provisional opaque data, NOT a decoded graphics/text grammar",
+  "bank1_direct_roots": {
+    "476C": [
+      "0DCC"
+    ],
+    "60B5": [
+      "0DCF"
+    ],
+    "6215": [
+      "0E20"
+    ],
+    "42BA": [
+      "1D74"
+    ],
+    "64CD": [
+      "0E7F"
+    ],
+    "61AE": [
+      "27A0",
+      "2FFE"
+    ]
+  },
+  "bank1_new_instructions": 376,
+  "bank1_new_instruction_bytes": 763,
+  "bank1_code_sha256": "ae219070c2b5f453f4d273545f3349861e37bc2ba126e4e4d1f7ddfc24718056",
+  "bank3_provisional_data_bytes": 14541,
+  "bank3_segments": [
+    {
+      "offset_start": "0C000",
+      "offset_end_exclusive": "0D000",
+      "size": 4096,
+      "status": "provisional_opaque_data",
+      "sha256": "ce7c073755a6382882ee518d16cf363e42354895f468e3eeac986b28c9469bea",
+      "ff_bytes": 0,
+      "byte_values_distinct": 133,
+      "notes": "Repeated four-byte motifs; likely graphic or color lookup data; format not proven"
+    },
+    {
+      "offset_start": "0D000",
+      "offset_end_exclusive": "0D600",
+      "size": 1536,
+      "status": "provisional_opaque_data",
+      "sha256": "527196d448c107535c8ab95cc71e0666acc0589c880c38af1bdc1b78bc98422e",
+      "ff_bytes": 127,
+      "byte_values_distinct": 153,
+      "notes": "Graphics-looking packed patterns and structured words; format not proven"
+    },
+    {
+      "offset_start": "0D600",
+      "offset_end_exclusive": "0DF00",
+      "size": 2304,
+      "status": "provisional_opaque_data",
+      "sha256": "25352a887b2aef9f70cf15b267df991214defa8eca4dacb041212cd39b340504",
+      "ff_bytes": 24,
+      "byte_values_distinct": 239,
+      "notes": "Mixed packed payload; no validated internal record grammar"
+    },
+    {
+      "offset_start": "0DF00",
+      "offset_end_exclusive": "0F8CD",
+      "size": 6605,
+      "status": "provisional_opaque_data",
+      "sha256": "eee2c5942046d6ba6e38b383284007149c90e7290becaa97d4d96d7103bb110b",
+      "ff_bytes": 102,
+      "byte_values_distinct": 190,
+      "notes": "High-entropy symbol/command-like payload; possible encoded game text; format unproven"
+    }
+  ],
+  "bank3_ff_padding_excluded": 1843,
+  "phase7_candidate_total_new": 15304,
+  "earlier_phase_1_to_6_classified": 21523,
+  "candidate_cumulative_coverage": 36827,
+  "candidate_coverage_percent": 14.048,
+  "unresolved_slot2_edges": [
+    "47C2 -> CPU 807C, slot-2 bank unknown",
+    "486C -> CPU 807C, slot-2 bank unknown",
+    "48DF -> CPU 807C, slot-2 bank unknown"
+  ],
+  "not_proven": [
+    "bank-1 runtime occupancy at each caller",
+    "meaning or format of bank-3 data",
+    "byte-identical assembler output",
+    "emulator execution equivalence"
+  ]
+}

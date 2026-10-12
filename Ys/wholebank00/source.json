@@ -1,0 +1,434 @@
+{
+  "schema": "ys-whole-bank00-v1",
+  "segments": [
+    {
+      "start": 6,
+      "end": 8,
+      "kind": "fill_ff",
+      "name": "padding_0006",
+      "value": 255,
+      "count": 2
+    },
+    {
+      "start": 19,
+      "end": 24,
+      "kind": "fill_ff",
+      "name": "padding_0013",
+      "value": 255,
+      "count": 5
+    },
+    {
+      "start": 35,
+      "end": 40,
+      "kind": "fill_ff",
+      "name": "padding_0023",
+      "value": 255,
+      "count": 5
+    },
+    {
+      "start": 49,
+      "end": 56,
+      "kind": "fill_ff",
+      "name": "padding_0031",
+      "value": 255,
+      "count": 7
+    },
+    {
+      "start": 88,
+      "end": 102,
+      "kind": "fill_ff",
+      "name": "padding_0058",
+      "value": 255,
+      "count": 14
+    },
+    {
+      "start": 212,
+      "end": 252,
+      "kind": "unresolved",
+      "name": "unresolved_00D4",
+      "hex": "fc004a0cde0e230f390f710fc90d052c5944703f0538cc38453c4d00634b3943a863076c266a257c"
+    },
+    {
+      "start": 428,
+      "end": 436,
+      "kind": "pointer_words",
+      "name": "bootstrap_dispatch_4",
+      "words": [
+        436,
+        442,
+        471,
+        952
+      ]
+    },
+    {
+      "start": 491,
+      "end": 509,
+      "kind": "pointer_words",
+      "name": "bootstrap_routines_9",
+      "words": [
+        509,
+        510,
+        648,
+        689,
+        706,
+        810,
+        825,
+        861,
+        905
+      ]
+    },
+    {
+      "start": 1896,
+      "end": 1907,
+      "kind": "unresolved",
+      "name": "unresolved_0768",
+      "hex": "26a0ffffffffff00000000"
+    },
+    {
+      "start": 1922,
+      "end": 1946,
+      "kind": "ascii",
+      "name": "cartridge_title",
+      "text": "Ancient Ys Vanished Omen"
+    },
+    {
+      "start": 2049,
+      "end": 2651,
+      "kind": "unresolved",
+      "name": "unresolved_0801",
+      "hex": "55cac755d050c84bd44bcf55cad0d658c3d455cac3d548d3d0ce4eda48d0d34ec73ccac755cac7d3c755cac7c755d0d8c7d347d7cbb244c732c845c3cf4fd0d54bd54ac7d3c755cacbd432d545d3c7c3d5d6d3c7d44ec3cf31c754d5d3c3cfc9c758cbb2b244d0d0cdd450cf43cfc644da4ac3d7c745b2d0c3cd55cacbc7d7c7d436da50d6d34ac7c3d3c641d44dcfd0d83ccad0d64ac3d444c7c8d0d3c755d0d8cf43ce32ecce3ccac7d3c745d0cec755cbcec744d6d543d3d554d0cec749c7d53fcac7cf55cac7da54d5c3d5d6c7d454d044c7c7cf4ed6d4d53aaabdabaa5ad0d643d3d0d6cfc654c3d848cbc7b2c6d443d3c74ac7b2d145c3cfd4d554cbb2d7c7d348d0d6cfc649d032c3cfc64fc3cec7c64ac758c74ac3c654d0cec7d5cacbcfc93ccac3cfcd55c3cdc750b2c649cbd3b254d0cec7d8cac7d3c745d0cecbcfc954d5d0b2c7cf3ccac7d3c7ecd445c3b2b2c7c638b2c7c3d4c757cbb2b2c3c9c742aeb8b2b42da0a0b6aead49d0c6c6c7d4d4c7d435bdbcb1aeba51d3d0d5c7c5d54ac3d3ced0cfcbc5c358cbd5cad0d6d547d4c5c3d1c72abaa0b755cad0d6c9ca33aeb6b6aa43cfdad5cacbcfc948d3cbc9cad5c7cfcbcfc955d3d0d6c4b2c73aa0adaa43c4c3cfc6d0cfc7c654d5d3d0cfc954d0cec7d0cfc754cacbc7b2c63fcbb2b2d4d543cfdaced0d3c751c7d3d4d0cf4acbb2b2d448c7c7b2cbcfc954c7c3b2c7c651d0c7d5c7d4d44ec3d5d5c7d343c9c3cbcf44c7c9cbcf45d0d3d1d4c749b2d0d8cbcfc946d0cfecd544c7d5d5c7d345c3cfecd555d3c3d1d1c7c658cacbc5ca45c3d1d5d6d3c7c64dcbb2b2c7c62daeb4bc00"
+    },
+    {
+      "start": 4087,
+      "end": 4093,
+      "kind": "pointer_words",
+      "name": "object_setup_dispatch_3",
+      "words": [
+        4093,
+        4094,
+        4777
+      ]
+    },
+    {
+      "start": 6536,
+      "end": 6604,
+      "kind": "pointer_words",
+      "name": "actor_handler_dispatch_34",
+      "words": [
+        5654,
+        5655,
+        5683,
+        5719,
+        5731,
+        5763,
+        5776,
+        5786,
+        6363,
+        6438,
+        6455,
+        5796,
+        5806,
+        5816,
+        5834,
+        6391,
+        5866,
+        6432,
+        5918,
+        5936,
+        5993,
+        6022,
+        6055,
+        6065,
+        6132,
+        6151,
+        6168,
+        6243,
+        6266,
+        6295,
+        6480,
+        6510,
+        6530,
+        6379
+      ]
+    },
+    {
+      "start": 7173,
+      "end": 7523,
+      "kind": "unresolved",
+      "name": "unresolved_1C05",
+      "hex": "080f130b0a00010059bb081f10090600020079bb0a1f190f0e00030099bb082f28140e000400f9bb0b2f58233200280019bc0a3f5c2d3c00320039bc0b4f694646003c0059bc095f7d506400460079bc0b6f82557800500099bc0c6f875a8c005a00b9bc0aafa050c800c800d9bc0eafa555f000f000f9bc10afa55a1801180119bd0ebfaa5fc800400139bd10cfaf64f000680159bd12dfb4691801900179bd0effa069c800b80199bd10efaf69f000e001b9bd12ffb96e18010302d9bd10ffa05a1801fe01f9bd10ffa55f1801fe0119be10ffb46e1801fe0139be10ffa5731801fe0159be10ffb46e1801fe0179be10ffbe911801fe0199be10ffc8871801fe01b9be10ffcd961801fe01d9be10ffcd9b1801fe01f9be10ffd79b1801fe0119bf10ffc8871801fe0139bf10ffebaa1801fe0159bf10ffb9731801fe0179bf10ffbe8c1801fe0199bf10ffd7a51801fe01b9bf10ffdb9b1801fe01d9bf"
+    },
+    {
+      "start": 7586,
+      "end": 7602,
+      "kind": "unresolved",
+      "name": "unresolved_1DA2",
+      "hex": "828484848586868686878787888e938a"
+    },
+    {
+      "start": 7701,
+      "end": 7743,
+      "kind": "unresolved",
+      "name": "unresolved_1E15",
+      "hex": "0b00800bda8b0cd9a40cd9a40a00800a00800a00800a00800a00800af0ae0af0ae0af0ae09f992099ca2"
+    },
+    {
+      "start": 7848,
+      "end": 7892,
+      "kind": "pointer_words",
+      "name": "graphics_upload_dispatch_22",
+      "words": [
+        7892,
+        7924,
+        7930,
+        7930,
+        7936,
+        7937,
+        7937,
+        7951,
+        7951,
+        7957,
+        7963,
+        7968,
+        7973,
+        7987,
+        7992,
+        8006,
+        8023,
+        8028,
+        8036,
+        8041,
+        8049,
+        8062
+      ]
+    },
+    {
+      "start": 9523,
+      "end": 9605,
+      "kind": "pointer_words",
+      "name": "nine_byte_resource_directory_41",
+      "words": [
+        9605,
+        9614,
+        9623,
+        9632,
+        9641,
+        9650,
+        9659,
+        9668,
+        9677,
+        9686,
+        9695,
+        9704,
+        9713,
+        9722,
+        9731,
+        9740,
+        9749,
+        9758,
+        9767,
+        9776,
+        9785,
+        9794,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803,
+        9803
+      ]
+    },
+    {
+      "start": 10101,
+      "end": 10109,
+      "kind": "fill_ff",
+      "name": "padding_2775",
+      "value": 255,
+      "count": 8
+    },
+    {
+      "start": 11215,
+      "end": 11249,
+      "kind": "pointer_words",
+      "name": "sprite_ram_buffer_pointers_17",
+      "words": [
+        49664,
+        49712,
+        49760,
+        49808,
+        49856,
+        49904,
+        49952,
+        50000,
+        50048,
+        50096,
+        50144,
+        50192,
+        50240,
+        50288,
+        50336,
+        50384,
+        50432
+      ]
+    },
+    {
+      "start": 13946,
+      "end": 13954,
+      "kind": "pointer_words",
+      "name": "state_handler_dispatch_4",
+      "words": [
+        13790,
+        14073,
+        14099,
+        14117
+      ]
+    },
+    {
+      "start": 13981,
+      "end": 13987,
+      "kind": "pointer_words",
+      "name": "state_handler_dispatch_3a",
+      "words": [
+        13790,
+        14073,
+        14117
+      ]
+    },
+    {
+      "start": 14051,
+      "end": 14057,
+      "kind": "pointer_words",
+      "name": "state_handler_dispatch_3b",
+      "words": [
+        13790,
+        14073,
+        14099
+      ]
+    },
+    {
+      "start": 14196,
+      "end": 14276,
+      "kind": "pointer_words",
+      "name": "scenario_dispatch_40",
+      "words": [
+        14151,
+        11906,
+        11702,
+        11685,
+        11727,
+        11845,
+        11887,
+        11901,
+        11685,
+        11927,
+        12038,
+        12052,
+        12523,
+        12338,
+        12428,
+        12539,
+        12951,
+        12718,
+        12885,
+        12700,
+        12745,
+        12832,
+        12843,
+        12872,
+        12700,
+        12911,
+        12923,
+        12935,
+        12947,
+        13110,
+        12987,
+        13076,
+        13093,
+        14151,
+        13141,
+        13269,
+        13154,
+        14151,
+        13608,
+        13879
+      ]
+    },
+    {
+      "start": 14297,
+      "end": 14306,
+      "kind": "unresolved",
+      "name": "unresolved_37D9",
+      "hex": "e7cfd0fde7c1c7d4ff"
+    },
+    {
+      "start": 15693,
+      "end": 15759,
+      "kind": "unresolved",
+      "name": "unresolved_3D4D",
+      "hex": "0e0e0e0e0f0d0f0f0f0e0f0d0d0b0d0f0e0d0e0d0d0d00803291329c78ab008047ad5f8f6ba106af42b606afbeb9d1b91ebc3dbab0bf75bfb5ba16bf45bbc6ba94bb"
+    },
+    {
+      "start": 16153,
+      "end": 16177,
+      "kind": "unresolved",
+      "name": "unresolved_3F19",
+      "hex": "213f2d3f293f253f0a1e42bf0a229abf092286bf0b2a67bf"
+    },
+    {
+      "start": 16264,
+      "end": 16288,
+      "kind": "pointer_words",
+      "name": "endgame_local_dispatch_12",
+      "words": [
+        4868,
+        4870,
+        4872,
+        4874,
+        4876,
+        4878,
+        16288,
+        16294,
+        16298,
+        16302,
+        16681,
+        16841
+      ]
+    },
+    {
+      "start": 16323,
+      "end": 16337,
+      "kind": "pointer_words",
+      "name": "endgame_branch_dispatch_7",
+      "words": [
+        16337,
+        16373,
+        16421,
+        16469,
+        16493,
+        16541,
+        16565
+      ]
+    },
+    {
+      "start": 16383,
+      "end": 16384,
+      "kind": "unresolved",
+      "name": "unresolved_3FFF",
+      "hex": "20"
+    }
+  ],
+  "note": "Unresolved byte data is reversible but not claimed decoded; Z80 ranges inferred and independently round-tripped."
+}

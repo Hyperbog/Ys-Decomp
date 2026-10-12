@@ -1,0 +1,317 @@
+{
+  "source_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "status": "Static mapper-context reconstruction; not runtime-proven",
+  "mapper_write_count": 46,
+  "mapper_writes_with_adjacent_immediate_bank": 38,
+  "mapper_audit": [
+    {
+      "write_offset": "00132",
+      "bank_immediately_loaded": 2,
+      "immediate_slot2_call_or_jump": "8000"
+    },
+    {
+      "write_offset": "00163",
+      "bank_immediately_loaded": 2,
+      "immediate_slot2_call_or_jump": "8000"
+    },
+    {
+      "write_offset": "00199",
+      "bank_immediately_loaded": null,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "001C8",
+      "bank_immediately_loaded": 7,
+      "immediate_slot2_call_or_jump": "8819"
+    },
+    {
+      "write_offset": "001DC",
+      "bank_immediately_loaded": 3,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00601",
+      "bank_immediately_loaded": 3,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00620",
+      "bank_immediately_loaded": null,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00B02",
+      "bank_immediately_loaded": 7,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00B6D",
+      "bank_immediately_loaded": 2,
+      "immediate_slot2_call_or_jump": "8112"
+    },
+    {
+      "write_offset": "00B7A",
+      "bank_immediately_loaded": 7,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00BA3",
+      "bank_immediately_loaded": 3,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00BDD",
+      "bank_immediately_loaded": null,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00C4F",
+      "bank_immediately_loaded": 2,
+      "immediate_slot2_call_or_jump": "8803"
+    },
+    {
+      "write_offset": "00C5B",
+      "bank_immediately_loaded": 5,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00DD7",
+      "bank_immediately_loaded": 7,
+      "immediate_slot2_call_or_jump": "86C1"
+    },
+    {
+      "write_offset": "00E5C",
+      "bank_immediately_loaded": 7,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00F9F",
+      "bank_immediately_loaded": 3,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "00FB3",
+      "bank_immediately_loaded": 8,
+      "immediate_slot2_call_or_jump": "BEE8"
+    },
+    {
+      "write_offset": "01B3E",
+      "bank_immediately_loaded": 7,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "01D87",
+      "bank_immediately_loaded": 2,
+      "immediate_slot2_call_or_jump": "8803"
+    },
+    {
+      "write_offset": "01DB4",
+      "bank_immediately_loaded": 3,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "01DD3",
+      "bank_immediately_loaded": 3,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "01DF0",
+      "bank_immediately_loaded": null,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "01E4D",
+      "bank_immediately_loaded": 4,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "01E67",
+      "bank_immediately_loaded": 3,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "01E93",
+      "bank_immediately_loaded": 4,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "01FEB",
+      "bank_immediately_loaded": null,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "02018",
+      "bank_immediately_loaded": null,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "0204F",
+      "bank_immediately_loaded": 9,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "026DF",
+      "bank_immediately_loaded": 7,
+      "immediate_slot2_call_or_jump": "8856"
+    },
+    {
+      "write_offset": "026F5",
+      "bank_immediately_loaded": 6,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "02761",
+      "bank_immediately_loaded": 7,
+      "immediate_slot2_call_or_jump": "86C1"
+    },
+    {
+      "write_offset": "02BF3",
+      "bank_immediately_loaded": 6,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "03CCD",
+      "bank_immediately_loaded": 12,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "03CDB",
+      "bank_immediately_loaded": 13,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "03D49",
+      "bank_immediately_loaded": null,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "03DA5",
+      "bank_immediately_loaded": 10,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "03DC3",
+      "bank_immediately_loaded": 12,
+      "immediate_slot2_call_or_jump": "9EFC"
+    },
+    {
+      "write_offset": "03DFD",
+      "bank_immediately_loaded": 12,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "03E2F",
+      "bank_immediately_loaded": 10,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "03E88",
+      "bank_immediately_loaded": 10,
+      "immediate_slot2_call_or_jump": "BEF7"
+    },
+    {
+      "write_offset": "03EFF",
+      "bank_immediately_loaded": 12,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "03F33",
+      "bank_immediately_loaded": 13,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "03F44",
+      "bank_immediately_loaded": null,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "04773",
+      "bank_immediately_loaded": 4,
+      "immediate_slot2_call_or_jump": null
+    },
+    {
+      "write_offset": "060C2",
+      "bank_immediately_loaded": 7,
+      "immediate_slot2_call_or_jump": null
+    }
+  ],
+  "banked_code": {
+    "4": {
+      "roots": {
+        "807C": [
+          "bank1 $476C sets $FFFF=04 at $4773, calls at $47C2/$486C/$48DF"
+        ]
+      },
+      "instructions": 28,
+      "bytes": 38,
+      "code_sha256": "81d03ebc7a7ab162f7715906597f3a6f8ff80b3196fe5a520ae189aaab769401",
+      "uncertainties": []
+    },
+    "7": {
+      "roots": {
+        "86C1": [
+          "fixed $0DD5/$0DD7/$0DDA and $275F/$2761/$2764: bank 07"
+        ],
+        "8819": [
+          "fixed $01C6/$01C8/$01CB: bank 07"
+        ],
+        "8856": [
+          "fixed $26DD/$26DF/$26E2: bank 07"
+        ]
+      },
+      "instructions": 290,
+      "bytes": 438,
+      "code_sha256": "e316e6e6522c69e491212d9a6658bd9b6e2751d91a689d2fc8b7d194fe26de9e",
+      "uncertainties": []
+    },
+    "8": {
+      "roots": {
+        "BEE8": [
+          "fixed $0FB1/$0FB3/$0FB6: bank 08"
+        ]
+      },
+      "instructions": 80,
+      "bytes": 138,
+      "code_sha256": "6967777b9b5cdd04ec07c9808c6120d41dd09c860d80d5bfaf4ac87a661774e5",
+      "uncertainties": []
+    },
+    "10": {
+      "roots": {
+        "BEF7": [
+          "fixed $3E86/$3E88/$3E8B: bank 0A"
+        ]
+      },
+      "instructions": 42,
+      "bytes": 75,
+      "code_sha256": "f9f7c3436b595c934f0f4b4d24a843ea3bdf3b7b78861a828c8f5e9125e5ccbf",
+      "uncertainties": []
+    },
+    "12": {
+      "roots": {
+        "9EFC": [
+          "fixed $3DC1/$3DC3/$3DC6: bank 0C"
+        ]
+      },
+      "instructions": 62,
+      "bytes": 108,
+      "code_sha256": "32c02f00df597cf637d9aac75a1f4c4d39e241f5544c2a17864cb516d465af83",
+      "uncertainties": []
+    }
+  },
+  "new_distinct_code_bytes": 797,
+  "bank4_indexed_table": {
+    "physical_start": "10000",
+    "physical_end_exclusive": "1007C",
+    "cpu_start": "8000",
+    "records": 31,
+    "record_size": 4,
+    "bytes": 124,
+    "sha256": "970b0fa80f570df092d33e9dfdec4a09c998dc8704c9d338a392a09dd1d35600",
+    "indexing_evidence": "Bank4 $807C-$8082 doubles A twice, then dereferences $8000+A*4",
+    "limitation": "Only the bounded prefix before code at $807C is counted; data semantics and valid indices unresolved"
+  },
+  "new_distinct_code_plus_table_bytes": 921,
+  "cumulative_candidate_coverage_bytes": 37748,
+  "new_distinct_instruction_starts": 502,
+  "caveat": "Branch entry must be reached with its advertised bank mapped; fixed-bank calls may change mapper state; no execution trace."
+}

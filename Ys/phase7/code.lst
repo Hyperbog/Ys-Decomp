@@ -1,0 +1,386 @@
+; Phase 7: conservative bank-1 Z80 CFG from six prior fixed-bank references.
+; Mapping is CONDITIONAL on bank 1 being present at CPU $4000-$7FFF.
+; Not assembled, execution-traced, or a validated full-function map.
+; ROM    CPU   bytes               Z80
+042BA 42BA  FE 0C               cp $0C
+042BC 42BC  D8                  ret c
+042BD 42BD  B7                  or a
+042BE 42BE  F2 C5 42            jp p,$42C5
+042C1 42C1  FE 92               cp $92
+042C3 42C3  28 03               jr z,$42C8
+042C5 42C5  3E 0C               ld a,$0C
+042C7 42C7  C9                  ret
+042C8 42C8  3E 0B               ld a,$0B
+042CA 42CA  C9                  ret
+0476C 476C  3A 00 C1            ld a,($C100)
+0476F 476F  B7                  or a
+04770 4770  C0                  ret nz
+04771 4771  3E 04               ld a,$04
+04773 4773  32 FF FF            ld ($FFFF),a
+04776 4776  3A E3 C1            ld a,($C1E3)
+04779 4779  B7                  or a
+0477A 477A  20 07               jr nz,$4783
+0477C 477C  3A 1B C1            ld a,($C11B)
+0477F 477F  0F                  rrca
+04780 4780  DA 9F 48            jp c,$489F
+04783 4783  3A 0D C2            ld a,($C20D)
+04786 4786  87                  add a,a
+04787 4787  C8                  ret z
+04788 4788  87                  add a,a
+04789 4789  6F                  ld l,a
+0478A 478A  26 80               ld h,$80
+0478C 478C  3A 11 C2            ld a,($C211)
+0478F 478F  86                  add a,(hl)
+04790 4790  47                  ld b,a
+04791 4791  23                  inc hl
+04792 4792  86                  add a,(hl)
+04793 4793  4F                  ld c,a
+04794 4794  23                  inc hl
+04795 4795  3A 10 C2            ld a,($C210)
+04798 4798  86                  add a,(hl)
+04799 4799  57                  ld d,a
+0479A 479A  23                  inc hl
+0479B 479B  86                  add a,(hl)
+0479C 479C  5F                  ld e,a
+0479D 479D  D9                  exx
+0479E 479E  06 10               ld b,$10
+047A0 47A0  DD 21 30 C2         ld ix,$C230
+047A4 47A4  C5                  push bc
+047A5 47A5  DD 7E 00            ld a,(ix+0)
+047A8 47A8  B7                  or a
+047A9 47A9  28 76               jr z,$4821
+047AB 47AB  DD CB 01 46         bit 0,(ix+1)
+047AF 47AF  20 70               jr nz,$4821
+047B1 47B1  DD CB 20 7E         bit 7,(ix+32)
+047B5 47B5  CA 68 48            jp z,$4868
+047B8 47B8  DD CB 01 56         bit 2,(ix+1)
+047BC 47BC  20 63               jr nz,$4821
+047BE 47BE  D9                  exx
+047BF 47BF  DD 7E 0E            ld a,(ix+14)
+047C2 47C2  CD 7C 80            call $807C
+047C5 47C5  D9                  exx
+047C6 47C6  30 59               jr nc,$4821
+047C8 47C8  3A 1B C1            ld a,($C11B)
+047CB 47CB  E6 1F               and $1F
+047CD 47CD  DD BE 21            cp (ix+33)
+047D0 47D0  38 4F               jr c,$4821
+047D2 47D2  3E A0               ld a,$A0
+047D4 47D4  32 64 DE            ld ($DE64),a
+047D7 47D7  3A 23 C2            ld a,($C223)
+047DA 47DA  DD 96 24            sub (ix+36)
+047DD 47DD  30 0B               jr nc,$47EA
+047DF 47DF  3E A3               ld a,$A3
+047E1 47E1  32 64 DE            ld ($DE64),a
+047E4 47E4  DD 7E 22            ld a,(ix+34)
+047E7 47E7  C3 05 48            jp $4805
+047EA 47EA  4F                  ld c,a
+047EB 47EB  DD 7E 22            ld a,(ix+34)
+047EE 47EE  91                  sub c
+047EF 47EF  30 01               jr nc,$47F2
+047F1 47F1  AF                  xor a
+047F2 47F2  DD 77 22            ld (ix+34),a
+047F5 47F5  3A BD C1            ld a,($C1BD)
+047F8 47F8  07                  rlca
+047F9 47F9  DD 7E 22            ld a,(ix+34)
+047FC 47FC  30 07               jr nc,$4805
+047FE 47FE  91                  sub c
+047FF 47FF  30 01               jr nc,$4802
+04801 4801  AF                  xor a
+04802 4802  DD 77 22            ld (ix+34),a
+04805 4805  B7                  or a
+04806 4806  DD CB 01 D6         set 2,(ix+1)
+0480A 480A  32 91 C1            ld ($C191),a
+0480D 480D  DD 7E 2A            ld a,(ix+42)
+04810 4810  32 90 C1            ld ($C190),a
+04813 4813  28 17               jr z,$482C
+04815 4815  DD 36 0F 0C         ld (ix+15),$0C
+04819 4819  3A 0C C2            ld a,($C20C)
+0481C 481C  E6 03               and $03
+0481E 481E  DD 77 19            ld (ix+25),a
+04821 4821  C1                  pop bc
+04822 4822  11 30 00            ld de,$0030
+04825 4825  DD 19               add ix,de
+04827 4827  05                  dec b
+04828 4828  C2 A4 47            jp nz,$47A4
+0482B 482B  C9                  ret
+0482C 482C  3E A1               ld a,$A1
+0482E 482E  32 64 DE            ld ($DE64),a
+04831 4831  DD 5E 27            ld e,(ix+39)
+04834 4834  DD 56 28            ld d,(ix+40)
+04837 4837  2A 27 C2            ld hl,($C227)
+0483A 483A  19                  add hl,de
+0483B 483B  30 03               jr nc,$4840
+0483D 483D  21 FF FF            ld hl,$FFFF
+04840 4840  22 27 C2            ld ($C227),hl
+04843 4843  DD 5E 25            ld e,(ix+37)
+04846 4846  DD 56 26            ld d,(ix+38)
+04849 4849  2A 25 C2            ld hl,($C225)
+0484C 484C  19                  add hl,de
+0484D 484D  30 03               jr nc,$4852
+0484F 484F  21 FF FF            ld hl,$FFFF
+04852 4852  22 25 C2            ld ($C225),hl
+04855 4855  DD 36 0F 64         ld (ix+15),$64
+04859 4859  DD 36 00 0A         ld (ix+0),$0A
+0485D 485D  DD 36 0D 00         ld (ix+13),$00
+04861 4861  DD 36 0E 00         ld (ix+14),$00
+04865 4865  C3 21 48            jp $4821
+04868 4868  D9                  exx
+04869 4869  DD 7E 0E            ld a,(ix+14)
+0486C 486C  CD 7C 80            call $807C
+0486F 486F  D9                  exx
+04870 4870  30 22               jr nc,$4894
+04872 4872  DD CB 01 7E         bit 7,(ix+1)
+04876 4876  DD CB 01 FE         set 7,(ix+1)
+0487A 487A  20 1C               jr nz,$4898
+0487C 487C  DD CB 01 F6         set 6,(ix+1)
+04880 4880  3A 81 C1            ld a,($C181)
+04883 4883  FE 03               cp $03
+04885 4885  D2 21 48            jp nc,$4821
+04888 4888  3A 0C C2            ld a,($C20C)
+0488B 488B  EE 01               xor $01
+0488D 488D  87                  add a,a
+0488E 488E  DD 77 14            ld (ix+20),a
+04891 4891  C3 21 48            jp $4821
+04894 4894  DD CB 01 BE         res 7,(ix+1)
+04898 4898  DD CB 01 B6         res 6,(ix+1)
+0489C 489C  C3 21 48            jp $4821
+0489F 489F  3A 01 C2            ld a,($C201)
+048A2 48A2  E6 04               and $04
+048A4 48A4  C0                  ret nz
+048A5 48A5  3A 0E C2            ld a,($C20E)
+048A8 48A8  87                  add a,a
+048A9 48A9  C8                  ret z
+048AA 48AA  87                  add a,a
+048AB 48AB  6F                  ld l,a
+048AC 48AC  26 80               ld h,$80
+048AE 48AE  3A 11 C2            ld a,($C211)
+048B1 48B1  86                  add a,(hl)
+048B2 48B2  47                  ld b,a
+048B3 48B3  23                  inc hl
+048B4 48B4  86                  add a,(hl)
+048B5 48B5  4F                  ld c,a
+048B6 48B6  23                  inc hl
+048B7 48B7  3A 10 C2            ld a,($C210)
+048BA 48BA  86                  add a,(hl)
+048BB 48BB  57                  ld d,a
+048BC 48BC  23                  inc hl
+048BD 48BD  86                  add a,(hl)
+048BE 48BE  5F                  ld e,a
+048BF 48BF  D9                  exx
+048C0 48C0  06 10               ld b,$10
+048C2 48C2  DD 21 30 C2         ld ix,$C230
+048C6 48C6  C5                  push bc
+048C7 48C7  DD 7E 00            ld a,(ix+0)
+048CA 48CA  B7                  or a
+048CB 48CB  CA 58 49            jp z,$4958
+048CE 48CE  DD CB 01 46         bit 0,(ix+1)
+048D2 48D2  C2 58 49            jp nz,$4958
+048D5 48D5  DD CB 20 7E         bit 7,(ix+32)
+048D9 48D9  28 7D               jr z,$4958
+048DB 48DB  D9                  exx
+048DC 48DC  DD 7E 0D            ld a,(ix+13)
+048DF 48DF  CD 7C 80            call $807C
+048E2 48E2  D9                  exx
+048E3 48E3  30 73               jr nc,$4958
+048E5 48E5  DD CB 01 FE         set 7,(ix+1)
+048E9 48E9  3A 1B C1            ld a,($C11B)
+048EC 48EC  E6 1F               and $1F
+048EE 48EE  DD BE 21            cp (ix+33)
+048F1 48F1  30 59               jr nc,$494C
+048F3 48F3  3A 24 C2            ld a,($C224)
+048F6 48F6  4F                  ld c,a
+048F7 48F7  DD 7E 23            ld a,(ix+35)
+048FA 48FA  91                  sub c
+048FB 48FB  4F                  ld c,a
+048FC 48FC  30 17               jr nc,$4915
+048FE 48FE  3E A3               ld a,$A3
+04900 4900  32 64 DE            ld ($DE64),a
+04903 4903  3A 1B C0            ld a,($C01B)
+04906 4906  E6 0F               and $0F
+04908 4908  20 22               jr nz,$492C
+0490A 490A  DD 4E 23            ld c,(ix+35)
+0490D 490D  CB 39               srl c
+0490F 490F  CB 39               srl c
+04911 4911  CB 39               srl c
+04913 4913  CB 39               srl c
+04915 4915  3E A2               ld a,$A2
+04917 4917  32 64 DE            ld ($DE64),a
+0491A 491A  3A BE C1            ld a,($C1BE)
+0491D 491D  07                  rlca
+0491E 491E  30 02               jr nc,$4922
+04920 4920  CB 39               srl c
+04922 4922  3A 22 C2            ld a,($C222)
+04925 4925  91                  sub c
+04926 4926  30 01               jr nc,$4929
+04928 4928  AF                  xor a
+04929 4929  32 22 C2            ld ($C222),a
+0492C 492C  3E 02               ld a,$02
+0492E 492E  32 00 C2            ld ($C200),a
+04931 4931  3A 1B C0            ld a,($C01B)
+04934 4934  B7                  or a
+04935 4935  28 08               jr z,$493F
+04937 4937  3A 0C C2            ld a,($C20C)
+0493A 493A  EE 01               xor $01
+0493C 493C  C3 44 49            jp $4944
+0493F 493F  DD 7E 0C            ld a,(ix+12)
+04942 4942  E6 03               and $03
+04944 4944  32 19 C2            ld ($C219),a
+04947 4947  3E 0C               ld a,$0C
+04949 4949  32 0F C2            ld ($C20F),a
+0494C 494C  DD 7E 22            ld a,(ix+34)
+0494F 494F  32 91 C1            ld ($C191),a
+04952 4952  DD 7E 2A            ld a,(ix+42)
+04955 4955  32 90 C1            ld ($C190),a
+04958 4958  C1                  pop bc
+04959 4959  11 30 00            ld de,$0030
+0495C 495C  DD 19               add ix,de
+0495E 495E  05                  dec b
+0495F 495F  C2 C6 48            jp nz,$48C6
+04962 4962  C9                  ret
+060B5 60B5  3A 98 C1            ld a,($C198)
+060B8 60B8  B7                  or a
+060B9 60B9  28 05               jr z,$60C0
+060BB 60BB  3A 00 C1            ld a,($C100)
+060BE 60BE  B7                  or a
+060BF 60BF  C0                  ret nz
+060C0 60C0  3E 07               ld a,$07
+060C2 60C2  32 FF FF            ld ($FFFF),a
+060C5 60C5  21 1F C1            ld hl,$C11F
+060C8 60C8  7E                  ld a,(hl)
+060C9 60C9  3C                  inc a
+060CA 60CA  E6 07               and $07
+060CC 60CC  77                  ld (hl),a
+060CD 60CD  21 D2 60            ld hl,$60D2
+060D0 60D0  CF                  rst $0008
+060D1 60D1  C9                  ret
+06116 6116  3A 22 C2            ld a,($C222)
+06119 6119  4F                  ld c,a
+0611A 611A  3A 19 C0            ld a,($C019)
+0611D 611D  E6 F8               and $F8
+0611F 611F  6F                  ld l,a
+06120 6120  26 00               ld h,$00
+06122 6122  29                  add hl,hl
+06123 6123  29                  add hl,hl
+06124 6124  29                  add hl,hl
+06125 6125  11 42 7D            ld de,$7D42
+06128 6128  19                  add hl,de
+06129 6129  7C                  ld a,h
+0612A 612A  FE 7F               cp $7F
+0612C 612C  38 03               jr c,$6131
+0612E 612E  D6 07               sub $07
+06130 6130  67                  ld h,a
+06131 6131  22 80 C5            ld ($C580),hl
+06134 6134  3E 02               ld a,$02
+06136 6136  32 03 C1            ld ($C103),a
+06139 6139  3A 2A C2            ld a,($C22A)
+0613C 613C  47                  ld b,a
+0613D 613D  79                  ld a,c
+0613E 613E  32 8E C1            ld ($C18E),a
+06141 6141  21 94 C5            ld hl,$C594
+06144 6144  CD AE 61            call $61AE
+06147 6147  3A 22 C2            ld a,($C222)
+0614A 614A  B7                  or a
+0614B 614B  C0                  ret nz
+0614C 614C  3E 0F               ld a,$0F
+0614E 614E  32 1F C0            ld ($C01F),a
+06151 6151  C9                  ret
+061AE 61AE  B7                  or a
+061AF 61AF  28 46               jr z,$61F7
+061B1 61B1  CB 3F               srl a
+061B3 61B3  3C                  inc a
+061B4 61B4  57                  ld d,a
+061B5 61B5  78                  ld a,b
+061B6 61B6  0F                  rrca
+061B7 61B7  0F                  rrca
+061B8 61B8  0F                  rrca
+061B9 61B9  0F                  rrca
+061BA 61BA  E6 0F               and $0F
+061BC 61BC  3C                  inc a
+061BD 61BD  47                  ld b,a
+061BE 61BE  3E 10               ld a,$10
+061C0 61C0  90                  sub b
+061C1 61C1  4F                  ld c,a
+061C2 61C2  7A                  ld a,d
+061C3 61C3  D6 08               sub $08
+061C5 61C5  38 0B               jr c,$61D2
+061C7 61C7  28 13               jr z,$61DC
+061C9 61C9  36 FE               ld (hl),$FE
+061CB 61CB  23                  inc hl
+061CC 61CC  23                  inc hl
+061CD 61CD  10 F4               djnz $61C3
+061CF 61CF  C3 EB 61            jp $61EB
+061D2 61D2  C6 FE               add a,$FE
+061D4 61D4  77                  ld (hl),a
+061D5 61D5  23                  inc hl
+061D6 61D6  23                  inc hl
+061D7 61D7  10 0C               djnz $61E5
+061D9 61D9  C3 EB 61            jp $61EB
+061DC 61DC  36 FE               ld (hl),$FE
+061DE 61DE  23                  inc hl
+061DF 61DF  23                  inc hl
+061E0 61E0  10 03               djnz $61E5
+061E2 61E2  C3 EB 61            jp $61EB
+061E5 61E5  36 F6               ld (hl),$F6
+061E7 61E7  23                  inc hl
+061E8 61E8  23                  inc hl
+061E9 61E9  10 FA               djnz $61E5
+061EB 61EB  0D                  dec c
+061EC 61EC  FA F6 61            jp m,$61F6
+061EF 61EF  36 FF               ld (hl),$FF
+061F1 61F1  23                  inc hl
+061F2 61F2  23                  inc hl
+061F3 61F3  C3 EB 61            jp $61EB
+061F6 61F6  C9                  ret
+061F7 61F7  78                  ld a,b
+061F8 61F8  0F                  rrca
+061F9 61F9  0F                  rrca
+061FA 61FA  0F                  rrca
+061FB 61FB  0F                  rrca
+061FC 61FC  E6 0F               and $0F
+061FE 61FE  3C                  inc a
+061FF 61FF  47                  ld b,a
+06200 6200  3E 10               ld a,$10
+06202 6202  90                  sub b
+06203 6203  4F                  ld c,a
+06204 6204  16 F6               ld d,$F6
+06206 6206  72                  ld (hl),d
+06207 6207  23                  inc hl
+06208 6208  23                  inc hl
+06209 6209  10 FB               djnz $6206
+0620B 620B  16 FF               ld d,$FF
+0620D 620D  0D                  dec c
+0620E 620E  F8                  ret m
+0620F 620F  72                  ld (hl),d
+06210 6210  23                  inc hl
+06211 6211  23                  inc hl
+06212 6212  C3 0D 62            jp $620D
+06215 6215  CD C5 0B            call $0BC5
+06218 6218  06 00               ld b,$00
+0621A 621A  04                  inc b
+0621B 621B  CB 48               bit 1,b
+0621D 621D  20 05               jr nz,$6224
+0621F 621F  3E AA               ld a,$AA
+06221 6221  32 64 DE            ld ($DE64),a
+06224 6224  21 2A C2            ld hl,$C22A
+06227 6227  3A 22 C2            ld a,($C222)
+0622A 622A  BE                  cp (hl)
+0622B 622B  30 10               jr nc,$623D
+0622D 622D  C5                  push bc
+0622E 622E  3C                  inc a
+0622F 622F  32 22 C2            ld ($C222),a
+06232 6232  CD 16 61            call $6116
+06235 6235  3E 02               ld a,$02
+06237 6237  CD 42 00            call $0042
+0623A 623A  C1                  pop bc
+0623B 623B  18 DD               jr $621A
+0623D 623D  06 1E               ld b,$1E
+0623F 623F  C3 CD 64            jp $64CD
+064CD 64CD  CD C5 0B            call $0BC5
+064D0 64D0  10 FB               djnz $64CD
+064D2 64D2  C9                  ret
+
+; Provisional bank-3 opaque segments are separately SHA-256 anchored; bytes omitted.
+; 0C000–0CFFF: 4096 bytes — Repeated four-byte motifs; likely graphic or color lookup data; format not proven
+; 0D000–0D5FF: 1536 bytes — Graphics-looking packed patterns and structured words; format not proven
+; 0D600–0DEFF: 2304 bytes — Mixed packed payload; no validated internal record grammar
+; 0DF00–0F8CC: 6605 bytes — High-entropy symbol/command-like payload; possible encoded game text; format unproven

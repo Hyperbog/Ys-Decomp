@@ -1,0 +1,70 @@
+{
+  "source_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "code_anchor": "0BA1..0BB6: selects $FFFF=3; RST $28; C iterations of 16 source bytes, each output to $BE with an interleaved zero",
+  "vdp_uploads": [
+    {
+      "call_cpu": "1DC8",
+      "source_cpu": "914A",
+      "source_physical_start": "0D14A",
+      "source_end_exclusive": "0D52A",
+      "source_bytes": 992,
+      "vdp_command": "5400",
+      "vram_start": "1400",
+      "vram_end_exclusive": "1BC0",
+      "mode4_output_tiles": 62,
+      "vdp_output_bytes": 1984,
+      "source_sha256": "e0a2f3712c0505fc427f4d97a581f9c1a54cfb1973cec12e266a33f15bf74311",
+      "vdp_output_sha256": "bbd17d3ff64b40623f2bcc69678e28b05c4aa170d1fcedc7ce1322cba5a018c3"
+    },
+    {
+      "call_cpu": "3C9C",
+      "source_cpu": "91EA",
+      "source_physical_start": "0D1EA",
+      "source_end_exclusive": "0D5EA",
+      "source_bytes": 1024,
+      "vdp_command": "6820",
+      "vram_start": "2820",
+      "vram_end_exclusive": "3020",
+      "mode4_output_tiles": 64,
+      "vdp_output_bytes": 2048,
+      "source_sha256": "9735fbc9a560a757fbf122ca2b687ed88f61b52f4567b6aed9ee1d2d9d1b9ba1",
+      "vdp_output_sha256": "c67aa4d90a6be1b2acee35d054bab7d9093dd840dace298309a22eaa34115dd1"
+    },
+    {
+      "call_cpu": "3CA7",
+      "source_cpu": "914A",
+      "source_physical_start": "0D14A",
+      "source_end_exclusive": "0D21A",
+      "source_bytes": 208,
+      "vdp_command": "6600",
+      "vram_start": "2600",
+      "vram_end_exclusive": "27A0",
+      "mode4_output_tiles": 13,
+      "vdp_output_bytes": 416,
+      "source_sha256": "d86f23cbfac3f7e7a844f1e4f92f0d2ca3b17275f011367e536e2bd17df7b95f",
+      "vdp_output_sha256": "2b67cde21a86ba02d884772b2f1ed946e39a24be1227a4a244f55084d525923c"
+    },
+    {
+      "call_cpu": "3D97",
+      "source_cpu": "914A",
+      "source_physical_start": "0D14A",
+      "source_end_exclusive": "0D54A",
+      "source_bytes": 1024,
+      "vdp_command": "6C00",
+      "vram_start": "2C00",
+      "vram_end_exclusive": "3400",
+      "mode4_output_tiles": 64,
+      "vdp_output_bytes": 2048,
+      "source_sha256": "b214c1e79538fa6deee8c90daaf94a049220855ea652484e31581d941ec20942",
+      "vdp_output_sha256": "8d63a690596d2feda76c543760e447396f075efe54cc7236a027375272014d62"
+    }
+  ],
+  "total_source_bytes_with_repeats": 3248,
+  "distinct_source_bytes": 1184,
+  "source_union_start": "0D14A",
+  "source_union_end_exclusive": "0D5EA",
+  "total_vdp_output_bytes_with_repeats": 6496,
+  "distinct_new_rom_bytes": 0,
+  "scope": "Static callsite arguments and emitted byte stream; no emulator timing/graphics palette confirmation",
+  "correction": "Phase8 native-4bpp interpretation is not established for source spans expanded at runtime; they should be described as 16-byte source tile streams"
+}

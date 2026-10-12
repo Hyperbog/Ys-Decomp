@@ -1,0 +1,1599 @@
+{
+  "schema": "ys-bank1-static-links-v1",
+  "physical_bank": 1,
+  "bank_sha256": "e91fa8fb9109dc13555967e208cb4650972d1965c2c9088be8d748ea177b4505",
+  "instruction_sites": 1251,
+  "instruction_bytes": 2480,
+  "direct_control_refs": 217,
+  "io_port_instructions": 2,
+  "mapper_register_writes": 10,
+  "branches": [
+    {
+      "at": 16388,
+      "instruction": "call $46AC",
+      "target": 18092,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 16400,
+      "instruction": "jp $44A3",
+      "target": 17571,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17036,
+      "instruction": "jr $4286",
+      "target": 17030,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17086,
+      "instruction": "jp p,$42C5",
+      "target": 17093,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 17091,
+      "instruction": "jr z,$42C8",
+      "target": 17096,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 17414,
+      "instruction": "djnz $4402",
+      "target": 17410,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17418,
+      "instruction": "jr nz,$4400",
+      "target": 17408,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17422,
+      "instruction": "djnz $43FC",
+      "target": 17404,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17527,
+      "instruction": "call $46F5",
+      "target": 18165,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17543,
+      "instruction": "call $07D5",
+      "target": 2005,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17546,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17552,
+      "instruction": "call $456B",
+      "target": 17771,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17555,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17563,
+      "instruction": "jr z,$4493",
+      "target": 17555,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17584,
+      "instruction": "call $44CE",
+      "target": 17614,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17589,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17598,
+      "instruction": "jr z,$44AF",
+      "target": 17583,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17602,
+      "instruction": "jr nz,$44CA",
+      "target": 17610,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17607,
+      "instruction": "jp $0008",
+      "target": 8,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17611,
+      "instruction": "jp $0008",
+      "target": 8,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17623,
+      "instruction": "jr c,$44E6",
+      "target": 17638,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17643,
+      "instruction": "jr nz,$44F2",
+      "target": 17650,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17647,
+      "instruction": "jr nz,$4505",
+      "target": 17669,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17659,
+      "instruction": "call $451B",
+      "target": 17691,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17666,
+      "instruction": "jp $453E",
+      "target": 17726,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17681,
+      "instruction": "call $451B",
+      "target": 17691,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17688,
+      "instruction": "jp $453E",
+      "target": 17726,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17705,
+      "instruction": "call $4725",
+      "target": 18213,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17723,
+      "instruction": "jp $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17735,
+      "instruction": "call $4725",
+      "target": 18213,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17790,
+      "instruction": "jr z,$45CD",
+      "target": 17869,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17794,
+      "instruction": "jr z,$45CC",
+      "target": 17868,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17798,
+      "instruction": "jr z,$45D3",
+      "target": 17875,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17805,
+      "instruction": "call $4725",
+      "target": 18213,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17818,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17826,
+      "instruction": "jr z,$45BC",
+      "target": 17852,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17830,
+      "instruction": "jr z,$45BC",
+      "target": 17852,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17834,
+      "instruction": "jr z,$45BC",
+      "target": 17852,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17838,
+      "instruction": "jr z,$45B8",
+      "target": 17848,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17842,
+      "instruction": "jr z,$45B8",
+      "target": 17848,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17846,
+      "instruction": "jr $4571",
+      "target": 17777,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17850,
+      "instruction": "jr $45BE",
+      "target": 17854,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17854,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17862,
+      "instruction": "jr nz,$45B4",
+      "target": 17844,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17864,
+      "instruction": "djnz $45BE",
+      "target": 17854,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17866,
+      "instruction": "jr $45B4",
+      "target": 17844,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17873,
+      "instruction": "jr $456F",
+      "target": 17775,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17893,
+      "instruction": "call $4725",
+      "target": 18213,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17911,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17914,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17922,
+      "instruction": "jr z,$45FA",
+      "target": 17914,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17936,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17949,
+      "instruction": "call $46F5",
+      "target": 18165,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17954,
+      "instruction": "jp $456B",
+      "target": 17771,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17957,
+      "instruction": "call $428A",
+      "target": 17034,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 17982,
+      "instruction": "djnz $4638",
+      "target": 17976,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18007,
+      "instruction": "djnz $4651",
+      "target": 18001,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18016,
+      "instruction": "jr nz,$4648",
+      "target": 17992,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18033,
+      "instruction": "djnz $466B",
+      "target": 18027,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18049,
+      "instruction": "jr nc,$4684",
+      "target": 18052,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18059,
+      "instruction": "jr z,$4692",
+      "target": 18066,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18061,
+      "instruction": "jr nc,$46A4",
+      "target": 18084,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18064,
+      "instruction": "jr $4685",
+      "target": 18053,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18071,
+      "instruction": "jr nz,$4692",
+      "target": 18066,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18080,
+      "instruction": "jr nz,$469B",
+      "target": 18075,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18082,
+      "instruction": "jr $4685",
+      "target": 18053,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18089,
+      "instruction": "jp $4285",
+      "target": 17029,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18105,
+      "instruction": "call $0B19",
+      "target": 2841,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18118,
+      "instruction": "call $4625",
+      "target": 17957,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18131,
+      "instruction": "call $4725",
+      "target": 18213,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18146,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18157,
+      "instruction": "jr nc,$46F0",
+      "target": 18160,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18162,
+      "instruction": "jr nz,$46CE",
+      "target": 18126,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18185,
+      "instruction": "call $4725",
+      "target": 18213,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18201,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18210,
+      "instruction": "jr nz,$4702",
+      "target": 18178,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18234,
+      "instruction": "jp c,$4739",
+      "target": 18233,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 18298,
+      "instruction": "jr nz,$4783",
+      "target": 18307,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18304,
+      "instruction": "jp c,$489F",
+      "target": 18591,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18345,
+      "instruction": "jr z,$4821",
+      "target": 18465,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18351,
+      "instruction": "jr nz,$4821",
+      "target": 18465,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18357,
+      "instruction": "jp z,$4868",
+      "target": 18536,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18364,
+      "instruction": "jr nz,$4821",
+      "target": 18465,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18370,
+      "instruction": "call $807C",
+      "target": 32892,
+      "mapping": "slot2_mapper_unknown",
+      "source": "previous"
+    },
+    {
+      "at": 18374,
+      "instruction": "jr nc,$4821",
+      "target": 18465,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18384,
+      "instruction": "jr c,$4821",
+      "target": 18465,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18397,
+      "instruction": "jr nc,$47EA",
+      "target": 18410,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18407,
+      "instruction": "jp $4805",
+      "target": 18437,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18415,
+      "instruction": "jr nc,$47F2",
+      "target": 18418,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18428,
+      "instruction": "jr nc,$4805",
+      "target": 18437,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18431,
+      "instruction": "jr nc,$4802",
+      "target": 18434,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18451,
+      "instruction": "jr z,$482C",
+      "target": 18476,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18472,
+      "instruction": "jp nz,$47A4",
+      "target": 18340,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18491,
+      "instruction": "jr nc,$4840",
+      "target": 18496,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18509,
+      "instruction": "jr nc,$4852",
+      "target": 18514,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18533,
+      "instruction": "jp $4821",
+      "target": 18465,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18540,
+      "instruction": "call $807C",
+      "target": 32892,
+      "mapping": "slot2_mapper_unknown",
+      "source": "previous"
+    },
+    {
+      "at": 18544,
+      "instruction": "jr nc,$4894",
+      "target": 18580,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18554,
+      "instruction": "jr nz,$4898",
+      "target": 18584,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18565,
+      "instruction": "jp nc,$4821",
+      "target": 18465,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18577,
+      "instruction": "jp $4821",
+      "target": 18465,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18588,
+      "instruction": "jp $4821",
+      "target": 18465,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18635,
+      "instruction": "jp z,$4958",
+      "target": 18776,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18642,
+      "instruction": "jp nz,$4958",
+      "target": 18776,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18649,
+      "instruction": "jr z,$4958",
+      "target": 18776,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18655,
+      "instruction": "call $807C",
+      "target": 32892,
+      "mapping": "slot2_mapper_unknown",
+      "source": "previous"
+    },
+    {
+      "at": 18659,
+      "instruction": "jr nc,$4958",
+      "target": 18776,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18673,
+      "instruction": "jr nc,$494C",
+      "target": 18764,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18684,
+      "instruction": "jr nc,$4915",
+      "target": 18709,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18696,
+      "instruction": "jr nz,$492C",
+      "target": 18732,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18718,
+      "instruction": "jr nc,$4922",
+      "target": 18722,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18726,
+      "instruction": "jr nc,$4929",
+      "target": 18729,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18741,
+      "instruction": "jr z,$493F",
+      "target": 18751,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18748,
+      "instruction": "jp $4944",
+      "target": 18756,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18783,
+      "instruction": "jp nz,$48C6",
+      "target": 18630,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 18800,
+      "instruction": "jp $0008",
+      "target": 8,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19048,
+      "instruction": "jr z,$4A6B",
+      "target": 19051,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19084,
+      "instruction": "jr z,$4A8F",
+      "target": 19087,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19481,
+      "instruction": "call $2660",
+      "target": 9824,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19492,
+      "instruction": "jr $4C2B",
+      "target": 19499,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19495,
+      "instruction": "call $4C48",
+      "target": 19528,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19502,
+      "instruction": "call $2654",
+      "target": 9812,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19516,
+      "instruction": "call $4C48",
+      "target": 19528,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19519,
+      "instruction": "call $2654",
+      "target": 9812,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19722,
+      "instruction": "djnz $4D08",
+      "target": 19720,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19727,
+      "instruction": "call $0B19",
+      "target": 2841,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19745,
+      "instruction": "call $4625",
+      "target": 17957,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19748,
+      "instruction": "call $4DB8",
+      "target": 19896,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19751,
+      "instruction": "call $46C9",
+      "target": 18121,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19754,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19762,
+      "instruction": "jr z,$4D2A",
+      "target": 19754,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19764,
+      "instruction": "call $1D63",
+      "target": 7523,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19767,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19863,
+      "instruction": "call $0BEF",
+      "target": 3055,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19893,
+      "instruction": "jp $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19925,
+      "instruction": "djnz $4DD1",
+      "target": 19921,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 19930,
+      "instruction": "jr nz,$4DCE",
+      "target": 19918,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 20485,
+      "instruction": "call $4D8D",
+      "target": 19853,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 20491,
+      "instruction": "jp $4CF8",
+      "target": 19704,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 20745,
+      "instruction": "jp $4C2B",
+      "target": 19499,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 21518,
+      "instruction": "jp $4C26",
+      "target": 19494,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 22528,
+      "instruction": "jp $4F5D",
+      "target": 20317,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 23562,
+      "instruction": "jp $4C37",
+      "target": 19511,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 24576,
+      "instruction": "call $2660",
+      "target": 9824,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 24590,
+      "instruction": "jp $4C26",
+      "target": 19494,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 24761,
+      "instruction": "jr z,$60C0",
+      "target": 24768,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 24876,
+      "instruction": "jr c,$6131",
+      "target": 24881,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 24900,
+      "instruction": "call $61AE",
+      "target": 25006,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 24962,
+      "instruction": "call $61AE",
+      "target": 25006,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 24992,
+      "instruction": "jr c,$61A5",
+      "target": 24997,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 25007,
+      "instruction": "jr z,$61F7",
+      "target": 25079,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25029,
+      "instruction": "jr c,$61D2",
+      "target": 25042,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25031,
+      "instruction": "jr z,$61DC",
+      "target": 25052,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25037,
+      "instruction": "djnz $61C3",
+      "target": 25027,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25039,
+      "instruction": "jp $61EB",
+      "target": 25067,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25047,
+      "instruction": "djnz $61E5",
+      "target": 25061,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25049,
+      "instruction": "jp $61EB",
+      "target": 25067,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25056,
+      "instruction": "djnz $61E5",
+      "target": 25061,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25058,
+      "instruction": "jp $61EB",
+      "target": 25067,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25065,
+      "instruction": "djnz $61E5",
+      "target": 25061,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25068,
+      "instruction": "jp m,$61F6",
+      "target": 25078,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25075,
+      "instruction": "jp $61EB",
+      "target": 25067,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25097,
+      "instruction": "djnz $6206",
+      "target": 25094,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25106,
+      "instruction": "jp $620D",
+      "target": 25101,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25109,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "previous"
+    },
+    {
+      "at": 25117,
+      "instruction": "jr nz,$6224",
+      "target": 25124,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25131,
+      "instruction": "jr nc,$623D",
+      "target": 25149,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25138,
+      "instruction": "call $6116",
+      "target": 24854,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25143,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "previous"
+    },
+    {
+      "at": 25147,
+      "instruction": "jr $621A",
+      "target": 25114,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25151,
+      "instruction": "jp $64CD",
+      "target": 25805,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 25805,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "previous"
+    },
+    {
+      "at": 25808,
+      "instruction": "djnz $64CD",
+      "target": 25805,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "previous"
+    },
+    {
+      "at": 26895,
+      "instruction": "call $0BEF",
+      "target": 3055,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 26899,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 26907,
+      "instruction": "call $43FC",
+      "target": 17404,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 26910,
+      "instruction": "call $0BC5",
+      "target": 3013,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 26918,
+      "instruction": "call $43FC",
+      "target": 17404,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 26930,
+      "instruction": "call $6987",
+      "target": 27015,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 26937,
+      "instruction": "djnz $68FB",
+      "target": 26875,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27026,
+      "instruction": "jr z,$69A4",
+      "target": 27044,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27028,
+      "instruction": "jr c,$69AD",
+      "target": 27053,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27039,
+      "instruction": "call $69B2",
+      "target": 27058,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27042,
+      "instruction": "jr $6987",
+      "target": 27015,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27051,
+      "instruction": "jr $69B2",
+      "target": 27058,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27075,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27659,
+      "instruction": "call $0FC8",
+      "target": 4040,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27662,
+      "instruction": "call $6C32",
+      "target": 27698,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27665,
+      "instruction": "call $2BF1",
+      "target": 11249,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27668,
+      "instruction": "call $4963",
+      "target": 18787,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27673,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27681,
+      "instruction": "call $6176",
+      "target": 24950,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27684,
+      "instruction": "call $6116",
+      "target": 24854,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27689,
+      "instruction": "call $0042",
+      "target": 66,
+      "mapping": "bank0_fixed",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27713,
+      "instruction": "jr z,$6C47",
+      "target": 27719,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 27725,
+      "instruction": "djnz $6C3C",
+      "target": 27708,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 28672,
+      "instruction": "jr z,$7008",
+      "target": 28680,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 29704,
+      "instruction": "jr z,$7434",
+      "target": 29748,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 29706,
+      "instruction": "jr c,$741E",
+      "target": 29726,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 29712,
+      "instruction": "jr c,$7413",
+      "target": 29715,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 29717,
+      "instruction": "jp p,$742E",
+      "target": 29742,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 29722,
+      "instruction": "jr c,$7434",
+      "target": 29748,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 29724,
+      "instruction": "jr $742E",
+      "target": 29742,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 29730,
+      "instruction": "jr nc,$7425",
+      "target": 29733,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 29735,
+      "instruction": "jp m,$742E",
+      "target": 29742,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 29740,
+      "instruction": "jr nc,$7434",
+      "target": 29748,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 30733,
+      "instruction": "jr c,$7826",
+      "target": 30758,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 30737,
+      "instruction": "jr nc,$7826",
+      "target": 30758,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 30744,
+      "instruction": "jr c,$7830",
+      "target": 30768,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 30748,
+      "instruction": "jr nc,$7830",
+      "target": 30768,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 30750,
+      "instruction": "call $6E87",
+      "target": 28295,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 30755,
+      "instruction": "jp $72BE",
+      "target": 29374,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 30766,
+      "instruction": "jr $7813",
+      "target": 30739,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 30776,
+      "instruction": "jr $781E",
+      "target": 30750,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 32267,
+      "instruction": "call $64CD",
+      "target": 25805,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 32288,
+      "instruction": "call $64CD",
+      "target": 25805,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    },
+    {
+      "at": 32294,
+      "instruction": "jr $7E0F",
+      "target": 32271,
+      "mapping": "candidate_bank1_mapper_conditional",
+      "source": "m6 candidate"
+    }
+  ],
+  "hardware_ports": [
+    {
+      "at": 32279,
+      "instruction": "out ($BE),a",
+      "port": 190,
+      "device": "VDP data"
+    },
+    {
+      "at": 32284,
+      "instruction": "out ($BE),a",
+      "port": 190,
+      "device": "VDP data"
+    }
+  ],
+  "mapper_writes": [
+    {
+      "at": 17516,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    },
+    {
+      "at": 17533,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    },
+    {
+      "at": 17780,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    },
+    {
+      "at": 18096,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    },
+    {
+      "at": 18291,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    },
+    {
+      "at": 18789,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    },
+    {
+      "at": 19709,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    },
+    {
+      "at": 19855,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    },
+    {
+      "at": 24770,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    },
+    {
+      "at": 26884,
+      "instruction": "ld ($FFFF),a",
+      "meaning": "Sega mapper page 2 (candidate hardware semantics)"
+    }
+  ],
+  "provenance": "Static disassembly only; no dynamic mapper or scene runtime trace.",
+  "full_semantic_decode": false
+}

@@ -1,0 +1,39 @@
+{
+  "assembler": "independent restricted two-pass encoder, NOT external full-Z80 assembler",
+  "source_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "source_asm": "src/phase9_vdp.asm",
+  "total_assembled_bytes": 111,
+  "span_count": 4,
+  "symbol_count": 11,
+  "sections": [
+    {
+      "start": "05F2",
+      "end_exclusive": "0624",
+      "bytes": 50,
+      "sha256": "fdf4fc15d846cac2c782a8fa8f6df518deeef8ed4e6799c75f2c718bdc28afb0",
+      "matches_rom": true
+    },
+    {
+      "start": "06C1",
+      "end_exclusive": "06D4",
+      "bytes": 19,
+      "sha256": "cb9dbd1119c143698dcfac5a4c774ae5c157dfa10eec35eac9cf4db099a0f125",
+      "matches_rom": true
+    },
+    {
+      "start": "06D4",
+      "end_exclusive": "06E8",
+      "bytes": 20,
+      "sha256": "81f2fe18b6c2caad6e0bce486af9d267fe69c4475b7e43a6eefccf51c6368dc8",
+      "matches_rom": true
+    },
+    {
+      "start": "0BA1",
+      "end_exclusive": "0BB7",
+      "bytes": 22,
+      "sha256": "a2acb58c74700864082c4cfee35543a6cf4268d8ce3f61079a01207ee29925ec",
+      "matches_rom": true
+    }
+  ],
+  "limitation": "Three disjoint VDP components plus the uploader; no full ROM build, emulator trace or timing parity"
+}

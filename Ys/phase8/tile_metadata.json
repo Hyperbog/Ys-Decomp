@@ -1,0 +1,65 @@
+{
+  "source_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "status": "Strong Mode-4-compatible tile structure; actual game tile usage is not emulator-verified",
+  "mode4_format": "32-byte 8x8 tile, row-major; each row has bitplanes 0,1,2,3 (MSB-left)",
+  "blocks": [
+    {
+      "file_start": "0C000",
+      "file_end_exclusive": "0D000",
+      "mode4_tile_count": 128,
+      "raw_bytes": 4096,
+      "unique_raw_tile_patterns": 76,
+      "sha256": "ce7c073755a6382882ee518d16cf363e42354895f468e3eeac986b28c9469bea",
+      "pixel_value_histogram": {
+        "0": 3804,
+        "1": 1024,
+        "2": 130,
+        "3": 235,
+        "4": 0,
+        "5": 351,
+        "6": 739,
+        "7": 1042,
+        "8": 0,
+        "9": 0,
+        "10": 308,
+        "11": 11,
+        "12": 38,
+        "13": 0,
+        "14": 191,
+        "15": 319
+      },
+      "all_rows_round_trip_verified": true
+    },
+    {
+      "file_start": "0D000",
+      "file_end_exclusive": "0D600",
+      "mode4_tile_count": 48,
+      "raw_bytes": 1536,
+      "unique_raw_tile_patterns": 48,
+      "sha256": "527196d448c107535c8ab95cc71e0666acc0589c880c38af1bdc1b78bc98422e",
+      "pixel_value_histogram": {
+        "0": 113,
+        "1": 403,
+        "2": 36,
+        "3": 18,
+        "4": 149,
+        "5": 1014,
+        "6": 161,
+        "7": 15,
+        "8": 143,
+        "9": 401,
+        "10": 485,
+        "11": 22,
+        "12": 18,
+        "13": 22,
+        "14": 13,
+        "15": 59
+      },
+      "all_rows_round_trip_verified": true
+    }
+  ],
+  "tiles_total": 176,
+  "interpreted_bytes": 5632,
+  "coverage_note": "These bytes were already counted as provisional opaque data in Phase 7; reclassification adds ZERO new distinct bytes",
+  "preview_note": "Atlas grayscale intensity represents index 0..15, not actual game colors; preview is not committed"
+}

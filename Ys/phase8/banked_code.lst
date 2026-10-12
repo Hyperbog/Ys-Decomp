@@ -1,0 +1,509 @@
+; Phase 8: conditionally mapped slot-2 CFG; ROM bytes checked, no emulator execution
+; OFFSET CPU  BYTES               Z80
+; BANK 4 $8000–$BFFF: root(s) $807C
+1007C 807C  87                  add a,a
+1007D 807D  87                  add a,a
+1007E 807E  6F                  ld l,a
+1007F 807F  26 80               ld h,$80
+10081 8081  7E                  ld a,(hl)
+10082 8082  2C                  inc l
+10083 8083  DD 86 11            add a,(ix+17)
+10086 8086  D0                  ret nc
+10087 8087  B9                  cp c
+10088 8088  28 07               jr z,$8091
+1008A 808A  D0                  ret nc
+1008B 808B  86                  add a,(hl)
+1008C 808C  38 12               jr c,$80A0
+1008E 808E  B8                  cp b
+1008F 808F  38 0F               jr c,$80A0
+10091 8091  2C                  inc l
+10092 8092  7E                  ld a,(hl)
+10093 8093  DD 86 10            add a,(ix+16)
+10096 8096  D0                  ret nc
+10097 8097  BB                  cp e
+10098 8098  28 06               jr z,$80A0
+1009A 809A  D0                  ret nc
+1009B 809B  2C                  inc l
+1009C 809C  86                  add a,(hl)
+1009D 809D  38 01               jr c,$80A0
+1009F 809F  BA                  cp d
+100A0 80A0  3F                  ccf
+100A1 80A1  C9                  ret
+; BANK 7 $8000–$BFFF: root(s) $86C1, $8819, $8856
+1C6C1 86C1  3A 98 C1            ld a,($C198)
+1C6C4 86C4  B7                  or a
+1C6C5 86C5  C8                  ret z
+1C6C6 86C6  AF                  xor a
+1C6C7 86C7  32 40 C0            ld ($C040),a
+1C6CA 86CA  ED 4B 10 C2         ld bc,($C210)
+1C6CE 86CE  3A 84 C1            ld a,($C184)
+1C6D1 86D1  81                  add a,c
+1C6D2 86D2  E6 07               and $07
+1C6D4 86D4  07                  rlca
+1C6D5 86D5  07                  rlca
+1C6D6 86D6  07                  rlca
+1C6D7 86D7  5F                  ld e,a
+1C6D8 86D8  3A 82 C1            ld a,($C182)
+1C6DB 86DB  80                  add a,b
+1C6DC 86DC  E6 07               and $07
+1C6DE 86DE  B3                  or e
+1C6DF 86DF  21 99 C1            ld hl,$C199
+1C6E2 86E2  BE                  cp (hl)
+1C6E3 86E3  C8                  ret z
+1C6E4 86E4  F6 80               or $80
+1C6E6 86E6  77                  ld (hl),a
+1C6E7 86E7  08                  ex af,af'
+1C6E8 86E8  79                  ld a,c
+1C6E9 86E9  D6 30               sub $30
+1C6EB 86EB  57                  ld d,a
+1C6EC 86EC  3A 19 C0            ld a,($C019)
+1C6EF 86EF  30 04               jr nc,$86F5
+1C6F1 86F1  82                  add a,d
+1C6F2 86F2  C3 F8 86            jp $86F8
+1C6F5 86F5  82                  add a,d
+1C6F6 86F6  38 04               jr c,$86FC
+1C6F8 86F8  FE E0               cp $E0
+1C6FA 86FA  38 02               jr c,$86FE
+1C6FC 86FC  D6 E0               sub $E0
+1C6FE 86FE  E6 F8               and $F8
+1C700 8700  11 00 D6            ld de,$D600
+1C703 8703  6F                  ld l,a
+1C704 8704  63                  ld h,e
+1C705 8705  29                  add hl,hl
+1C706 8706  29                  add hl,hl
+1C707 8707  29                  add hl,hl
+1C708 8708  19                  add hl,de
+1C709 8709  78                  ld a,b
+1C70A 870A  D6 20               sub $20
+1C70C 870C  57                  ld d,a
+1C70D 870D  3A 82 C1            ld a,($C182)
+1C710 8710  82                  add a,d
+1C711 8711  E6 F8               and $F8
+1C713 8713  0F                  rrca
+1C714 8714  0F                  rrca
+1C715 8715  B5                  or l
+1C716 8716  6F                  ld l,a
+1C717 8717  2C                  inc l
+1C718 8718  11 40 00            ld de,$0040
+1C71B 871B  D9                  exx
+1C71C 871C  26 81               ld h,$81
+1C71E 871E  08                  ex af,af'
+1C71F 871F  87                  add a,a
+1C720 8720  6F                  ld l,a
+1C721 8721  5E                  ld e,(hl)
+1C722 8722  2C                  inc l
+1C723 8723  56                  ld d,(hl)
+1C724 8724  21 40 C0            ld hl,$C040
+1C727 8727  D9                  exx
+1C728 8728  E5                  push hl
+1C729 8729  06 0B               ld b,$0B
+1C72B 872B  E5                  push hl
+1C72C 872C  D9                  exx
+1C72D 872D  1A                  ld a,(de)
+1C72E 872E  13                  inc de
+1C72F 872F  D9                  exx
+1C730 8730  0F                  rrca
+1C731 8731  CD E5 87            call $87E5
+1C734 8734  D9                  exx
+1C735 8735  1A                  ld a,(de)
+1C736 8736  13                  inc de
+1C737 8737  D9                  exx
+1C738 8738  07                  rlca
+1C739 8739  4F                  ld c,a
+1C73A 873A  CD E5 87            call $87E5
+1C73D 873D  CB 11               rl c
+1C73F 873F  CD E5 87            call $87E5
+1C742 8742  CB 11               rl c
+1C744 8744  CD E5 87            call $87E5
+1C747 8747  CB 11               rl c
+1C749 8749  CD E5 87            call $87E5
+1C74C 874C  CB 11               rl c
+1C74E 874E  CD E5 87            call $87E5
+1C751 8751  CB 11               rl c
+1C753 8753  CD E5 87            call $87E5
+1C756 8756  CB 11               rl c
+1C758 8758  CD E5 87            call $87E5
+1C75B 875B  CB 11               rl c
+1C75D 875D  CD E5 87            call $87E5
+1C760 8760  E1                  pop hl
+1C761 8761  19                  add hl,de
+1C762 8762  7C                  ld a,h
+1C763 8763  FE DD               cp $DD
+1C765 8765  38 02               jr c,$8769
+1C767 8767  26 D6               ld h,$D6
+1C769 8769  10 C0               djnz $872B
+1C76B 876B  E1                  pop hl
+1C76C 876C  3A 1E C1            ld a,($C11E)
+1C76F 876F  B7                  or a
+1C770 8770  28 37               jr z,$87A9
+1C772 8772  FE 02               cp $02
+1C774 8774  38 42               jr c,$87B8
+1C776 8776  28 08               jr z,$8780
+1C778 8778  7D                  ld a,l
+1C779 8779  07                  rlca
+1C77A 877A  07                  rlca
+1C77B 877B  C6 F8               add a,$F8
+1C77D 877D  C3 85 87            jp $8785
+1C780 8780  7D                  ld a,l
+1C781 8781  07                  rlca
+1C782 8782  07                  rlca
+1C783 8783  C6 48               add a,$48
+1C785 8785  0F                  rrca
+1C786 8786  0F                  rrca
+1C787 8787  6F                  ld l,a
+1C788 8788  06 0B               ld b,$0B
+1C78A 878A  CB 6E               bit 5,(hl)
+1C78C 878C  28 0C               jr z,$879A
+1C78E 878E  CB AE               res 5,(hl)
+1C790 8790  7D                  ld a,l
+1C791 8791  D9                  exx
+1C792 8792  77                  ld (hl),a
+1C793 8793  23                  inc hl
+1C794 8794  D9                  exx
+1C795 8795  7C                  ld a,h
+1C796 8796  D9                  exx
+1C797 8797  77                  ld (hl),a
+1C798 8798  23                  inc hl
+1C799 8799  D9                  exx
+1C79A 879A  19                  add hl,de
+1C79B 879B  7C                  ld a,h
+1C79C 879C  FE DD               cp $DD
+1C79E 879E  38 02               jr c,$87A2
+1C7A0 87A0  26 D6               ld h,$D6
+1C7A2 87A2  10 E6               djnz $878A
+1C7A4 87A4  D9                  exx
+1C7A5 87A5  36 00               ld (hl),$00
+1C7A7 87A7  D9                  exx
+1C7A8 87A8  C9                  ret
+1C7A9 87A9  11 C0 02            ld de,$02C0
+1C7AC 87AC  19                  add hl,de
+1C7AD 87AD  7C                  ld a,h
+1C7AE 87AE  FE DD               cp $DD
+1C7B0 87B0  38 12               jr c,$87C4
+1C7B2 87B2  D6 07               sub $07
+1C7B4 87B4  67                  ld h,a
+1C7B5 87B5  C3 C4 87            jp $87C4
+1C7B8 87B8  11 C0 FF            ld de,$FFC0
+1C7BB 87BB  19                  add hl,de
+1C7BC 87BC  7C                  ld a,h
+1C7BD 87BD  FE D6               cp $D6
+1C7BF 87BF  30 03               jr nc,$87C4
+1C7C1 87C1  C6 07               add a,$07
+1C7C3 87C3  67                  ld h,a
+1C7C4 87C4  06 09               ld b,$09
+1C7C6 87C6  CB 6E               bit 5,(hl)
+1C7C8 87C8  28 0C               jr z,$87D6
+1C7CA 87CA  CB AE               res 5,(hl)
+1C7CC 87CC  7D                  ld a,l
+1C7CD 87CD  D9                  exx
+1C7CE 87CE  77                  ld (hl),a
+1C7CF 87CF  23                  inc hl
+1C7D0 87D0  D9                  exx
+1C7D1 87D1  7C                  ld a,h
+1C7D2 87D2  D9                  exx
+1C7D3 87D3  77                  ld (hl),a
+1C7D4 87D4  23                  inc hl
+1C7D5 87D5  D9                  exx
+1C7D6 87D6  7D                  ld a,l
+1C7D7 87D7  07                  rlca
+1C7D8 87D8  07                  rlca
+1C7D9 87D9  C6 08               add a,$08
+1C7DB 87DB  0F                  rrca
+1C7DC 87DC  0F                  rrca
+1C7DD 87DD  6F                  ld l,a
+1C7DE 87DE  10 E6               djnz $87C6
+1C7E0 87E0  D9                  exx
+1C7E1 87E1  36 00               ld (hl),$00
+1C7E3 87E3  D9                  exx
+1C7E4 87E4  C9                  ret
+1C7E5 87E5  30 19               jr nc,$8800
+1C7E7 87E7  CB 6E               bit 5,(hl)
+1C7E9 87E9  20 0C               jr nz,$87F7
+1C7EB 87EB  CB EE               set 5,(hl)
+1C7ED 87ED  7D                  ld a,l
+1C7EE 87EE  D9                  exx
+1C7EF 87EF  77                  ld (hl),a
+1C7F0 87F0  23                  inc hl
+1C7F1 87F1  D9                  exx
+1C7F2 87F2  7C                  ld a,h
+1C7F3 87F3  D9                  exx
+1C7F4 87F4  77                  ld (hl),a
+1C7F5 87F5  23                  inc hl
+1C7F6 87F6  D9                  exx
+1C7F7 87F7  7D                  ld a,l
+1C7F8 87F8  07                  rlca
+1C7F9 87F9  07                  rlca
+1C7FA 87FA  C6 08               add a,$08
+1C7FC 87FC  0F                  rrca
+1C7FD 87FD  0F                  rrca
+1C7FE 87FE  6F                  ld l,a
+1C7FF 87FF  C9                  ret
+1C800 8800  CB 6E               bit 5,(hl)
+1C802 8802  28 0C               jr z,$8810
+1C804 8804  CB AE               res 5,(hl)
+1C806 8806  7D                  ld a,l
+1C807 8807  D9                  exx
+1C808 8808  77                  ld (hl),a
+1C809 8809  23                  inc hl
+1C80A 880A  D9                  exx
+1C80B 880B  7C                  ld a,h
+1C80C 880C  D9                  exx
+1C80D 880D  77                  ld (hl),a
+1C80E 880E  23                  inc hl
+1C80F 880F  D9                  exx
+1C810 8810  7D                  ld a,l
+1C811 8811  07                  rlca
+1C812 8812  07                  rlca
+1C813 8813  C6 08               add a,$08
+1C815 8815  0F                  rrca
+1C816 8816  0F                  rrca
+1C817 8817  6F                  ld l,a
+1C818 8818  C9                  ret
+1C819 8819  CD 56 88            call $8856
+1C81C 881C  21 40 C0            ld hl,$C040
+1C81F 881F  01 BF A2            ld bc,$A2BF
+1C822 8822  5E                  ld e,(hl)
+1C823 8823  CB 43               bit 0,e
+1C825 8825  C8                  ret z
+1C826 8826  2C                  inc l
+1C827 8827  56                  ld d,(hl)
+1C828 8828  2C                  inc l
+1C829 8829  1A                  ld a,(de)
+1C82A 882A  E6 20               and $20
+1C82C 882C  28 12               jr z,$8840
+1C82E 882E  1D                  dec e
+1C82F 882F  ED 59               out (c),e
+1C831 8831  78                  ld a,b
+1C832 8832  82                  add a,d
+1C833 8833  D3 BF               out ($BF),a
+1C835 8835  1A                  ld a,(de)
+1C836 8836  13                  inc de
+1C837 8837  D3 BE               out ($BE),a
+1C839 8839  1A                  ld a,(de)
+1C83A 883A  5E                  ld e,(hl)
+1C83B 883B  D3 BE               out ($BE),a
+1C83D 883D  C3 23 88            jp $8823
+1C840 8840  1D                  dec e
+1C841 8841  ED 59               out (c),e
+1C843 8843  78                  ld a,b
+1C844 8844  82                  add a,d
+1C845 8845  D3 BF               out ($BF),a
+1C847 8847  5E                  ld e,(hl)
+1C848 8848  3E E7               ld a,$E7
+1C84A 884A  D3 BE               out ($BE),a
+1C84C 884C  3E 18               ld a,$18
+1C84E 884E  CB 43               bit 0,e
+1C850 8850  D3 BE               out ($BE),a
+1C852 8852  C2 26 88            jp nz,$8826
+1C855 8855  C9                  ret
+1C856 8856  21 99 C1            ld hl,$C199
+1C859 8859  7E                  ld a,(hl)
+1C85A 885A  CB BE               res 7,(hl)
+1C85C 885C  87                  add a,a
+1C85D 885D  D0                  ret nc
+1C85E 885E  87                  add a,a
+1C85F 885F  6F                  ld l,a
+1C860 8860  26 80               ld h,$80
+1C862 8862  3E 20               ld a,$20
+1C864 8864  D3 BF               out ($BF),a
+1C866 8866  3E 74               ld a,$74
+1C868 8868  D3 BF               out ($BF),a
+1C86A 886A  0E BE               ld c,$BE
+1C86C 886C  5E                  ld e,(hl)
+1C86D 886D  2C                  inc l
+1C86E 886E  56                  ld d,(hl)
+1C86F 886F  2C                  inc l
+1C870 8870  7E                  ld a,(hl)
+1C871 8871  2C                  inc l
+1C872 8872  66                  ld h,(hl)
+1C873 8873  6F                  ld l,a
+1C874 8874  AF                  xor a
+1C875 8875  D5                  push de
+1C876 8876  C9                  ret
+; BANK 8 $8000–$BFFF: root(s) $BEE8
+23EE8 BEE8  3E 10               ld a,$10
+23EEA BEEA  32 21 C2            ld ($C221),a
+23EED BEED  AF                  xor a
+23EEE BEEE  32 0D C2            ld ($C20D),a
+23EF1 BEF1  32 01 C2            ld ($C201),a
+23EF4 BEF4  3C                  inc a
+23EF5 BEF5  32 12 C2            ld ($C212),a
+23EF8 BEF8  32 00 C2            ld ($C200),a
+23EFB BEFB  32 0E C2            ld ($C20E),a
+23EFE BEFE  3A 0C C2            ld a,($C20C)
+23F01 BF01  87                  add a,a
+23F02 BF02  32 14 C2            ld ($C214),a
+23F05 BF05  21 A0 C1            ld hl,$C1A0
+23F08 BF08  7E                  ld a,(hl)
+23F09 BF09  87                  add a,a
+23F0A BF0A  87                  add a,a
+23F0B BF0B  86                  add a,(hl)
+23F0C BF0C  21 7F BF            ld hl,$BF7F
+23F0F BF0F  85                  add a,l
+23F10 BF10  6F                  ld l,a
+23F11 BF11  30 01               jr nc,$BF14
+23F13 BF13  24                  inc h
+23F14 BF14  5E                  ld e,(hl)
+23F15 BF15  23                  inc hl
+23F16 BF16  56                  ld d,(hl)
+23F17 BF17  23                  inc hl
+23F18 BF18  ED 53 A1 C1         ld ($C1A1),de
+23F1C BF1C  7E                  ld a,(hl)
+23F1D BF1D  32 2A C2            ld ($C22A),a
+23F20 BF20  23                  inc hl
+23F21 BF21  11 A8 C1            ld de,$C1A8
+23F24 BF24  06 05               ld b,$05
+23F26 BF26  1A                  ld a,(de)
+23F27 BF27  B7                  or a
+23F28 BF28  FA 2E BF            jp m,$BF2E
+23F2B BF2B  1B                  dec de
+23F2C BF2C  10 F8               djnz $BF26
+23F2E BF2E  78                  ld a,b
+23F2F BF2F  11 72 BF            ld de,$BF72
+23F32 BF32  83                  add a,e
+23F33 BF33  5F                  ld e,a
+23F34 BF34  30 01               jr nc,$BF37
+23F36 BF36  14                  inc d
+23F37 BF37  1A                  ld a,(de)
+23F38 BF38  86                  add a,(hl)
+23F39 BF39  32 23 C2            ld ($C223),a
+23F3C BF3C  23                  inc hl
+23F3D BF3D  11 B4 C1            ld de,$C1B4
+23F40 BF40  06 05               ld b,$05
+23F42 BF42  1A                  ld a,(de)
+23F43 BF43  B7                  or a
+23F44 BF44  FA 4A BF            jp m,$BF4A
+23F47 BF47  1B                  dec de
+23F48 BF48  10 F8               djnz $BF42
+23F4A BF4A  78                  ld a,b
+23F4B BF4B  11 78 BF            ld de,$BF78
+23F4E BF4E  83                  add a,e
+23F4F BF4F  5F                  ld e,a
+23F50 BF50  30 01               jr nc,$BF53
+23F52 BF52  14                  inc d
+23F53 BF53  1A                  ld a,(de)
+23F54 BF54  4F                  ld c,a
+23F55 BF55  11 AE C1            ld de,$C1AE
+23F58 BF58  06 05               ld b,$05
+23F5A BF5A  1A                  ld a,(de)
+23F5B BF5B  B7                  or a
+23F5C BF5C  FA 62 BF            jp m,$BF62
+23F5F BF5F  1B                  dec de
+23F60 BF60  10 F8               djnz $BF5A
+23F62 BF62  78                  ld a,b
+23F63 BF63  11 7E BF            ld de,$BF7E
+23F66 BF66  83                  add a,e
+23F67 BF67  5F                  ld e,a
+23F68 BF68  30 01               jr nc,$BF6B
+23F6A BF6A  14                  inc d
+23F6B BF6B  1A                  ld a,(de)
+23F6C BF6C  81                  add a,c
+23F6D BF6D  86                  add a,(hl)
+23F6E BF6E  32 24 C2            ld ($C224),a
+23F71 BF71  C9                  ret
+; BANK 10 $8000–$BFFF: root(s) $BEF7
+2BEF7 BEF7  EF                  rst $0028
+2BEF8 BEF8  06 00               ld b,$00
+2BEFA BEFA  11 F0 D8            ld de,$D8F0
+2BEFD BEFD  19                  add hl,de
+2BEFE BEFE  04                  inc b
+2BEFF BEFF  38 F9               jr c,$BEFA
+2BF01 BF01  05                  dec b
+2BF02 BF02  ED 52               sbc hl,de
+2BF04 BF04  CD 35 BF            call $BF35
+2BF07 BF07  06 00               ld b,$00
+2BF09 BF09  11 18 FC            ld de,$FC18
+2BF0C BF0C  19                  add hl,de
+2BF0D BF0D  04                  inc b
+2BF0E BF0E  38 F9               jr c,$BF09
+2BF10 BF10  05                  dec b
+2BF11 BF11  ED 52               sbc hl,de
+2BF13 BF13  CD 35 BF            call $BF35
+2BF16 BF16  06 00               ld b,$00
+2BF18 BF18  11 9C FF            ld de,$FF9C
+2BF1B BF1B  19                  add hl,de
+2BF1C BF1C  04                  inc b
+2BF1D BF1D  38 F9               jr c,$BF18
+2BF1F BF1F  05                  dec b
+2BF20 BF20  ED 52               sbc hl,de
+2BF22 BF22  CD 35 BF            call $BF35
+2BF25 BF25  06 00               ld b,$00
+2BF27 BF27  11 F6 FF            ld de,$FFF6
+2BF2A BF2A  19                  add hl,de
+2BF2B BF2B  04                  inc b
+2BF2C BF2C  38 F9               jr c,$BF27
+2BF2E BF2E  05                  dec b
+2BF2F BF2F  ED 52               sbc hl,de
+2BF31 BF31  CD 35 BF            call $BF35
+2BF34 BF34  45                  ld b,l
+2BF35 BF35  3E 30               ld a,$30
+2BF37 BF37  80                  add a,b
+2BF38 BF38  D3 BE               out ($BE),a
+2BF3A BF3A  3A 26 C0            ld a,($C026)
+2BF3D BF3D  00                  nop
+2BF3E BF3E  D3 BE               out ($BE),a
+2BF40 BF40  00                  nop
+2BF41 BF41  C9                  ret
+; BANK 12 $8000–$BFFF: root(s) $9EFC
+31EFC 9EFC  0E 00               ld c,$00
+31EFE 9EFE  7E                  ld a,(hl)
+31EFF 9EFF  FE FE               cp $FE
+31F01 9F01  CA 35 9F            jp z,$9F35
+31F04 9F04  D0                  ret nc
+31F05 9F05  FE FC               cp $FC
+31F07 9F07  CA 2D 9F            jp z,$9F2D
+31F0A 9F0A  D2 1C 9F            jp nc,$9F1C
+31F0D 9F0D  FE F9               cp $F9
+31F0F 9F0F  CA 3D 9F            jp z,$9F3D
+31F12 9F12  06 C0               ld b,$C0
+31F14 9F14  80                  add a,b
+31F15 9F15  CD 5E 9F            call $9F5E
+31F18 9F18  0C                  inc c
+31F19 9F19  23                  inc hl
+31F1A 9F1A  18 E2               jr $9EFE
+31F1C 9F1C  7B                  ld a,e
+31F1D 9F1D  E6 E0               and $E0
+31F1F 9F1F  01 82 00            ld bc,$0082
+31F22 9F22  5F                  ld e,a
+31F23 9F23  EB                  ex de,hl
+31F24 9F24  09                  add hl,bc
+31F25 9F25  EB                  ex de,hl
+31F26 9F26  EF                  rst $0028
+31F27 9F27  23                  inc hl
+31F28 9F28  0E 00               ld c,$00
+31F2A 9F2A  C3 FE 9E            jp $9EFE
+31F2D 9F2D  7B                  ld a,e
+31F2E 9F2E  E6 E0               and $E0
+31F30 9F30  01 C2 00            ld bc,$00C2
+31F33 9F33  18 ED               jr $9F22
+31F35 9F35  7B                  ld a,e
+31F36 9F36  E6 C0               and $C0
+31F38 9F38  01 86 00            ld bc,$0086
+31F3B 9F3B  18 E5               jr $9F22
+31F3D 9F3D  79                  ld a,c
+31F3E 9F3E  87                  add a,a
+31F3F 9F3F  4F                  ld c,a
+31F40 9F40  06 00               ld b,$00
+31F42 9F42  EB                  ex de,hl
+31F43 9F43  09                  add hl,bc
+31F44 9F44  01 40 00            ld bc,$0040
+31F47 9F47  A7                  and a
+31F48 9F48  ED 42               sbc hl,bc
+31F4A 9F4A  EB                  ex de,hl
+31F4B 9F4B  EF                  rst $0028
+31F4C 9F4C  3E 3B               ld a,$3B
+31F4E 9F4E  CD 5E 9F            call $9F5E
+31F51 9F51  EB                  ex de,hl
+31F52 9F52  01 42 00            ld bc,$0042
+31F55 9F55  09                  add hl,bc
+31F56 9F56  EB                  ex de,hl
+31F57 9F57  EF                  rst $0028
+31F58 9F58  0E 00               ld c,$00
+31F5A 9F5A  23                  inc hl
+31F5B 9F5B  C3 FE 9E            jp $9EFE
+31F5E 9F5E  D3 BE               out ($BE),a
+31F60 9F60  3A 26 C0            ld a,($C026)
+31F63 9F63  00                  nop
+31F64 9F64  D3 BE               out ($BE),a
+31F66 9F66  00                  nop
+31F67 9F67  C9                  ret

@@ -1,0 +1,12 @@
+{
+  "bank_sha256": "e91fa8fb9109dc13555967e208cb4650972d1965c2c9088be8d748ea177b4505",
+  "new_code_sha256": "a58309fc89c785f0f55f8075c581891ea4894dcf7e93d71b4cc1b84900292c7b",
+  "new_data_sha256": "379fa998de68dc938bc981a00010cc71f8b4aa4402af95b5f451e7ad0ff4363c",
+  "previous_source_bytes": 779,
+  "new_code_bytes": 1717,
+  "new_data_bytes": 13888,
+  "unresolved_bytes": 13528,
+  "pointer_bytes": 20,
+  "padding_bytes": 340,
+  "unresolved_span_count": 71
+}
