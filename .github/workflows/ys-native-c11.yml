@@ -1,0 +1,20 @@
+name: Ys native C11 foundation
+on:
+  push:
+    branches: [Ys]
+  pull_request:
+    branches: [Ys]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-memory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure C11 runtime
+        run: cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Debug
+      - name: Compile native memory library and tests
+        run: cmake --build build-native --parallel
+      - name: Test SMS memory and mapper behavior
+        run: ctest --test-dir build-native --output-on-failure
