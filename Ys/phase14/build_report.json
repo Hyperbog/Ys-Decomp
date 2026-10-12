@@ -1,0 +1,184 @@
+{
+  "schema": "ys-phase14-source-overlay-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "complete_image_length": 262144,
+  "complete_output_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "matched_source_bytes": 14025,
+  "unknown_template_bytes": 248119,
+  "matching_source_fraction": 0.05350113,
+  "template_fraction": 0.94649887,
+  "sources": [
+    {
+      "source": "src/phase11_roundtrip/bank00.asm",
+      "bank": 0,
+      "emitted_bytes": 7935,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase11_roundtrip/bank01.asm",
+      "bank": 1,
+      "emitted_bytes": 763,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase11_roundtrip/bank02.asm",
+      "bank": 2,
+      "emitted_bytes": 2541,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase11_roundtrip/bank04.asm",
+      "bank": 4,
+      "emitted_bytes": 38,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase11_roundtrip/bank06.asm",
+      "bank": 6,
+      "emitted_bytes": 403,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase11_roundtrip/bank07.asm",
+      "bank": 7,
+      "emitted_bytes": 438,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase11_roundtrip/bank08.asm",
+      "bank": 8,
+      "emitted_bytes": 138,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase11_roundtrip/bank10.asm",
+      "bank": 10,
+      "emitted_bytes": 75,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase11_roundtrip/bank12.asm",
+      "bank": 12,
+      "emitted_bytes": 108,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase12/bank06_sprite_handlers.asm",
+      "bank": 6,
+      "emitted_bytes": 241,
+      "label_count": 0
+    },
+    {
+      "source": "src/phase13/bank07_unrolled_vdp.asm",
+      "bank": 7,
+      "emitted_bytes": 1345,
+      "label_count": 0
+    }
+  ],
+  "banks": [
+    {
+      "bank": 0,
+      "sourced_code_bytes": 7935,
+      "template_bytes": 8449,
+      "reconstructed_bank_sha256": "3bc23bce4f0bdcf88669187f949c7a89dea9341a9653fb21025fe704e8ce872b"
+    },
+    {
+      "bank": 1,
+      "sourced_code_bytes": 763,
+      "template_bytes": 15621,
+      "reconstructed_bank_sha256": "e91fa8fb9109dc13555967e208cb4650972d1965c2c9088be8d748ea177b4505"
+    },
+    {
+      "bank": 2,
+      "sourced_code_bytes": 2541,
+      "template_bytes": 13843,
+      "reconstructed_bank_sha256": "78b8ac016f2574ffece7f944f9b7680e873eb33f8481c31bbc0a480c4c74a4d8"
+    },
+    {
+      "bank": 3,
+      "sourced_code_bytes": 0,
+      "template_bytes": 16384,
+      "reconstructed_bank_sha256": "b9ade48d112c574b642f026fd770e78cb939bb717328e4c6a3fdc228cc7c2c15"
+    },
+    {
+      "bank": 4,
+      "sourced_code_bytes": 38,
+      "template_bytes": 16346,
+      "reconstructed_bank_sha256": "bd2e9c90792a9f462a3f8ff42763c676ffc9568d9913227e3460c592beb42354"
+    },
+    {
+      "bank": 5,
+      "sourced_code_bytes": 0,
+      "template_bytes": 16384,
+      "reconstructed_bank_sha256": "56986e4eab31e4a3d968326b9ab6002accb08e66e20f77b3d17adcc94f6f8170"
+    },
+    {
+      "bank": 6,
+      "sourced_code_bytes": 644,
+      "template_bytes": 15740,
+      "reconstructed_bank_sha256": "cd64e2820b24ee57c2d909b9edf871246d37fc5e9e6dc889c0d58116a92524eb"
+    },
+    {
+      "bank": 7,
+      "sourced_code_bytes": 1783,
+      "template_bytes": 14601,
+      "reconstructed_bank_sha256": "86c86574d85f58dbde305325f8ea0d6c92c75a53bdcebf222e2909f1932bfce4"
+    },
+    {
+      "bank": 8,
+      "sourced_code_bytes": 138,
+      "template_bytes": 16246,
+      "reconstructed_bank_sha256": "3ef67b48f3b9e55adc980894ab1a4bfc932556f9f3e1a315204eb7456d4f53fa"
+    },
+    {
+      "bank": 9,
+      "sourced_code_bytes": 0,
+      "template_bytes": 16384,
+      "reconstructed_bank_sha256": "d0ef995a86a68bf2230380320ab919212558d938e588e2c31e54084166613577"
+    },
+    {
+      "bank": 10,
+      "sourced_code_bytes": 75,
+      "template_bytes": 16309,
+      "reconstructed_bank_sha256": "d8e67566e6b8ec634d346a88426fcbf6975ed8021037b74895d0aa0d6057f9db"
+    },
+    {
+      "bank": 11,
+      "sourced_code_bytes": 0,
+      "template_bytes": 16384,
+      "reconstructed_bank_sha256": "9855397ba6805317c97ac6dfd67219fcb931eb5721a5ac3daa0893cb4746b6df"
+    },
+    {
+      "bank": 12,
+      "sourced_code_bytes": 108,
+      "template_bytes": 16276,
+      "reconstructed_bank_sha256": "a39ff12117caebd7e626200107d04f5cc92f8507eff743607baca41a1ce8760b"
+    },
+    {
+      "bank": 13,
+      "sourced_code_bytes": 0,
+      "template_bytes": 16384,
+      "reconstructed_bank_sha256": "00227b5f7b913280a53e60ad90743371b82381a30c8514aa4d92a287e062b39e"
+    },
+    {
+      "bank": 14,
+      "sourced_code_bytes": 0,
+      "template_bytes": 16384,
+      "reconstructed_bank_sha256": "2178d9364b03203d4bb38ffdd41416c3fdf8d9efad1cb63090bee31f8a241b59"
+    },
+    {
+      "bank": 15,
+      "sourced_code_bytes": 0,
+      "template_bytes": 16384,
+      "reconstructed_bank_sha256": "cc2164854a09b17dcdbcf8a33d2f632e25bac5a0907c5ad22fc2595f37228b1a"
+    }
+  ],
+  "cross_references": {
+    "total": 1196,
+    "fixed_bank0": 770,
+    "mapper_unresolved": 426
+  },
+  "external_assembler_verified": false,
+  "source_only_build": false,
+  "notes": "All unimplemented ROM bytes come from supplied source ROM, not assembly. Exact full-image equality is a template integrity check, NOT complete decompilation."
+}
