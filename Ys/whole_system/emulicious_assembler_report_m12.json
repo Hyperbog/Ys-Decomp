@@ -1,0 +1,16 @@
+{
+  "schema": "ys-external-emulicious-z80-assembler-m12-v1",
+  "assembler": "Emulicious built-in Z80Assembler",
+  "jar_sha256": "db185a1ed0af3bdab5ebdeb254612d02d3848bac155dbc89333d1b04e21c371d",
+  "source_cartridge_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "all_16_banks_source_only": true,
+  "instructions_submitted": 11009,
+  "instruction_bytes_examined": 22552,
+  "externally_matched_instruction_bytes": 22552,
+  "unsupported_instruction_count": 0,
+  "mismatching_instruction_count": 0,
+  "unsupported_samples": [],
+  "mismatch_samples": [],
+  "independent_full_cartridge_link_passed": false,
+  "independent_wla_dx_passed": false
+}
