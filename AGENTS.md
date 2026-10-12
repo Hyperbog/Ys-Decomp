@@ -1,0 +1,15 @@
+# Evidence-first decompilation / recompilation agent policy
+
+Applies to all game architectures. Project-specific build and license rules take precedence where stricter.
+
+1. **Establish source of truth.** Before work, record original binary SHA-256, format, compiler/assembler version if known, bank/section/overlay address space, and Git baseline. Never silently change an original image or its target assembly.
+2. **Work on whole subsystems.** Prioritize full banks, complete executable game subsystems and boot-to-play validation. An isolated handful of bytes is not a project milestone. Plan code, data, callers, side effects and build coverage together.
+3. **Protect target/evaluator within matching iterations.** Lock golden assembly, expected outputs, build scripts and toolchain settings. Changes to these require a *separate reviewed infrastructure task*, not a way to make a candidate pass. Never game the comparison with inline opaque assembly for a high-level matching task. Native 6502/Z80 reconstruction in assembly is legitimate.
+4. **Avoid guess-to-proof escalation.** Distinguish identified bytes, source-backed code/data, semantically understood routines, exact independent assembly, independently replayed hardware behavior, and full source-only cartridge/executable build. Require reproducible evidence for each. Keep unresolved bytes conspicuous.
+5. **Assemble context, not fiction.** Retrieve architecture, bank-qualified symbols, direct callers/callees, constants and nearest verified analogue. Expose unknown types, signature gaps and mapper ambiguity. Never provide invented declarations as facts. Prefer a bounded context packet over the entire repository.
+6. **Use a bounded retry loop.** For each candidate: compile with the pinned toolchain, diff exact target bytes, record score and discrepancies. Stop for diagnostic handoff after two non-improving retries (three total observations) unless the project explicitly authorizes another threshold. Do not modify reference files to improve a score.
+7. **Pass independent gates.** Test source generation without reading the original ROM for claimed source-only regions, compare exact binary digests, execute emulator/hardware tests when supported, and run the project's regression runner. A template-assisted rebuild is not a source-only rebuild.
+8. **Security, licensing, and portability.** Do not commit commercial ROM/ISO files, decryption keys or redistributed extracted assets without rights. Keep local binaries outside distributed archives; preserve hashes and file offsets instead. Do not automate bulk uploads or recurring LLM/API requests against services that prohibit them (including decomp.me).
+9. **Preserve knowledge.** Commit symbol and CFG ledgers, unresolved questions, confidence tags, reproducible tests, compiler flags, tool versions and failed-attempt notes. Surface exact verification limitations in release reports.
+
+Reference implementation: `shared_decomp/README.md`; source review: `AI_DECOMP_ADOPTION.md`.

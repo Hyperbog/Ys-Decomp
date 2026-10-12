@@ -1,0 +1,10 @@
+# Keep proprietary ROM images out of version control
+*.sms
+*.nes
+*.gg
+*.sg
+*.bin
+*.zip
+__pycache__/
+*.pyc
+.DS_Store
