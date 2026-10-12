@@ -1,0 +1,151 @@
+{
+  "schema": "ys-phase15-source-overlay-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "rom_bytes": 262144,
+  "assembly_source_bytes": 14025,
+  "standalone_data_source_bytes": 678,
+  "all_source_backed_bytes": 14703,
+  "original_rom_fallback_bytes": 247441,
+  "source_backed_percentage": 5.6087,
+  "source_table_modules": [
+    {
+      "bank": 0,
+      "source": "src/phase15/bank00_tables.asm",
+      "bytes": 100,
+      "labels": {
+        "GameStateDispatch": 8282,
+        "SceneDispatch": 11300
+      }
+    },
+    {
+      "bank": 1,
+      "source": "src/phase15/bank01_header.asm",
+      "bytes": 16,
+      "labels": {
+        "SegaCartridgeHeader": 32752
+      }
+    },
+    {
+      "bank": 6,
+      "source": "src/phase15/bank06_tables.asm",
+      "bytes": 178,
+      "labels": {
+        "SpriteRecordDirectory": 32768,
+        "ObjectWorkDirectory": 39543,
+        "SpriteHandlerDirectory": 39577
+      }
+    },
+    {
+      "bank": 7,
+      "source": "src/phase15/bank07_tables.asm",
+      "bytes": 384,
+      "labels": {
+        "GraphicsDispatchDirectory": 32768,
+        "SecondaryRecordDirectory": 33024
+      }
+    }
+  ],
+  "banks": [
+    {
+      "bank": 0,
+      "z80_source_bytes": 7935,
+      "structured_source_bytes": 100,
+      "fallback_bytes": 8349
+    },
+    {
+      "bank": 1,
+      "z80_source_bytes": 763,
+      "structured_source_bytes": 16,
+      "fallback_bytes": 15605
+    },
+    {
+      "bank": 2,
+      "z80_source_bytes": 2541,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 13843
+    },
+    {
+      "bank": 3,
+      "z80_source_bytes": 0,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 4,
+      "z80_source_bytes": 38,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16346
+    },
+    {
+      "bank": 5,
+      "z80_source_bytes": 0,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 6,
+      "z80_source_bytes": 644,
+      "structured_source_bytes": 178,
+      "fallback_bytes": 15562
+    },
+    {
+      "bank": 7,
+      "z80_source_bytes": 1783,
+      "structured_source_bytes": 384,
+      "fallback_bytes": 14217
+    },
+    {
+      "bank": 8,
+      "z80_source_bytes": 138,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16246
+    },
+    {
+      "bank": 9,
+      "z80_source_bytes": 0,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 10,
+      "z80_source_bytes": 75,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16309
+    },
+    {
+      "bank": 11,
+      "z80_source_bytes": 0,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 12,
+      "z80_source_bytes": 108,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16276
+    },
+    {
+      "bank": 13,
+      "z80_source_bytes": 0,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 14,
+      "z80_source_bytes": 0,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16384
+    },
+    {
+      "bank": 15,
+      "z80_source_bytes": 0,
+      "structured_source_bytes": 0,
+      "fallback_bytes": 16384
+    }
+  ],
+  "source_only_complete_rom": false,
+  "external_z80_assembler_verified": false,
+  "prior_candidate_classification_bytes": 58133,
+  "coverage_note": "Structured source bytes were already ROM-classified in prior phases; do not add them again to candidate classification coverage.",
+  "sha256_output": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9"
+}
