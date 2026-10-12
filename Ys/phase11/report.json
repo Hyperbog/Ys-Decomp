@@ -1,0 +1,119 @@
+{
+  "schema": "ys-phase11-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "source": "Sparse Z80 ASM generated from audited disassembly; original commercial ROM not embedded",
+  "external_assembler_verified": false,
+  "baseline_phase10b_instructions": 4960,
+  "baseline_phase10b_code_bytes": 10188,
+  "additional_instructions": 1198,
+  "additional_code_bytes": 2251,
+  "cumulative_code_instruction_count": 6158,
+  "cumulative_distinct_assembler_matched_code_bytes": 12439,
+  "code_banks": [
+    {
+      "bank": 0,
+      "instructions": 3773,
+      "code_bytes": 7935,
+      "first_offset": "00000",
+      "last_offset": "03F6F"
+    },
+    {
+      "bank": 1,
+      "instructions": 376,
+      "code_bytes": 763,
+      "first_offset": "042BA",
+      "last_offset": "064D2"
+    },
+    {
+      "bank": 2,
+      "instructions": 1279,
+      "code_bytes": 2541,
+      "first_offset": "08000",
+      "last_offset": "08A57"
+    },
+    {
+      "bank": 4,
+      "instructions": 28,
+      "code_bytes": 38,
+      "first_offset": "1007C",
+      "last_offset": "100A1"
+    },
+    {
+      "bank": 6,
+      "instructions": 228,
+      "code_bytes": 403,
+      "first_offset": "19932",
+      "last_offset": "19AF6"
+    },
+    {
+      "bank": 7,
+      "instructions": 290,
+      "code_bytes": 438,
+      "first_offset": "1C6C1",
+      "last_offset": "1C876"
+    },
+    {
+      "bank": 8,
+      "instructions": 80,
+      "code_bytes": 138,
+      "first_offset": "23EE8",
+      "last_offset": "23F71"
+    },
+    {
+      "bank": 10,
+      "instructions": 42,
+      "code_bytes": 75,
+      "first_offset": "2BEF7",
+      "last_offset": "2BF41"
+    },
+    {
+      "bank": 12,
+      "instructions": 62,
+      "code_bytes": 108,
+      "first_offset": "31EFC",
+      "last_offset": "31F67"
+    }
+  ],
+  "pointer_table": {
+    "bank": 6,
+    "rom_begin": "18000",
+    "rom_end_exclusive": "18080",
+    "cpu_begin": "8000",
+    "record_width": 2,
+    "entries": 64,
+    "unique_destinations": 64,
+    "minimum_target": "8080",
+    "maximum_target": "98D7",
+    "sha256": "6b4c8832925b3bfd376cfd530e7c0e8237251347818fe93c5af8a0abdc4d2af4",
+    "targets_sha256": "6b4c8832925b3bfd376cfd530e7c0e8237251347818fe93c5af8a0abdc4d2af4",
+    "interpretation": "64 little-endian pointers indexed through bank6 $9932; destination payload schema unknown",
+    "limitation": "No independently established maximum allowed runtime index or interpretation of payloads"
+  },
+  "reversible_tile_blocks": [
+    {
+      "rom_start": "0C000",
+      "rom_end_exclusive": "0D000",
+      "tiles": 128,
+      "bytes": 4096,
+      "sha256": "ce7c073755a6382882ee518d16cf363e42354895f468e3eeac986b28c9469bea"
+    },
+    {
+      "rom_start": "0D000",
+      "rom_end_exclusive": "0D600",
+      "tiles": 48,
+      "bytes": 1536,
+      "sha256": "527196d448c107535c8ab95cc71e0666acc0589c880c38af1bdc1b78bc98422e"
+    }
+  ],
+  "separate_reencoded_data_bytes": 5760,
+  "combined_distinct_code_and_reencoded_data_bytes": 18199,
+  "new_candidate_classification_bytes": 531,
+  "total_candidate_coverage_bytes": 38279,
+  "scope": "Cumulative matched code excludes raw original-ROM fill; graphics reencoding is independent of assembler, not execution verified",
+  "limitations": [
+    "Sparse assembly does not reproduce complete bank images or entire ROM",
+    "No external assembler or emulator trace",
+    "Tile pixel interpretation does not establish runtime VRAM usage",
+    "Additional bank6 code is statically rooted; pointer payloads remain unknown"
+  ]
+}

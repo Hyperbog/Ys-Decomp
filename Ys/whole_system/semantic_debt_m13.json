@@ -1,0 +1,442 @@
+{
+  "schema": "ys-semantic-debt-m13-v1",
+  "classification": "explicit-label-based lower bound; NOT definitive semantic decoding",
+  "bank_count": 16,
+  "cartridge_bytes": 262144,
+  "mnemonic_bytes": 22552,
+  "data_directive_bytes": 239592,
+  "explicitly_uncertain_bytes_lower_bound": 141581,
+  "banks": [
+    {
+      "bank": 0,
+      "source_sha256": "7bd6a314ba6f0873b14d8ae877bd2fc0d4bb8216c2bc4f791dd74f7688d027b5",
+      "mnemonic_bytes": 14453,
+      "db_bytes": 1533,
+      "dw_bytes": 398,
+      "explicitly_uncertain_bytes_lower_bound": 0,
+      "unlabeled_data_bytes": 1931,
+      "explicitly_uncertain_regions": []
+    },
+    {
+      "bank": 1,
+      "source_sha256": "ce3c7e02cf972e6230e0398f29da0f92f7f90d4424d3ae6887cbec1922f55bd2",
+      "mnemonic_bytes": 2480,
+      "db_bytes": 13884,
+      "dw_bytes": 20,
+      "explicitly_uncertain_bytes_lower_bound": 5788,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "UndecodedSceneData",
+          "start_cpu": 26624,
+          "end_cpu_exclusive": 32412,
+          "bytes": 5788
+        }
+      ]
+    },
+    {
+      "bank": 2,
+      "source_sha256": "150195e563d5593ab23ef9092540674631e41f624fa52104a876748d29184c5b",
+      "mnemonic_bytes": 2557,
+      "db_bytes": 13341,
+      "dw_bytes": 486,
+      "explicitly_uncertain_bytes_lower_bound": 11846,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "UnresolvedSoundTablesAndEvents",
+          "start_cpu": 36094,
+          "end_cpu_exclusive": 43639,
+          "bytes": 7545
+        },
+        {
+          "label": "UnresolvedSongEventArea",
+          "start_cpu": 44416,
+          "end_cpu_exclusive": 45849,
+          "bytes": 1433
+        },
+        {
+          "label": "Song31UnresolvedEvents",
+          "start_cpu": 45859,
+          "end_cpu_exclusive": 45890,
+          "bytes": 31
+        },
+        {
+          "label": "Song32UnresolvedEvents",
+          "start_cpu": 45890,
+          "end_cpu_exclusive": 45933,
+          "bytes": 43
+        },
+        {
+          "label": "Song33UnresolvedEvents",
+          "start_cpu": 45933,
+          "end_cpu_exclusive": 45974,
+          "bytes": 41
+        },
+        {
+          "label": "Song34UnresolvedEvents",
+          "start_cpu": 45974,
+          "end_cpu_exclusive": 46021,
+          "bytes": 47
+        },
+        {
+          "label": "Song35UnresolvedEvents",
+          "start_cpu": 46021,
+          "end_cpu_exclusive": 46060,
+          "bytes": 39
+        },
+        {
+          "label": "Song36UnresolvedEvents",
+          "start_cpu": 46060,
+          "end_cpu_exclusive": 46100,
+          "bytes": 40
+        },
+        {
+          "label": "Song37UnresolvedEvents",
+          "start_cpu": 46100,
+          "end_cpu_exclusive": 46133,
+          "bytes": 33
+        },
+        {
+          "label": "Song38UnresolvedEvents",
+          "start_cpu": 46133,
+          "end_cpu_exclusive": 46182,
+          "bytes": 49
+        },
+        {
+          "label": "Song39UnresolvedEvents",
+          "start_cpu": 46182,
+          "end_cpu_exclusive": 46211,
+          "bytes": 29
+        },
+        {
+          "label": "Song40UnresolvedEvents",
+          "start_cpu": 46211,
+          "end_cpu_exclusive": 46241,
+          "bytes": 30
+        },
+        {
+          "label": "Song41UnresolvedEvents",
+          "start_cpu": 46241,
+          "end_cpu_exclusive": 46274,
+          "bytes": 33
+        },
+        {
+          "label": "Song42UnresolvedEvents",
+          "start_cpu": 46274,
+          "end_cpu_exclusive": 46322,
+          "bytes": 48
+        },
+        {
+          "label": "Song43UnresolvedEvents",
+          "start_cpu": 46322,
+          "end_cpu_exclusive": 46359,
+          "bytes": 37
+        },
+        {
+          "label": "Song44UnresolvedEvents",
+          "start_cpu": 46359,
+          "end_cpu_exclusive": 46430,
+          "bytes": 71
+        },
+        {
+          "label": "Song45UnresolvedEvents",
+          "start_cpu": 46430,
+          "end_cpu_exclusive": 46462,
+          "bytes": 32
+        },
+        {
+          "label": "Song46UnresolvedEvents",
+          "start_cpu": 46462,
+          "end_cpu_exclusive": 46486,
+          "bytes": 24
+        },
+        {
+          "label": "Song47UnresolvedEvents",
+          "start_cpu": 46486,
+          "end_cpu_exclusive": 46523,
+          "bytes": 37
+        },
+        {
+          "label": "Song48UnresolvedEvents",
+          "start_cpu": 46523,
+          "end_cpu_exclusive": 46556,
+          "bytes": 33
+        },
+        {
+          "label": "Song49UnresolvedEvents",
+          "start_cpu": 46556,
+          "end_cpu_exclusive": 46587,
+          "bytes": 31
+        },
+        {
+          "label": "Song50UnresolvedEvents",
+          "start_cpu": 46587,
+          "end_cpu_exclusive": 46647,
+          "bytes": 60
+        },
+        {
+          "label": "Song51UnresolvedEvents",
+          "start_cpu": 46647,
+          "end_cpu_exclusive": 46730,
+          "bytes": 83
+        },
+        {
+          "label": "Song52UnresolvedEvents",
+          "start_cpu": 46730,
+          "end_cpu_exclusive": 46773,
+          "bytes": 43
+        },
+        {
+          "label": "Song53UnresolvedEvents",
+          "start_cpu": 46773,
+          "end_cpu_exclusive": 46804,
+          "bytes": 31
+        },
+        {
+          "label": "Song54UnresolvedEvents",
+          "start_cpu": 46804,
+          "end_cpu_exclusive": 46824,
+          "bytes": 20
+        },
+        {
+          "label": "UndecodedSoundTrailingData",
+          "start_cpu": 46824,
+          "end_cpu_exclusive": 48727,
+          "bytes": 1903
+        }
+      ]
+    },
+    {
+      "bank": 3,
+      "source_sha256": "b761f65d4c7c6107c5b7e7656c9aad2cab94ec7299ddfaa9b3f9abe458f79726",
+      "mnemonic_bytes": 0,
+      "db_bytes": 16264,
+      "dw_bytes": 120,
+      "explicitly_uncertain_bytes_lower_bound": 2064,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "UndecodedVisualStream",
+          "start_cpu": 38400,
+          "end_cpu_exclusive": 40355,
+          "bytes": 1955
+        },
+        {
+          "label": "TextPrefixCandidate",
+          "start_cpu": 40595,
+          "end_cpu_exclusive": 40704,
+          "bytes": 109
+        }
+      ]
+    },
+    {
+      "bank": 4,
+      "source_sha256": "259712e730251365b87a61b2dfb57c8abcab9a4ff3a51db9f615cd0d78ae90b6",
+      "mnemonic_bytes": 38,
+      "db_bytes": 16346,
+      "dw_bytes": 0,
+      "explicitly_uncertain_bytes_lower_bound": 16150,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "UndecodedFourByteLanes502Groups",
+          "start_cpu": 32930,
+          "end_cpu_exclusive": 48994,
+          "bytes": 16064
+        },
+        {
+          "label": "UndecodedBankTrailer",
+          "start_cpu": 48994,
+          "end_cpu_exclusive": 49080,
+          "bytes": 86
+        }
+      ]
+    },
+    {
+      "bank": 5,
+      "source_sha256": "31c503e1b6e40ad7ab9ed47fbdaccac4108adc53d7b175ced51de3cd2345bffc",
+      "mnemonic_bytes": 0,
+      "db_bytes": 16384,
+      "dw_bytes": 0,
+      "explicitly_uncertain_bytes_lower_bound": 15451,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "Bank05_UnresolvedAssets",
+          "start_cpu": 32768,
+          "end_cpu_exclusive": 48219,
+          "bytes": 15451
+        }
+      ]
+    },
+    {
+      "bank": 6,
+      "source_sha256": "2ec803b2fedb7e3d03755119ff6cbee8b0e819bbc795e206c553231eb6f6cf83",
+      "mnemonic_bytes": 644,
+      "db_bytes": 15724,
+      "dw_bytes": 16,
+      "explicitly_uncertain_bytes_lower_bound": 0,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": []
+    },
+    {
+      "bank": 7,
+      "source_sha256": "ac4d83bd3561cada7e744fe506ea265368b7d63cb36470dc76addd795ab81fdc",
+      "mnemonic_bytes": 1956,
+      "db_bytes": 13958,
+      "dw_bytes": 470,
+      "explicitly_uncertain_bytes_lower_bound": 1088,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "UnresolvedVisualData",
+          "start_cpu": 46486,
+          "end_cpu_exclusive": 47574,
+          "bytes": 1088
+        }
+      ]
+    },
+    {
+      "bank": 8,
+      "source_sha256": "ea64d82d75918705700ffff9bbfc30c0a4b0191afc00a2d5782c5b7191ea0153",
+      "mnemonic_bytes": 176,
+      "db_bytes": 16208,
+      "dw_bytes": 0,
+      "explicitly_uncertain_bytes_lower_bound": 16125,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "UnresolvedBank8Script",
+          "start_cpu": 32768,
+          "end_cpu_exclusive": 48872,
+          "bytes": 16104
+        },
+        {
+          "label": "UnresolvedBank8Trailer",
+          "start_cpu": 49116,
+          "end_cpu_exclusive": 49137,
+          "bytes": 21
+        }
+      ]
+    },
+    {
+      "bank": 9,
+      "source_sha256": "682362c2273063ea9d9c00e7a1784f6d03f5f45bc5e9ed8f645ff5c91a641e33",
+      "mnemonic_bytes": 65,
+      "db_bytes": 16319,
+      "dw_bytes": 0,
+      "explicitly_uncertain_bytes_lower_bound": 106,
+      "unlabeled_data_bytes": 16123,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "Bank09_UnresolvedTail",
+          "start_cpu": 49020,
+          "end_cpu_exclusive": 49126,
+          "bytes": 106
+        }
+      ]
+    },
+    {
+      "bank": 10,
+      "source_sha256": "8612fb06f0926e07c35c81a30b49789cb9d2b23ad2e64689382f842c8f14a0f9",
+      "mnemonic_bytes": 75,
+      "db_bytes": 16287,
+      "dw_bytes": 22,
+      "explicitly_uncertain_bytes_lower_bound": 16171,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "UnresolvedBank10Resources",
+          "start_cpu": 32768,
+          "end_cpu_exclusive": 48752,
+          "bytes": 15984
+        },
+        {
+          "label": "UnresolvedBank10Trailer",
+          "start_cpu": 48962,
+          "end_cpu_exclusive": 49149,
+          "bytes": 187
+        }
+      ]
+    },
+    {
+      "bank": 11,
+      "source_sha256": "00d0023fa75e8172733452b437151966c941b71a9f8510f2906030fb2eb0f362",
+      "mnemonic_bytes": 0,
+      "db_bytes": 16384,
+      "dw_bytes": 0,
+      "explicitly_uncertain_bytes_lower_bound": 0,
+      "unlabeled_data_bytes": 16332,
+      "explicitly_uncertain_regions": []
+    },
+    {
+      "bank": 12,
+      "source_sha256": "bc9e05789ed3d475cadc3ae7d67fabfe4c4f88d0740f8d2fc026aae47d15ef54",
+      "mnemonic_bytes": 108,
+      "db_bytes": 16276,
+      "dw_bytes": 0,
+      "explicitly_uncertain_bytes_lower_bound": 7804,
+      "unlabeled_data_bytes": 128,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "Bank12_UnresolvedPayload",
+          "start_cpu": 32896,
+          "end_cpu_exclusive": 40700,
+          "bytes": 7804
+        }
+      ]
+    },
+    {
+      "bank": 13,
+      "source_sha256": "67864a46fdccd9c19c2c7356c4df8fc663f647a2c7fdd9ed3136515447bdc7d7",
+      "mnemonic_bytes": 0,
+      "db_bytes": 16284,
+      "dw_bytes": 100,
+      "explicitly_uncertain_bytes_lower_bound": 16266,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "Bank13_UnresolvedAssets",
+          "start_cpu": 32768,
+          "end_cpu_exclusive": 49034,
+          "bytes": 16266
+        }
+      ]
+    },
+    {
+      "bank": 14,
+      "source_sha256": "3a696ce18ebac36fc97b7607a485cd01c1f6e4e682f344978ba648966050d770",
+      "mnemonic_bytes": 0,
+      "db_bytes": 16384,
+      "dw_bytes": 0,
+      "explicitly_uncertain_bytes_lower_bound": 16342,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "Bank14_UnresolvedAssets",
+          "start_cpu": 32768,
+          "end_cpu_exclusive": 49110,
+          "bytes": 16342
+        }
+      ]
+    },
+    {
+      "bank": 15,
+      "source_sha256": "72503c21fdb08bb2d4705def5ea2c32ce5d00f6146dc497e90e92c9ba041dfe1",
+      "mnemonic_bytes": 0,
+      "db_bytes": 16384,
+      "dw_bytes": 0,
+      "explicitly_uncertain_bytes_lower_bound": 16380,
+      "unlabeled_data_bytes": 0,
+      "explicitly_uncertain_regions": [
+        {
+          "label": "Bank15_UnresolvedAssets",
+          "start_cpu": 32768,
+          "end_cpu_exclusive": 49148,
+          "bytes": 16380
+        }
+      ]
+    }
+  ]
+}

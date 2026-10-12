@@ -1,0 +1,40 @@
+{
+  "schema": "ys-phase11b-summary-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "previous_phase11a": {
+    "verified_code_bytes": 12439,
+    "reencoded_data_bytes": 5760,
+    "candidate_classification_bytes": 38279
+  },
+  "new": {
+    "bank": 6,
+    "record_count": 64,
+    "elements": 2086,
+    "source_file_range": [
+      "18080",
+      "19932"
+    ],
+    "distinct_structured_data_bytes": 6322,
+    "record_data_sha256": "a438fe5123fdea950e073695dd370d61412675e0fb6ade980a9af605f57a18f9"
+  },
+  "cumulative": {
+    "verified_code_bytes": 12439,
+    "structured_reencoded_data_bytes": 12082,
+    "distinct_code_or_structured_data_bytes": 24521,
+    "candidate_classification_bytes": 44601,
+    "rom_bytes": 262144
+  },
+  "verification": [
+    "all twelve phases suites passed individually",
+    "byte-matched sparse Z80 source via in-project encoder",
+    "64 record payload round-trips",
+    "64 consumer stream simulations at 3 origins each",
+    "ROM fingerprint and mutation rejection"
+  ],
+  "unverified": [
+    "independent third-party assembler",
+    "full matching ROM build",
+    "emulator runtime mapper state",
+    "gameplay semantics of bank-6 records"
+  ]
+}

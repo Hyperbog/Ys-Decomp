@@ -1,0 +1,83 @@
+{
+  "schema": "ys-z80-phase10b-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "inputs": [
+    "phase5/code.lst",
+    "phase6/code.lst",
+    "phase7/code.lst",
+    "phase8/banked_code.lst"
+  ],
+  "assembler": "independent in-project Z80 mnemonic encoder; not an external assembler",
+  "matching_instructions": 4960,
+  "newly_assembled_distinct_bytes": 10188,
+  "previously_assembled_phase9_bytes": 111,
+  "phase9_overlap": 61,
+  "total_distinct_assembler_matched_bytes": 10238,
+  "source_banks": [
+    {
+      "bank": 0,
+      "instructions": 3265,
+      "matched_bytes": 6973,
+      "first_offset": "00260",
+      "last_offset": "03F6F",
+      "source": "src/phase10_roundtrip/bank00.asm"
+    },
+    {
+      "bank": 1,
+      "instructions": 376,
+      "matched_bytes": 763,
+      "first_offset": "042BA",
+      "last_offset": "064D2",
+      "source": "src/phase10_roundtrip/bank01.asm"
+    },
+    {
+      "bank": 2,
+      "instructions": 817,
+      "matched_bytes": 1655,
+      "first_offset": "08329",
+      "last_offset": "08A57",
+      "source": "src/phase10_roundtrip/bank02.asm"
+    },
+    {
+      "bank": 4,
+      "instructions": 28,
+      "matched_bytes": 38,
+      "first_offset": "1007C",
+      "last_offset": "100A1",
+      "source": "src/phase10_roundtrip/bank04.asm"
+    },
+    {
+      "bank": 7,
+      "instructions": 290,
+      "matched_bytes": 438,
+      "first_offset": "1C6C1",
+      "last_offset": "1C876",
+      "source": "src/phase10_roundtrip/bank07.asm"
+    },
+    {
+      "bank": 8,
+      "instructions": 80,
+      "matched_bytes": 138,
+      "first_offset": "23EE8",
+      "last_offset": "23F71",
+      "source": "src/phase10_roundtrip/bank08.asm"
+    },
+    {
+      "bank": 10,
+      "instructions": 42,
+      "matched_bytes": 75,
+      "first_offset": "2BEF7",
+      "last_offset": "2BF41",
+      "source": "src/phase10_roundtrip/bank10.asm"
+    },
+    {
+      "bank": 12,
+      "instructions": 62,
+      "matched_bytes": 108,
+      "first_offset": "31EFC",
+      "last_offset": "31F67",
+      "source": "src/phase10_roundtrip/bank12.asm"
+    }
+  ],
+  "caveat": "Existing decoded instruction classifications; no new ROM coverage or full ROM rebuild."
+}

@@ -1,0 +1,118 @@
+{
+  "schema": "ys-phase12-sprite-pipeline-v1",
+  "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "contiguous_bank6_region": {
+    "start": "18000",
+    "end_exclusive": "19C18",
+    "bytes": 7192,
+    "previously_assembled_code_bytes": 403,
+    "newly_assembled_code_bytes": 241,
+    "structurally_reencoded_data_bytes": 6548,
+    "raw_rom_in_repository": false
+  },
+  "new_code": {
+    "instruction_count": 119,
+    "bytes": 241,
+    "rooted_targets": [
+      "9AF6",
+      "9AA9",
+      "9AF7",
+      "9B45",
+      "9B90",
+      "9BC1",
+      "9BB9",
+      "9BF4"
+    ],
+    "sha256": "aeb49d605fd02405d719c6b86eb3f33248f70dbf891b904373abdd72569dacec",
+    "full_reached_code_sha256": "aa64285e5b3c726dbfecf77a81dd25cad105692df358feb9ab319ef6aaa7f60e"
+  },
+  "data_spans": {
+    "record_pointer_directory": {
+      "start": "18000",
+      "end_exclusive": "18080",
+      "bytes": 128,
+      "sha256": "6b4c8832925b3bfd376cfd530e7c0e8237251347818fe93c5af8a0abdc4d2af4"
+    },
+    "counted_sprite_records": {
+      "start": "18080",
+      "end_exclusive": "19932",
+      "bytes": 6322,
+      "sha256": "a438fe5123fdea950e073695dd370d61412675e0fb6ade980a9af605f57a18f9"
+    },
+    "object_work_record_pointers": {
+      "start": "19A77",
+      "end_exclusive": "19A99",
+      "bytes": 34,
+      "sha256": "e1e9ec130fbece2fccc8c42636068d39d48789c01c48a4c7fd28c5c0bd56aba4"
+    },
+    "sprite_handler_dispatch": {
+      "start": "19A99",
+      "end_exclusive": "19AA9",
+      "bytes": 16,
+      "sha256": "692855008a561ed4de24213b8b49b70d6ac9cccd5ea3830fec1c1825458fc9ac"
+    },
+    "fourteen_sprite_offsets": {
+      "start": "19B29",
+      "end_exclusive": "19B45",
+      "bytes": 28,
+      "sha256": "d9d92735d787734e8ffcb584d2dee65d0db90e554c681b3b86544a848ba4e4a0"
+    },
+    "sixteen_sprite_offsets": {
+      "start": "19B7C",
+      "end_exclusive": "19B90",
+      "bytes": 20,
+      "sha256": "d1ea143261d393a62b9c4a8298209a1205e1e60e07760e5c92c717e8a7a055f7"
+    }
+  },
+  "object_work_record_pointer_values": {
+    "count": 17,
+    "start": "C200",
+    "end": "C500",
+    "stride": 48
+  },
+  "handler_dispatch": {
+    "entries": 8,
+    "targets": [
+      "9AF6",
+      "9AA9",
+      "9AF7",
+      "9B45",
+      "9B90",
+      "9BC1",
+      "9BB9",
+      "9BF4"
+    ]
+  },
+  "VDP_sprite_attribute_table": {
+    "vram_first": "3F00",
+    "ram_first": "DD00",
+    "y_bytes": 64,
+    "vram_second": "3F80",
+    "ram_second": "DD40",
+    "x_tile_bytes": 128,
+    "total_bytes": 192,
+    "output_port": "BE",
+    "control_port": "BF",
+    "transfer_opcode": "OUTI"
+  },
+  "record_capacity_check": {
+    "record_count": 64,
+    "maximum_elements": 38,
+    "max_y_output_bytes": 64,
+    "max_x_tile_output_bytes": 128
+  },
+  "new_distinct_assembly_bytes": 241,
+  "new_distinct_structured_data_bytes": 98,
+  "new_distinct_classified_bytes": 339,
+  "cumulative_assembler_matched_bytes": 12680,
+  "cumulative_reversible_data_bytes": 12180,
+  "cumulative_code_and_reversible_data_bytes": 24860,
+  "cumulative_candidate_coverage_bytes": 44940,
+  "cumulative_candidate_coverage_percentage": 17.1432,
+  "limitations": [
+    "No independent assembler or emulator trace",
+    "RAM sprite buffers can contain additional data or padding beyond individual records",
+    "Sprite semantics inferred from instruction flow and VDP/SAT hardware layout",
+    "Outside $18000-$19C18 bank6 data boundaries remain unverified"
+  ]
+}

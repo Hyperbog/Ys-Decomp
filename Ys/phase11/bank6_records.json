@@ -1,0 +1,685 @@
+{
+  "schema": "ys-phase11b-records-v1",
+  "source_rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "bank": 6,
+  "pointer_table_file_range": [
+    "18000",
+    "18080"
+  ],
+  "pointer_table_bytes_previously_classified": 128,
+  "record_data_file_range": [
+    "18080",
+    "19932"
+  ],
+  "new_structured_data_bytes": 6322,
+  "record_count": 64,
+  "record_length_formula": "1 + 3 * count",
+  "count_histogram": {
+    "27": 2,
+    "29": 2,
+    "30": 7,
+    "31": 9,
+    "32": 13,
+    "33": 10,
+    "34": 7,
+    "35": 7,
+    "36": 4,
+    "37": 2,
+    "38": 1
+  },
+  "record_byte_count_range": [
+    82,
+    115
+  ],
+  "record_payload_sha256": "a438fe5123fdea950e073695dd370d61412675e0fb6ade980a9af605f57a18f9",
+  "record_layout": {
+    "byte_0": "count",
+    "bytes_1_through_count": "first byte-array, count bytes",
+    "remaining_2xcount": "count pairs: running delta and literal byte",
+    "consumer_output": "first count bytes are running sums of first group plus ($C210); next 2*count bytes are running sums of each pair first byte plus ($C211), interleaved with copied literal pair second bytes",
+    "consumer": "bank 6 CPU $9932 reads record and copies/transforms into RAM destinations via ($C028) and ($C02A)",
+    "semantic_status": "fields have no confirmed gameplay names; mapping is statically inferred, not emulator traced"
+  },
+  "records_by_directory_index": [
+    {
+      "index": 0,
+      "cpu_address": "8306",
+      "rom_start": "18306",
+      "rom_end_exclusive": "18361",
+      "elements": 30,
+      "bytes": 91,
+      "sha256": "7e7b1f7cfe948eb2dfe6712dabefda235c52016873fb30d017c48bd48d36e9b9",
+      "consumer_zero_origin_sha256": "a4778f84e86dc6065d555eded8d652546ddb65b1b2ab31dc0af5fe2462c276eb"
+    },
+    {
+      "index": 1,
+      "cpu_address": "82AB",
+      "rom_start": "182AB",
+      "rom_end_exclusive": "18306",
+      "elements": 30,
+      "bytes": 91,
+      "sha256": "b4851416818e416011a0d279375efa5a372a37cc686f56e157502f07b8c242b2",
+      "consumer_zero_origin_sha256": "fa9613f6941f14c36f0bb4832827243d6d9ae4b1c3718328868786f4fc1c5f1b"
+    },
+    {
+      "index": 2,
+      "cpu_address": "824D",
+      "rom_start": "1824D",
+      "rom_end_exclusive": "182AB",
+      "elements": 31,
+      "bytes": 94,
+      "sha256": "06d5656bc802a433f221f1fd2ff48fd0bdd7d31d8aa899e0e825a0339535b1d7",
+      "consumer_zero_origin_sha256": "3752a481c6275f4caecf24db6058fb291d228b21721cc5bf7904af6623be7a16"
+    },
+    {
+      "index": 3,
+      "cpu_address": "81EF",
+      "rom_start": "181EF",
+      "rom_end_exclusive": "1824D",
+      "elements": 31,
+      "bytes": 94,
+      "sha256": "1edb50d167b5f95ce140ffa44ce88d97d979f26749bbe90b17627b461ad87b54",
+      "consumer_zero_origin_sha256": "74ae4e247734bed24530fc782748b13f75e4a94df262a2cfa6f39e8c6c184a78"
+    },
+    {
+      "index": 4,
+      "cpu_address": "8194",
+      "rom_start": "18194",
+      "rom_end_exclusive": "181EF",
+      "elements": 30,
+      "bytes": 91,
+      "sha256": "1d8ebe968eac9e1b2f12f5d2e9c551f94f3765177555cf53e9a6dd868b8c158e",
+      "consumer_zero_origin_sha256": "0904964a912e9c9fc5b604f56bdc007c321d5ef6beb4aafb8ca386a7a904a767"
+    },
+    {
+      "index": 5,
+      "cpu_address": "8136",
+      "rom_start": "18136",
+      "rom_end_exclusive": "18194",
+      "elements": 31,
+      "bytes": 94,
+      "sha256": "2baab127f58b989f42d0ea772c38123739a45a8ae3f18dd05725673194baf0b8",
+      "consumer_zero_origin_sha256": "dee414d697654ead5b949e8d56868df2b9dd61b94a67c8a9eef8c890d290ceeb"
+    },
+    {
+      "index": 6,
+      "cpu_address": "80DB",
+      "rom_start": "180DB",
+      "rom_end_exclusive": "18136",
+      "elements": 30,
+      "bytes": 91,
+      "sha256": "cff601e6dae77f6bdace8c901062355d26e0a0b95cff88865b58ddf99ecae846",
+      "consumer_zero_origin_sha256": "5be290af82b421123f6e01ba3a5b7a2ecc3f798ece707e475ebbf9c1a3204b6b"
+    },
+    {
+      "index": 7,
+      "cpu_address": "8080",
+      "rom_start": "18080",
+      "rom_end_exclusive": "180DB",
+      "elements": 30,
+      "bytes": 91,
+      "sha256": "7b9cdb3697bb06d7587c001dd8f3826afe6b9b0151dabf3a1b67f6757fa0b4dd",
+      "consumer_zero_origin_sha256": "e6c03281e1ee9505da3b72f654b59a81b297ab7ae313208bf4577c1d26232e45"
+    },
+    {
+      "index": 8,
+      "cpu_address": "98D7",
+      "rom_start": "198D7",
+      "rom_end_exclusive": "19932",
+      "elements": 30,
+      "bytes": 91,
+      "sha256": "fef5efc87d10250a2342292ac3a040f4626d1a667d2f1484d738c6fa994d200a",
+      "consumer_zero_origin_sha256": "7ff70472e369b72cedfb0eb30d212d15966ca7088d02cc7282580a3c9565df36"
+    },
+    {
+      "index": 9,
+      "cpu_address": "9879",
+      "rom_start": "19879",
+      "rom_end_exclusive": "198D7",
+      "elements": 31,
+      "bytes": 94,
+      "sha256": "2be78ef3c72ac3ca3cb4eb13146e5af20b96d26969e213341e17e42b28999c6c",
+      "consumer_zero_origin_sha256": "9a98f00f96251d33b37448275a9aacff87cb45681afd81742b2dec8cfb52a34d"
+    },
+    {
+      "index": 10,
+      "cpu_address": "9818",
+      "rom_start": "19818",
+      "rom_end_exclusive": "19879",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "e68e460fda4fc9a103cba4bfc447a9d0a95555a005d85660458f5b819116591b",
+      "consumer_zero_origin_sha256": "8c3e36745f1913c09de014c079da29e63a408f95c36d0a3134d6a1f0cd154b57"
+    },
+    {
+      "index": 11,
+      "cpu_address": "97B7",
+      "rom_start": "197B7",
+      "rom_end_exclusive": "19818",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "14b5c027ad4565b646c6f8bd4c111b130547416399ab5f906ffcd22df1886cd2",
+      "consumer_zero_origin_sha256": "4245aff9d4cbf2df08bf5f39a9af4ec9c951750f1225f251911d69e76ff97487"
+    },
+    {
+      "index": 12,
+      "cpu_address": "9756",
+      "rom_start": "19756",
+      "rom_end_exclusive": "197B7",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "f8964e58e54fccf3d266721f7b49d9752739b9075e73b0d401b5fb7007411a00",
+      "consumer_zero_origin_sha256": "26ee583d6519767409a3e5b80e2e0b18cb960f05c1daecc228ef5dad0ea94d82"
+    },
+    {
+      "index": 13,
+      "cpu_address": "96EF",
+      "rom_start": "196EF",
+      "rom_end_exclusive": "19756",
+      "elements": 34,
+      "bytes": 103,
+      "sha256": "af88f1de3da13288b45a32409634b57a3c49fe6bce946304b6f57baee73b3f40",
+      "consumer_zero_origin_sha256": "14c1ef920bce4a724bc8e939263e3c9a4abd6dba20f58fb2eb3148e42f541af7"
+    },
+    {
+      "index": 14,
+      "cpu_address": "9691",
+      "rom_start": "19691",
+      "rom_end_exclusive": "196EF",
+      "elements": 31,
+      "bytes": 94,
+      "sha256": "705770c719ec068d0a5f710e54211c4df3f55cb2aebcba44283cc91325cf5097",
+      "consumer_zero_origin_sha256": "de40d205701ba8f92347dc6e730a9ba133879dea579ca7a68d8faf6d5427de35"
+    },
+    {
+      "index": 15,
+      "cpu_address": "9636",
+      "rom_start": "19636",
+      "rom_end_exclusive": "19691",
+      "elements": 30,
+      "bytes": 91,
+      "sha256": "e577993af9b045f51c09889a79061b6434b7bc1c0a01864f3b8cf495c65b0dc8",
+      "consumer_zero_origin_sha256": "e9d31c11878af366514dc486f392a82dc36fecdaf3d1615ac4a89e3fe64c9c20"
+    },
+    {
+      "index": 16,
+      "cpu_address": "95DE",
+      "rom_start": "195DE",
+      "rom_end_exclusive": "19636",
+      "elements": 29,
+      "bytes": 88,
+      "sha256": "4f78d4ab7c0ed82a75c3077028576d8615b5a3aea8eac2c029dc99aea3938546",
+      "consumer_zero_origin_sha256": "b285ee0c9fae6b33c817dc77da9b77fdfad51d3240e09e33c96e48daafcc6145"
+    },
+    {
+      "index": 17,
+      "cpu_address": "957A",
+      "rom_start": "1957A",
+      "rom_end_exclusive": "195DE",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "b1f885fa2187b90ab39e0038fb5fad62bdbc57860791267f33196f3cab300e3b",
+      "consumer_zero_origin_sha256": "c22318c6ce2745c7597147512d9a3abd56adba5620e4f6d254f7499bfce309bf"
+    },
+    {
+      "index": 18,
+      "cpu_address": "950D",
+      "rom_start": "1950D",
+      "rom_end_exclusive": "1957A",
+      "elements": 36,
+      "bytes": 109,
+      "sha256": "cb93b8d3c990c61781eb6c0bffa48f3537e0514d70b33e1482882138a336b262",
+      "consumer_zero_origin_sha256": "8c8e44bf09e72c1151563ff7320ea20338d07e06cd2196ccff0a6a5db501adc2"
+    },
+    {
+      "index": 19,
+      "cpu_address": "94AC",
+      "rom_start": "194AC",
+      "rom_end_exclusive": "1950D",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "ad8a02f43200954cfcbb49f6441ea06f52d1edb7108ee8e46a767e4b827bf62b",
+      "consumer_zero_origin_sha256": "4571bf9d550c0d762eec83354b768020855e0989d72ea2ad3a4ed86417f177c5"
+    },
+    {
+      "index": 20,
+      "cpu_address": "944B",
+      "rom_start": "1944B",
+      "rom_end_exclusive": "194AC",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "04e6541ef56f7539447d7b2a48f28b48de7dfd56badbfb30f040aae1ef53ae53",
+      "consumer_zero_origin_sha256": "11d9340991b57df60ddb2e0d2287f74c87f73154ff82c0348e857aa832715086"
+    },
+    {
+      "index": 21,
+      "cpu_address": "93E1",
+      "rom_start": "193E1",
+      "rom_end_exclusive": "1944B",
+      "elements": 35,
+      "bytes": 106,
+      "sha256": "eed2a2a344c5923a775f85a165f79460aaec8b0d931b56d6e216c34903bd47c2",
+      "consumer_zero_origin_sha256": "56ca36a283f136a0cb1fafdf4de74fc3b69ebbfce010f9b0d2184a415d249f3f"
+    },
+    {
+      "index": 22,
+      "cpu_address": "9380",
+      "rom_start": "19380",
+      "rom_end_exclusive": "193E1",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "abb9bdf1c3a6f674c5f4a74cece88adb8112483cde66b859de780e9e008bf1ff",
+      "consumer_zero_origin_sha256": "0238248756b0bdc5669414036ad7862a73f4d17c9c42ad3660df5dbaab85f9b5"
+    },
+    {
+      "index": 23,
+      "cpu_address": "932E",
+      "rom_start": "1932E",
+      "rom_end_exclusive": "19380",
+      "elements": 27,
+      "bytes": 82,
+      "sha256": "486c381631e436a226d856b2afc683fc7b5b75feeff19af09f606e86ebb2c5ea",
+      "consumer_zero_origin_sha256": "21108268eb217eb3c1b008ff0937211824ee25bf681d4a4cfd9e5b688f5767d7"
+    },
+    {
+      "index": 24,
+      "cpu_address": "9014",
+      "rom_start": "19014",
+      "rom_end_exclusive": "19078",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "450bd51f2d55901dafe9fbdf6da0ca89143d5494891ca049872265c70bd6130a",
+      "consumer_zero_origin_sha256": "82880bf702021bc45f35654eb77be306470b8b5d699e06833bced48253c2145e"
+    },
+    {
+      "index": 25,
+      "cpu_address": "8FA7",
+      "rom_start": "18FA7",
+      "rom_end_exclusive": "19014",
+      "elements": 36,
+      "bytes": 109,
+      "sha256": "4100dda59615166494c9bed5dad49777a26c8973624b6aac05de3f28936a1695",
+      "consumer_zero_origin_sha256": "9a95ff96b23feae638415fd4f8b87cbef81e109294110a4fba3133810a311d9c"
+    },
+    {
+      "index": 26,
+      "cpu_address": "8F3A",
+      "rom_start": "18F3A",
+      "rom_end_exclusive": "18FA7",
+      "elements": 36,
+      "bytes": 109,
+      "sha256": "8a6fa36c777cd3603a5ae311ea010fc1fcf2119f3553f417b1291139d7db8dea",
+      "consumer_zero_origin_sha256": "ef3a82133111df96e3de164be85656ab51e4f52f009cff63736704a635e72979"
+    },
+    {
+      "index": 27,
+      "cpu_address": "8ED0",
+      "rom_start": "18ED0",
+      "rom_end_exclusive": "18F3A",
+      "elements": 35,
+      "bytes": 106,
+      "sha256": "aa4351a26b7406e1c1c211c86a6c915782f2383118a371f88252ad2b7f158b9f",
+      "consumer_zero_origin_sha256": "ed6331bce64b69fedad65a02dd82dc7a5996c4a9b911322443ba5e202c921a6c"
+    },
+    {
+      "index": 28,
+      "cpu_address": "8E66",
+      "rom_start": "18E66",
+      "rom_end_exclusive": "18ED0",
+      "elements": 35,
+      "bytes": 106,
+      "sha256": "3ec1fff9071e7e453bc3149a4d2502bd67a0dd2f85035e57f2ba8385a7ddf531",
+      "consumer_zero_origin_sha256": "b2d9a4d3c573bded3bdba38589b932262652da4f3b076ecee0699b4ea8427ae9"
+    },
+    {
+      "index": 29,
+      "cpu_address": "8DF9",
+      "rom_start": "18DF9",
+      "rom_end_exclusive": "18E66",
+      "elements": 36,
+      "bytes": 109,
+      "sha256": "b20a5946f7d054f5aaefd3eb4fd4f1d2181dc5234f8838adab09b6f0b9489e0a",
+      "consumer_zero_origin_sha256": "3597d7c9d9c52f3cbd09f08003742ba9f288fdd0cf76eed9e18bceda72b2e036"
+    },
+    {
+      "index": 30,
+      "cpu_address": "8D86",
+      "rom_start": "18D86",
+      "rom_end_exclusive": "18DF9",
+      "elements": 38,
+      "bytes": 115,
+      "sha256": "38c90a13090b477dbc9988eef829794bcde9a8b795ff3b85b6827d0b5fcac1cd",
+      "consumer_zero_origin_sha256": "4a59434a641c3b733159df4d9a7553c95d8121de139e9fae0a168e96e3ca0daa"
+    },
+    {
+      "index": 31,
+      "cpu_address": "8D25",
+      "rom_start": "18D25",
+      "rom_end_exclusive": "18D86",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "2ba68b89d29bf1ec53daad240b160dad9c555a19addbe722e70c4a93db3b7bba",
+      "consumer_zero_origin_sha256": "d04cbacbe69c4594589fc329edeb9b0b1bcbfcf79c5e57ea05cec12eb4818db6"
+    },
+    {
+      "index": 32,
+      "cpu_address": "92CA",
+      "rom_start": "192CA",
+      "rom_end_exclusive": "1932E",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "b047ad496afb24a32f5f9b278a08d3c80963a39b294fe37d267c941d8fd80b25",
+      "consumer_zero_origin_sha256": "ff4604fc5996013ab5895dbb7eebd174000944fc563cdeca5bf675f64a4533a8"
+    },
+    {
+      "index": 33,
+      "cpu_address": "9266",
+      "rom_start": "19266",
+      "rom_end_exclusive": "192CA",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "cb45707606561721101373bfcff23e4fd73c876deea4cd15b97dca0659b1e5a5",
+      "consumer_zero_origin_sha256": "7a2a4ff9c345db79c17d9f270f53dd2387b905a6765ac6f81f5415adc05e09b2"
+    },
+    {
+      "index": 34,
+      "cpu_address": "9205",
+      "rom_start": "19205",
+      "rom_end_exclusive": "19266",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "dc19459dabb305eeb0e4af929050ba45299bdd9ae64661aae1a9fee109ac1f7f",
+      "consumer_zero_origin_sha256": "9c468da781b5610d9acb5036e0b1bd7d14d8f7c5198eab5a3781f2f85ae6c890"
+    },
+    {
+      "index": 35,
+      "cpu_address": "91A1",
+      "rom_start": "191A1",
+      "rom_end_exclusive": "19205",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "08ae841c9901354d814c30a186839ea5a9b942b1523a5846e4aff379caf91896",
+      "consumer_zero_origin_sha256": "86d1eee574d23d48087ff5c99ffb5e2e973b7ab5647f789517e5cf6bc3e6d2ce"
+    },
+    {
+      "index": 36,
+      "cpu_address": "9140",
+      "rom_start": "19140",
+      "rom_end_exclusive": "191A1",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "4303c8aaa25207406ab1380823f7cdfe8ab245304ebe5a11c1b20aba747afa13",
+      "consumer_zero_origin_sha256": "876fc4fd4140408cc6b54223b7cc11a1004a8faa9ab60238c11cb9c2d669d171"
+    },
+    {
+      "index": 37,
+      "cpu_address": "90DF",
+      "rom_start": "190DF",
+      "rom_end_exclusive": "19140",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "163c27e6ec39b49a0123b53b6bd3c1c4198a7b5e028e35205ed59956f0b615aa",
+      "consumer_zero_origin_sha256": "acf3818e51e0f4e0062064d609135718bd4152553208133bdc2e2d5ecef48927"
+    },
+    {
+      "index": 38,
+      "cpu_address": "9078",
+      "rom_start": "19078",
+      "rom_end_exclusive": "190DF",
+      "elements": 34,
+      "bytes": 103,
+      "sha256": "a01a71b8225af16dd367b5dc6753eeb7a410052e8b26becc33fa92cb31bbac4d",
+      "consumer_zero_origin_sha256": "b2e78333bb6c6e6227ab630b9897e188ff8bb0f68e9ea2e746f296bbd981d66e"
+    },
+    {
+      "index": 39,
+      "cpu_address": "8CC1",
+      "rom_start": "18CC1",
+      "rom_end_exclusive": "18D25",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "08f82948e2faffa9f1f8eeaba8daff7cbc75223576ff498d88f41d3f9e4ff579",
+      "consumer_zero_origin_sha256": "4142d81cec9a02d14cf3835f9dae13c104d5801c5acccca7116fcd1b0ddbed53"
+    },
+    {
+      "index": 40,
+      "cpu_address": "8AC4",
+      "rom_start": "18AC4",
+      "rom_end_exclusive": "18B28",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "c04acf66b504c7c874ecf115e3d2f4d6bab365a2ccb4f769aa0b222aea9fe0d0",
+      "consumer_zero_origin_sha256": "1790c68fb97c88953077693a451ede0b052f50c731806467b1f95e4135f6ff2b"
+    },
+    {
+      "index": 41,
+      "cpu_address": "8A5A",
+      "rom_start": "18A5A",
+      "rom_end_exclusive": "18AC4",
+      "elements": 35,
+      "bytes": 106,
+      "sha256": "07a9af1c76c95bf11e59728bbad17c89ebb2f41d5b158759bdb788a117fb058f",
+      "consumer_zero_origin_sha256": "1e8de8b8a408f9ef8c77810a0db98fddbcf429577ea61a15c398cfaef18b4dc2"
+    },
+    {
+      "index": 42,
+      "cpu_address": "89F3",
+      "rom_start": "189F3",
+      "rom_end_exclusive": "18A5A",
+      "elements": 34,
+      "bytes": 103,
+      "sha256": "31ba02fdcfc3f29a435e2058b61cb9ac03c4bc781ffd12fd03436218c288c85e",
+      "consumer_zero_origin_sha256": "0752499aab6c9b89ee5d2b9929077be9091bd9d30ef0a983910ca282b5b6d2c2"
+    },
+    {
+      "index": 43,
+      "cpu_address": "898C",
+      "rom_start": "1898C",
+      "rom_end_exclusive": "189F3",
+      "elements": 34,
+      "bytes": 103,
+      "sha256": "fe8315242de2545270fbfb1ba833bfd6c90d2619649441ee0d11631c28755f57",
+      "consumer_zero_origin_sha256": "a35bceeeb37f573eaf6af704025294a8e0ba318dcd3b71a4b10cb117f04dd181"
+    },
+    {
+      "index": 44,
+      "cpu_address": "8925",
+      "rom_start": "18925",
+      "rom_end_exclusive": "1898C",
+      "elements": 34,
+      "bytes": 103,
+      "sha256": "b3b926fbcc9bbccfbf222a1ef71e79acfb7e0974591cad988a38ab7162be4e7a",
+      "consumer_zero_origin_sha256": "0e558d5e2f5eae8c7a266b488b321b03920db82d3792851ac57c6ea5fc610b54"
+    },
+    {
+      "index": 45,
+      "cpu_address": "88C7",
+      "rom_start": "188C7",
+      "rom_end_exclusive": "18925",
+      "elements": 31,
+      "bytes": 94,
+      "sha256": "dd070ed3e338f1e9b5e89ca9158fca37cd16d04e6504302b08552db73d0844e7",
+      "consumer_zero_origin_sha256": "a70cdbbb4dbf1b9fa81e0fdf8bae80e3656bce42d092860e771290098b4c3b68"
+    },
+    {
+      "index": 46,
+      "cpu_address": "8866",
+      "rom_start": "18866",
+      "rom_end_exclusive": "188C7",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "2d0f2f0618c988c827c5377eefafece0f4247d270958b5941208930df84cce62",
+      "consumer_zero_origin_sha256": "9542b099f4ceb4bb5c27f05ce47a51e86d3ad5ec5abc9361f613103768eef039"
+    },
+    {
+      "index": 47,
+      "cpu_address": "8802",
+      "rom_start": "18802",
+      "rom_end_exclusive": "18866",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "671471f353e5f4c73d018de23cdc0823ba981dbdf7f3d1b3db9b3b7e4e33ae45",
+      "consumer_zero_origin_sha256": "9460ceca10a4b5b3ec9fa4297da7486f00dc5d572fddad2065ff404f3a195e14"
+    },
+    {
+      "index": 48,
+      "cpu_address": "87A4",
+      "rom_start": "187A4",
+      "rom_end_exclusive": "18802",
+      "elements": 31,
+      "bytes": 94,
+      "sha256": "4d5e7d7c9a59fd97344d85e12d89b6d872e25e18264b6821b59c8e0073e38a10",
+      "consumer_zero_origin_sha256": "aa4e62486eb2344d038902bb572906fdf626f0e781667caee57d8f47c6175dbf"
+    },
+    {
+      "index": 49,
+      "cpu_address": "873A",
+      "rom_start": "1873A",
+      "rom_end_exclusive": "187A4",
+      "elements": 35,
+      "bytes": 106,
+      "sha256": "465e7bf19dab9c86fb6197c95a515dc920bf412d36c78cdbb43d68301570b5ef",
+      "consumer_zero_origin_sha256": "486d5336897ea080742a98f1c5353cb3842ac3774c0beb857d0a0ae8aff243c7"
+    },
+    {
+      "index": 50,
+      "cpu_address": "86CA",
+      "rom_start": "186CA",
+      "rom_end_exclusive": "1873A",
+      "elements": 37,
+      "bytes": 112,
+      "sha256": "7582663d52e1bab6f52b1c8f80107ce720e26feaaf7abc9aabbe670dc3adce0a",
+      "consumer_zero_origin_sha256": "1bddaa8c44d0e98dafa94233d50129425bc44a0d1ff2dbf13953597f014db483"
+    },
+    {
+      "index": 51,
+      "cpu_address": "8663",
+      "rom_start": "18663",
+      "rom_end_exclusive": "186CA",
+      "elements": 34,
+      "bytes": 103,
+      "sha256": "9531cd6a7ba4e223ecb1ecfb8efe9569060e41da995f54d6debc4badcc29a7dd",
+      "consumer_zero_origin_sha256": "32f2e8546f41d23900e279443a134ed591ec6e5cf8f11dcea50bbc4ba3e3441d"
+    },
+    {
+      "index": 52,
+      "cpu_address": "8C5A",
+      "rom_start": "18C5A",
+      "rom_end_exclusive": "18CC1",
+      "elements": 34,
+      "bytes": 103,
+      "sha256": "c230c7ac4c2044aec15fb60038075373da0d90af8db8e3c2af589cff7ba5936c",
+      "consumer_zero_origin_sha256": "07bbb1bed498225740b073c3e07d6edd63ea0e85ffb555102a6776040dfde35d"
+    },
+    {
+      "index": 53,
+      "cpu_address": "8BEA",
+      "rom_start": "18BEA",
+      "rom_end_exclusive": "18C5A",
+      "elements": 37,
+      "bytes": 112,
+      "sha256": "b3d086f431eda2964e279a404c3b735decf83c53d7ddb2c5bef5c08422916502",
+      "consumer_zero_origin_sha256": "e2e6e41656441c67c9c2216f2347d1a43e8b6c9aee402dd48bed042de75387dc"
+    },
+    {
+      "index": 54,
+      "cpu_address": "8B86",
+      "rom_start": "18B86",
+      "rom_end_exclusive": "18BEA",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "da687dec97172dea438fb5f8af1d83fb9254c144bcf8155efeff4e5c28bd10d6",
+      "consumer_zero_origin_sha256": "43e2cce890a02ddb3ddc09c4ccba091c338c9f2fa3cad2341c767b7b338f8bf1"
+    },
+    {
+      "index": 55,
+      "cpu_address": "8B28",
+      "rom_start": "18B28",
+      "rom_end_exclusive": "18B86",
+      "elements": 31,
+      "bytes": 94,
+      "sha256": "0712cf4b86aa08a8ed0be27cd44bf2912c41c0731269eeae792d3b3bd47639fe",
+      "consumer_zero_origin_sha256": "bacce14ddee560043662d8a127f6df80c53970260d4b9df54d78dc5eb7bcef09"
+    },
+    {
+      "index": 56,
+      "cpu_address": "860B",
+      "rom_start": "1860B",
+      "rom_end_exclusive": "18663",
+      "elements": 29,
+      "bytes": 88,
+      "sha256": "d684529c1b9f2132eb3f62a0aa2f83afca8a6addfa0054e72c7ff8b0a2b32663",
+      "consumer_zero_origin_sha256": "3da997132c8f612a6d342dd7bc35da0fab0d848dc7643a8099dfa35415236588"
+    },
+    {
+      "index": 57,
+      "cpu_address": "85A7",
+      "rom_start": "185A7",
+      "rom_end_exclusive": "1860B",
+      "elements": 33,
+      "bytes": 100,
+      "sha256": "922179a961a9da3101c173fc3c58ee8cfd8a773849d763b4ca719dfdb325c631",
+      "consumer_zero_origin_sha256": "adf9c2bda4df7ab56026a9e522e7a4df82f6c70f7e2169bc7eb66e795b80eaa9"
+    },
+    {
+      "index": 58,
+      "cpu_address": "853D",
+      "rom_start": "1853D",
+      "rom_end_exclusive": "185A7",
+      "elements": 35,
+      "bytes": 106,
+      "sha256": "652611628cb5a130b691e2776a68c54b436d08ae0b2e77d1d304195efaef4ad7",
+      "consumer_zero_origin_sha256": "1b39d3bed342098c66b5f6f21bd33716c642722153bb0d1bb94829593f31ce81"
+    },
+    {
+      "index": 59,
+      "cpu_address": "84DC",
+      "rom_start": "184DC",
+      "rom_end_exclusive": "1853D",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "9b46156a797043bb43cb44ff9637e0802ed66a8bfc25d71be36a3a880a5973c0",
+      "consumer_zero_origin_sha256": "ba8088f6e5cca471c32ddb0082a9e3948198574a2df1fbfdc49cce8aa4a937ec"
+    },
+    {
+      "index": 60,
+      "cpu_address": "847B",
+      "rom_start": "1847B",
+      "rom_end_exclusive": "184DC",
+      "elements": 32,
+      "bytes": 97,
+      "sha256": "80e2f0cb212e60f707ef569aed84281812f3d51cf6c75ea293e47297a82ba4ec",
+      "consumer_zero_origin_sha256": "05b62cf45a795c0b9166670e8325c886f41e3f50d91dc528aa00b1b57a3b65b7"
+    },
+    {
+      "index": 61,
+      "cpu_address": "8411",
+      "rom_start": "18411",
+      "rom_end_exclusive": "1847B",
+      "elements": 35,
+      "bytes": 106,
+      "sha256": "81979d816c8fa09fc8bacaf926926d8e5a2307ebe23eafb0e12a6f6319049780",
+      "consumer_zero_origin_sha256": "c7be75bb8256517c20f0c5372c2a20ff9bf095e46913f7665633b6fd11a33dcc"
+    },
+    {
+      "index": 62,
+      "cpu_address": "83B3",
+      "rom_start": "183B3",
+      "rom_end_exclusive": "18411",
+      "elements": 31,
+      "bytes": 94,
+      "sha256": "74bb99bea74b74fa1d51f24537286e30116e3a20fd07f8092335724197db0f30",
+      "consumer_zero_origin_sha256": "47fb553eb1290e766f37872165ac909a4c478d422868dd1fd68b3ebe63c826be"
+    },
+    {
+      "index": 63,
+      "cpu_address": "8361",
+      "rom_start": "18361",
+      "rom_end_exclusive": "183B3",
+      "elements": 27,
+      "bytes": 82,
+      "sha256": "667a339a6992a49148c2636c3b374314e6d4101781169869e206e01bbb97cda0",
+      "consumer_zero_origin_sha256": "79770920a906943d6bfac2e951146e0a9aff10fe18ec4fe56a2336f3dc9dd374"
+    }
+  ]
+}
