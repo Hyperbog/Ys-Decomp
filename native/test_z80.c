@@ -146,7 +146,38 @@ static void test_vdp_cpu_ports_and_rst(void) {
     assert(cpu.sp==0xDFF0 && cpu.iff1);
     assert(vdp.code==3 && vdp.address==0x10);
 }
+static void test_bank2_audio_io_and_block_transfer(void) {
+    setup();
+    YsSmsSound sound;
+    ys_sms_sound_reset(&sound);
+    ys_z80_attach_sound(&cpu,&sound);
+    LOAD(0,0x31,0xF0,0xDF,0x3E,0x02,0x32,0xFF,0xFF,
+           0xCD,0x03,0x88,0x76);
+    /* Representative bank-2 instruction sequence at $8803, using synthetic
+       program bytes; the actual cartridge is traced in trace_boot.c. */
+    const uint8_t program2[]={
+        0x21,0x00,0xC0,0x11,0x10,0xC0,0x01,0x02,0x00,
+        0xED,0xA0,0xED,0xA0, /* two LDI instructions */
+        0x21,0x20,0x80,0x0E,0x7F,0xED,0xA3,0xED,0xA3, /* OUTI */
+        0x06,0x03,0x21,0x00,0xC0,0x11,0x18,0x00,0x19, /* ADD HL,DE */
+        0x16,0x20,0x0E,0xF0,0xED,0x51, /* OUT (C),D */
+        0x3E,0x55,0xD3,0xF1,0xC9
+    };
+    memcpy(rom+0x8803,program2,sizeof(program2));
+    rom[0x8020]=0x9A;rom[0x8021]=0xAC;
+    assert(ys_sms_bus_write(&bus,0xC000,0x43));
+    assert(ys_sms_bus_write(&bus,0xC001,0x44));
+    run(0x000B,100);
+    assert(cpu.sp==0xDFF0 && cpu.h==0xC0 && cpu.l==0x18);
+    assert(ys_sms_bus_read(&bus,0xC010)==0x43);
+    assert(ys_sms_bus_read(&bus,0xC011)==0x44);
+    assert(sound.psg_write_count==2 && sound.psg_prefix[0]==0x9A &&
+           sound.psg_prefix[1]==0xAC);
+    assert(sound.fm_address_count==1 && sound.fm_data_count==1 &&
+           sound.fm_touched[0x20] && sound.fm_registers[0x20]==0x55);
+}
 int main(void) {
+    test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
     boot_prefix_source_fixture();

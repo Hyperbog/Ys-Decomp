@@ -1,12 +1,18 @@
-name: Ys source integrity (M13–M16)
-
+name: Ys source integrity (M13–M17)
 on:
   push:
     branches: [Ys]
+    paths:
+      - 'Ys/**'
+      - '.github/workflows/ys-m14-integrity.yml'
+      - 'AGENTS.md'
   pull_request:
     branches: [Ys]
+    paths:
+      - 'Ys/**'
+      - '.github/workflows/ys-m14-integrity.yml'
+      - 'AGENTS.md'
   workflow_dispatch:
-
 permissions:
   contents: read
 

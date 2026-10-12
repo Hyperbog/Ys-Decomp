@@ -1,78 +1,76 @@
-# Ys native C11 runtime — Phase 3: SRAM startup + bounded VDP I/O
+# Ys native C11 — M20: continuous banked sound + VDP startup
 
-**This is not a playable native port.** The original Z80/Python source-only
-cartridge reconstruction (M10–M17) is untouched and remains authoritative.
-No commercial ROM bytes, assets or executable binaries are committed.
+This is a **bounded execution harness**, not a playable port or a complete
+Z80/Sega Master System emulator. The verified ROM-source baseline, ROM digest,
+and existing decompilation artifacts remain unchanged.
 
-## Configure, compile and verify
+## Execute fast native tests
 
 ```sh
-cmake -S native -B /tmp/ys-native-build -DCMAKE_BUILD_TYPE=Debug
-cmake --build /tmp/ys-native-build --parallel
-ctest --test-dir /tmp/ys-native-build --output-on-failure
-
-python3 Ys/tools/build_system_m10.py --check --out /tmp/ys-source-built.sms
-/tmp/ys-native-build/ys-native-trace /tmp/ys-source-built.sms
+cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-native --parallel
+ctest --test-dir build-native --output-on-failure
 ```
 
-The source builder validates SHA-256
+The default native workflow now runs **only the native C11 unit tests**. No
+full 256 KiB ROM reconstruction is run on ordinary native commits. To validate
+the full cartridge when a new boot boundary warrants it, push a commit whose
+message includes `[rom-check]`, or manually trigger the native workflow with
+`rom_trace=true`. The separate M13–M17 cartridge-integrity workflow runs on
+`Ys/**`, changes to its own workflow, or `AGENTS.md` (not native-only
+changes). Its on-demand `workflow_dispatch` entry also remains available.
+
+## Explicit cartridge checkpoint (slow)
+
+```sh
+python3 Ys/tools/build_system_m10.py --check --out /tmp/ys-source-built.sms
+./build-native/ys-native-trace /tmp/ys-source-built.sms
+```
+
+M10 verifies SHA-256
 `02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9`.
-The native tracer checks image length/header, *not* the ROM hash. Always feed
-it the independently source-built, SHA-verified image.
+The native tracer checks the image size/header, *not* its digest; do not use
+unverified ROM inputs. Never commit the reconstructed commercial game ROM.
 
-## Continuous reset checkpoint
+### Continuous execution
 
-From actual Ys reset vector `$0000`, execute through `$079A`, the SRAM
-setup/check routine, its return at `$00A5`, and the WRAM-clear loop.
-Stop at `$00BB`, **before** the banked subroutine `CALL $8803`.
-Check that bank 0 has initialized mapper slots 0/1/2, restored control `$80`,
-copied the 24-byte ROM identifier `$0782-$0799` to SRAM `$8010-$8027`,
-cleared the rest of the observed SRAM/WRAM regions, and set expected stack
-and RAM values. This executes both long Z80 LDIR loops instead of treating
-them as startup shortcuts.
+The trace now executes real Ys instructions from the reset vector at
+`$0000`, through the `$079A` SRAM signature setup, the `$00A5` work RAM
+clear, physical ROM Bank 2's `$8803` sound initializer (including
+`$8842` and its `$8883` delay stub), and Bank 0's `$0749` VDP initializer.
+The trace halts at `$00C1`, **before `CALL $0BC5`**.
 
-## Separately seeded VDP initializer
+The sound initialization routine sends 11 literal bytes from physical ROM
+Bank 2 `$8878` to PSG port `$7F`, then selects YM2413 FM registers
+`$20–$25` through `$F0` and writes zero through `$F1`. The output sink
+(`sms_sound.c`) observes I/O bytes and stores initial register state only.
+**No audio synthesis, frequency timing, or player output is present.**
 
-The source-backed `$0749` routine is the *next available isolated hardware
-test*, not a claim that continuous execution reaches it yet. With a seeded
-return address on the stack, run real `$0749-$0767` ROM opcodes through the
-Bank 0 RST `$28` VDP helper. Check that 11 VDP registers receive the 11-byte
-table at `$0768`, the same values appear at console RAM `$C010`, 24
-control-port bytes were written, and one CRAM byte at `$10` was set to zero.
+The VDP routine writes 11 register values from Bank 0 table `$0768` to VDP
+control port `$BF`, copies that table into work RAM, and writes one zero byte
+to CRAM at `$10` through data port `$BE`. Unlike the previous milestone,
+this VDP call is now reached through normal reset execution without manually
+seeding the routine's CPU stack.
 
-`native/sms_vdp.c` implements a register/VRAM/CRAM port model, not rendering:
-- Two-byte low-first command latch and control read latch reset.
-- VDP command modes 0 (VRAM read/prefetch), 1 (VRAM write),
-  2 (VDP register), 3 (CRAM write); mirrored ports `$80-$BF`.
-- 16 KiB VRAM, 32-byte SMS CRAM, 16 register storage locations.
-- Data-port address increment/wrap and basic read-ahead buffer.
-- Read-to-clear VDP status; no VBlank/IRQ generation or timing.
+### Additional Z80 subset
 
-The base behavior follows SMS Power's Control Port and I/O Port Map:
-https://www.smspower.org/Development/ControlPort
-https://www.smspower.org/Development/IOPortMap
+- `LDI`, `OUTI`, `OUT (C),r`, `ADD HL,rr` (with documented flags).
+- Existing `LDIR` support is still bounded and approximate for undocumented
+  flags; only the executed opcodes are supported.
+- The fail-closed port dispatch distinguishes VDP `$BE/$BF` from PSG `$7F`
+  and FM `$F0/$F1`; other I/O ports are rejected.
+- Synthetic unit fixtures exercise the above instructions with mapper-selected
+  bank 2; real cartridge instructions are tested in the explicitly gated
+  trace step.
 
-## Known limitations
+## Unimplemented
 
-The Z80 interpreter is an intentionally fail-closed partial implementation.
-Its supported instructions are extended with `DJNZ`, `LD (DE),A`,
-`LD A,(DE)`, `OR n`, `AND n`, `CP (HL)`, `RST $28` and VDP
-`OUT (n),A` / `IN A,(n)`. The other instructions from Phase 2 remain.
-Ports other than VDP fail closed; neither PSG/FM sound, controllers, port
-`$3E`, nor CPU I/O by `(C)` is implemented. The full Z80 prefix, interrupt,
-alternate-register, undocumented flag and cycle sets are unfinished; EI
-interrupt deferral and LDIR's undocumented flag bits are approximate.
-VDP frame timing, sprite status generation, H/V counters, palette rendering,
-tile renderer, IRQ delivery, CPU cycles, and SDL3 frontend are absent.
+Further CPU instructions, cycle-accurate flags/interrupt scheduling, VDP
+frame/scanline timing and rendering, PSG/YM2413 synthesis, controller input,
+SDL3 frontend, save RAM persistence and full boot/gameplay. The Sega mapper
+model retains its documented Phase 1 hardware-revision assumptions. Neither
+the source-built ROM nor the C11 runtime has yet produced native frames.
 
-The Sega mapper assumptions inherited from Phase 1 remain in place; ROM
-write-enable, SRAM persistence, and full mapper-revision behavior are not
-validated. The next trace must cover the banked `$8803` initializer before
-we can call `$0749` part of a *continuously observed* boot.
-
-## Regression gates
-
-`ctest` now covers independent bus, VDP, and Z80 unit suites. GitHub
-Actions compiles with strict warnings, runs all three, reconstructs the full
-source ROM using M10 and invokes `ys-native-trace` with that ROM. Existing
-M13–M17 CI continues independently.
+Next milestone: continue from `$0BC5` through interrupt/state initialization
+using evidence-driven CPU/port expansions, and introduce deterministic native
+VDP state checks.

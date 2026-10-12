@@ -87,6 +87,15 @@ void ys_z80_reset(YsZ80 *cpu, YsSmsBus *bus) {
 void ys_z80_attach_vdp(YsZ80 *cpu, YsSmsVdp *vdp) {
     if (cpu) cpu->vdp = vdp;
 }
+void ys_z80_attach_sound(YsZ80 *cpu, YsSmsSound *sound) {
+    if (cpu) cpu->sound = sound;
+}
+static bool out_port(YsZ80 *cpu, uint8_t port, uint8_t value) {
+    if ((cpu->vdp && ys_sms_vdp_write(cpu->vdp,port,value)) ||
+        (cpu->sound && ys_sms_sound_write(cpu->sound,port,value))) return true;
+    cpu->status=Z80_UNSUPPORTED_PORT;
+    return false;
+}
 
 Z80Status ys_z80_step(YsZ80 *cpu) {
     if (!cpu || !cpu->bus) return Z80_UNSUPPORTED;
@@ -109,6 +118,19 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         uint8_t old = r8(cpu, i), result = (uint8_t)(old - 1u);
         if (!w8(cpu, i, result)) goto fail;
         cpu->f = dec_flags(old, result, cpu->f & Z80_F_C);
+    } else if ((opcode & 0xCFu) == 0x09u) {
+        uint16_t hl=pair(cpu->h,cpu->l);
+        unsigned index=(opcode >> 4) & 3u;
+        uint16_t rhs=index==0 ? pair(cpu->b,cpu->c) :
+                     index==1 ? pair(cpu->d,cpu->e) :
+                     index==2 ? hl : cpu->sp;
+        unsigned sum=(unsigned)hl+rhs;
+        uint16_t result=(uint16_t)sum;
+        split(result,&cpu->h,&cpu->l);
+        cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
+            ((result>>8)&(Z80_F_3|Z80_F_5)) |
+            (((hl&0xFFFu)+(rhs&0xFFFu)>0xFFFu)? Z80_F_H:0) |
+            (sum>0xFFFFu? Z80_F_C:0));
     } else switch (opcode) {
     case 0x00: break; /* NOP */
     case 0x02: if (!store(cpu,pair(cpu->b,cpu->c),cpu->a)) goto fail;break;
@@ -198,6 +220,36 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     case 0xED: {
         uint8_t sub=fetch(cpu);
         if (sub==0x56) {cpu->interrupt_mode=1;break;}
+        if (sub==0xA0) { /* LDI: preserve S,Z,C; update PV and 3/5. */
+            uint16_t hl=pair(cpu->h,cpu->l),de=pair(cpu->d,cpu->e);
+            uint8_t value=ys_sms_bus_read(cpu->bus,hl);
+            if (!store(cpu,de,value)) goto fail;
+            split((uint16_t)(hl+1u),&cpu->h,&cpu->l);
+            split((uint16_t)(de+1u),&cpu->d,&cpu->e);
+            uint16_t bc=(uint16_t)(pair(cpu->b,cpu->c)-1u);
+            split(bc,&cpu->b,&cpu->c);
+            uint8_t u=(uint8_t)(cpu->a+value);
+            cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_C)) |
+                    (bc ? Z80_F_PV : 0u) | (u & Z80_F_3) |
+                    ((u & 2u)<<4));
+            break;
+        }
+        if (sub==0xA3) { /* OUTI: write at (HL), increment HL, decrement B. */
+            uint16_t hl=pair(cpu->h,cpu->l);
+            uint8_t value=ys_sms_bus_read(cpu->bus,hl);
+            if(!out_port(cpu,cpu->c,value)) goto fail;
+            split((uint16_t)(hl+1u),&cpu->h,&cpu->l);
+            cpu->b=(uint8_t)(cpu->b-1u);
+            unsigned k=(unsigned)cpu->l+value;
+            cpu->f=(uint8_t)(sz53(cpu->b)|(value&0x80u?Z80_F_N:0) |
+                    (k>255u?(Z80_F_H|Z80_F_C):0) |
+                    (parity((uint8_t)(((k&7u)^cpu->b)))?Z80_F_PV:0));
+            break;
+        }
+        if ((sub&0xC7u)==0x41u && sub!=0x71u) {
+            if(!out_port(cpu,cpu->c,r8(cpu,(sub>>3)&7u))) goto fail;
+            break;
+        }
         if (sub==0xB0) {
             uint16_t hl=pair(cpu->h,cpu->l), de=pair(cpu->d,cpu->e);
             uint16_t bc=pair(cpu->b,cpu->c);
@@ -214,9 +266,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     }
     case 0xD3: {
         uint8_t port=fetch(cpu);
-        if (!cpu->vdp || !ys_sms_vdp_write(cpu->vdp,port,cpu->a)) {
-            cpu->status=Z80_UNSUPPORTED_PORT;goto fail;
-        }
+        if (!out_port(cpu,port,cpu->a)) goto fail;
         break;
     }
     case 0xDB: {

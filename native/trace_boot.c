@@ -19,8 +19,9 @@ int main(int argc, char **argv) {
     uint8_t *rom=malloc(YS_ROM_BYTES);
     YsSmsBus *bus=malloc(sizeof(*bus));
     YsSmsVdp *vdp=malloc(sizeof(*vdp));
-    if (!rom || !bus || !vdp) {
-        fclose(in);free(rom);free(bus);free(vdp);return EXIT_FAILURE;
+    YsSmsSound *sound=malloc(sizeof(*sound));
+    if (!rom || !bus || !vdp || !sound) {
+        fclose(in);free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
     }
     size_t size=fread(rom,1,YS_ROM_BYTES,in);
     int trailing=fgetc(in);
@@ -29,50 +30,52 @@ int main(int argc, char **argv) {
         memcmp(rom+0x7FF0,"TMR SEGA",8)!=0 ||
         !ys_sms_bus_init(bus,rom,size)) {
         fputs("invalid Ys-sized image; SHA-256 check belongs to M10 builder\n",stderr);
-        free(rom);free(bus);free(vdp);return EXIT_FAILURE;
+        free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
     }
     YsZ80 cpu;
     ys_z80_reset(&cpu,bus);
     ys_sms_vdp_reset(vdp);
+    ys_sms_sound_reset(sound);
     ys_z80_attach_vdp(&cpu,vdp);
-    Z80Status result=ys_z80_run_until(&cpu,0x00BB,50000);
-    if (result!=Z80_RUNNING || cpu.pc!=0x00BB ||
-        cpu.sp!=0xDFF0 || cpu.interrupt_mode!=1 ||
-        bus->mapper_control!=0x80 || bus->mapped_bank[0]!=0 ||
-        bus->mapped_bank[1]!=1 || bus->mapped_bank[2]!=2 ||
-        ys_sms_bus_read(bus,0xC001)!=0xFF ||
-        ys_sms_bus_read(bus,0xDE60)!=0 ||
-        bus->cart_ram[0x0028]!=0 ||
-        bus->cart_ram[0x1FFE]!=0 ||
-        memcmp(bus->cart_ram+0x0010,rom+0x0782,0x18)!=0) {
-        int code=fail("continuous reset/SRAM/WRAM trace",&cpu);
-        free(rom);free(bus);free(vdp);return code;
+    ys_z80_attach_sound(&cpu,sound);
+    /* Continuous reset, battery-backed SRAM setup, two RAM clear loops,
+       bank 2 sound initializer $8803, and VDP initializer $0749. */
+    Z80Status result=ys_z80_run_until(&cpu,0x00C1,30000);
+    bool ok=result==Z80_RUNNING && cpu.pc==0x00C1 &&
+        cpu.sp==0xDFF0 && cpu.interrupt_mode==1 &&
+        bus->mapper_control==0x80 && bus->mapped_bank[0]==0 &&
+        bus->mapped_bank[1]==1 && bus->mapped_bank[2]==2 &&
+        ys_sms_bus_read(bus,0xC001)==0xFF &&
+        ys_sms_bus_read(bus,0xDE60)==0 &&
+        ys_sms_bus_read(bus,0xDE63)==0 &&
+        ys_sms_bus_read(bus,0xDE68)==0xE4 &&
+        memcmp(bus->cart_ram+0x0010,rom+0x0782,0x18)==0 &&
+        sound->psg_write_count==11 &&
+        memcmp(sound->psg_prefix,rom+0x8878,11)==0 &&
+        sound->fm_address_count==6 && sound->fm_data_count==6 &&
+        vdp->register_writes==11 && vdp->control_writes==24 &&
+        vdp->cram_writes==1 && vdp->vram_writes==0 &&
+        vdp->cram[0x10]==0 && vdp->address==0x11 &&
+        memcmp(vdp->registers,rom+0x0768,11)==0 &&
+        memcmp(bus->wram+0x0010,rom+0x0768,11)==0;
+    for (unsigned i=0;i<6;++i)
+        ok=ok && sound->fm_touched[0x20u+i] &&
+            sound->fm_registers[0x20u+i]==0;
+    if (!ok) {
+        int code=fail("continuous bank-2 sound + bank-0 VDP initialization",&cpu);
+        fprintf(stderr,"  PSG=%llu FM=%llu/%llu VDP register=%llu ctrl=%llu CRAM=%llu\n",
+                (unsigned long long)sound->psg_write_count,
+                (unsigned long long)sound->fm_address_count,
+                (unsigned long long)sound->fm_data_count,
+                (unsigned long long)vdp->register_writes,
+                (unsigned long long)vdp->control_writes,
+                (unsigned long long)vdp->cram_writes);
+        free(rom);free(bus);free(vdp);free(sound);return code;
     }
-    printf("PASS continuous Ys reset: %llu instructions, PC=$%04X; SRAM signature copied, WRAM cleared, mapper restored\n",
+    printf("PASS continuous Ys reset through bank-2 sound and VDP: %llu instructions, PC=$%04X\n",
            (unsigned long long)cpu.steps,cpu.pc);
-
-    /* Separate, source-backed execution of the VDP initializer at $0749.
-       Startup has NOT yet reached this routine through the bank-2 call. */
-    ys_sms_vdp_reset(vdp);
-    ys_z80_reset(&cpu,bus);
-    ys_z80_attach_vdp(&cpu,vdp);
-    cpu.pc=0x0749;cpu.sp=0xDFF0;
-    (void)ys_sms_bus_write(bus,0xDFF0,0xAD);
-    (void)ys_sms_bus_write(bus,0xDFF1,0x0B);
-    result=ys_z80_run_until(&cpu,0x0BAD,1000);
-    if (result!=Z80_RUNNING || cpu.pc!=0x0BAD ||
-        cpu.sp!=0xDFF2 || vdp->register_writes!=11 ||
-        vdp->control_writes!=24 || vdp->cram_writes!=1 ||
-        vdp->vram_writes!=0 || vdp->code!=3 ||
-        vdp->address!=0x0011 || vdp->cram[0x10]!=0 ||
-        memcmp(vdp->registers,rom+0x0768,11)!=0 ||
-        memcmp(bus->wram+0x0010,rom+0x0768,11)!=0) {
-        int code=fail("separately invoked VDP initializer",&cpu);
-        free(rom);free(bus);free(vdp);return code;
-    }
-    printf("PASS Ys VDP initializer $0749: %llu instructions, 11 registers, 24 control bytes, 1 CRAM byte\n",
-           (unsigned long long)cpu.steps);
-    puts("Boundaries: no full boot, video timing, interrupt delivery, renderer or gameplay yet.");
-    free(rom);free(bus);free(vdp);
+    puts("PASS source-matched PSG=11 bytes, FM=6 register/data pairs, VDP=11 registers + 1 CRAM byte");
+    puts("Stop before $0BC5; audio synthesis, rendering, inputs, interrupts and gameplay are not implemented.");
+    free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }

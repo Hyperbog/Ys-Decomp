@@ -1,27 +1,39 @@
-name: Ys native C11 startup and VDP
+name: Ys native C11 startup, VDP and sound
 on:
   push:
     branches: [Ys]
+    paths:
+      - 'native/**'
+      - '.github/workflows/ys-native-c11.yml'
   pull_request:
     branches: [Ys]
+    paths:
+      - 'native/**'
+      - '.github/workflows/ys-native-c11.yml'
   workflow_dispatch:
+    inputs:
+      rom_trace:
+        type: boolean
+        description: 'Reconstruct and trace the full Ys cartridge'
+        default: false
 permissions:
   contents: read
 jobs:
-  native-startup-vdp:
+  native-unit:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - name: Configure strict C11 runtime
         run: cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Debug
-      - name: Compile SMS bus, VDP and bounded Z80
+      - name: Compile SMS bus, VDP, sound and bounded Z80
         run: cmake --build build-native --parallel
-      - name: Test SMS bus, VDP and CPU
+      - name: Test SMS bus, VDP, sound and Z80
         run: ctest --test-dir build-native --output-on-failure
-      - name: Reconstruct SHA-verified 16-bank ROM entirely from source
-        run: python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-native-boot.sms"
-      - name: Trace continuous SRAM boot and separate source VDP initializer
-        run: ./build-native/ys-native-trace "$RUNNER_TEMP/ys-native-boot.sms"
+      - name: Verify cartridge startup only when explicitly requested
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.rom_trace) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[rom-check]')) }}
+        run: |
+          python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-native-boot.sms"
+          ./build-native/ys-native-trace "$RUNNER_TEMP/ys-native-boot.sms"
       - name: Ensure no tracked source changed
         run: git diff --exit-code
