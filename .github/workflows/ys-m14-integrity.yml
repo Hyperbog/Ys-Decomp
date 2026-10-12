@@ -29,7 +29,7 @@ jobs:
           python3 Ys/tools/restore_m14_git_history.py --output "$RUNNER_TEMP/Ys-M14-Foundation.bundle"
           git bundle verify "$RUNNER_TEMP/Ys-M14-Foundation.bundle"
           git clone -q -b Ys "$RUNNER_TEMP/Ys-M14-Foundation.bundle" "$RUNNER_TEMP/ys-original-history"
-          test "$(git -C "$RUNNER_TEMP/ys-original-history" rev-list --count Ys)" -eq 44
+          test "$(git -C "$RUNNER_TEMP/ys-original-history" rev-list --count refs/heads/Ys)" -eq 44
 
       - name: Rebuild entire 256 KiB source-only cartridge
         working-directory: Ys
