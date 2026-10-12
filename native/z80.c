@@ -84,6 +84,10 @@ void ys_z80_reset(YsZ80 *cpu, YsSmsBus *bus) {
     cpu->status = Z80_RUNNING;
 }
 
+void ys_z80_attach_vdp(YsZ80 *cpu, YsSmsVdp *vdp) {
+    if (cpu) cpu->vdp = vdp;
+}
+
 Z80Status ys_z80_step(YsZ80 *cpu) {
     if (!cpu || !cpu->bus) return Z80_UNSUPPORTED;
     if (cpu->status != Z80_RUNNING) return cpu->status;
@@ -107,6 +111,10 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         cpu->f = dec_flags(old, result, cpu->f & Z80_F_C);
     } else switch (opcode) {
     case 0x00: break; /* NOP */
+    case 0x02: if (!store(cpu,pair(cpu->b,cpu->c),cpu->a)) goto fail;break;
+    case 0x0A: cpu->a=ys_sms_bus_read(cpu->bus,pair(cpu->b,cpu->c));break;
+    case 0x12: if (!store(cpu,pair(cpu->d,cpu->e),cpu->a)) goto fail;break;
+    case 0x1A: cpu->a=ys_sms_bus_read(cpu->bus,pair(cpu->d,cpu->e));break;
     case 0x01: split(fetch16(cpu), &cpu->b, &cpu->c); break;
     case 0x11: split(fetch16(cpu), &cpu->d, &cpu->e); break;
     case 0x21: split(fetch16(cpu), &cpu->h, &cpu->l); break;
@@ -131,6 +139,16 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     case 0x32: if (!store(cpu,fetch16(cpu),cpu->a)) goto fail; break;
     case 0x3A: cpu->a=ys_sms_bus_read(cpu->bus,fetch16(cpu)); break;
     case 0xAF: cpu->a=0;cpu->f=Z80_F_Z|Z80_F_PV;break;
+    case 0xE6: cpu->a=(uint8_t)(cpu->a & fetch(cpu));
+        cpu->f=(uint8_t)(sz53(cpu->a)|Z80_F_H|(parity(cpu->a)?Z80_F_PV:0));
+        break;
+    case 0xF6: cpu->a=(uint8_t)(cpu->a | fetch(cpu));
+        cpu->f=(uint8_t)(sz53(cpu->a)|(parity(cpu->a)?Z80_F_PV:0));
+        break;
+    case 0xBE: {
+        uint8_t rhs=ys_sms_bus_read(cpu->bus,pair(cpu->h,cpu->l));
+        cpu->f=sub_flags(cpu->a,rhs,(uint8_t)(cpu->a-rhs));break;
+    }
     case 0xA7: cpu->f=(uint8_t)(sz53(cpu->a)|Z80_F_H|
                                       (parity(cpu->a)?Z80_F_PV:0));break;
     case 0xB7: cpu->f=(uint8_t)(sz53(cpu->a)|
@@ -154,6 +172,15 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     case 0xD1: split(pop16(cpu),&cpu->d,&cpu->e);break;
     case 0xE1: split(pop16(cpu),&cpu->h,&cpu->l);break;
     case 0xF1: split(pop16(cpu),&cpu->a,&cpu->f);break;
+    case 0x10: {
+        int8_t displacement=(int8_t)fetch(cpu);
+        cpu->b=(uint8_t)(cpu->b-1u);
+        if(cpu->b) cpu->pc=(uint16_t)(cpu->pc+displacement);
+        break;
+    }
+    case 0xEF: /* RST $28 -- VDP command helper in Ys bank 0. */
+        if(!push16(cpu,cpu->pc)) goto fail;
+        cpu->pc=0x0028u;break;
     case 0x18: {
         int8_t displacement=(int8_t)fetch(cpu);
         cpu->pc=(uint16_t)(cpu->pc+displacement);break;
@@ -185,7 +212,20 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         }
         cpu->status=Z80_UNSUPPORTED;goto fail;
     }
-    case 0xD3: case 0xDB: cpu->status=Z80_UNSUPPORTED_PORT;goto fail;
+    case 0xD3: {
+        uint8_t port=fetch(cpu);
+        if (!cpu->vdp || !ys_sms_vdp_write(cpu->vdp,port,cpu->a)) {
+            cpu->status=Z80_UNSUPPORTED_PORT;goto fail;
+        }
+        break;
+    }
+    case 0xDB: {
+        uint8_t port=fetch(cpu), value=0;
+        if (!cpu->vdp || !ys_sms_vdp_read(cpu->vdp,port,&value)) {
+            cpu->status=Z80_UNSUPPORTED_PORT;goto fail;
+        }
+        cpu->a=value;break; /* IN A,(n) leaves Z80 flags unchanged. */
+    }
     default: cpu->status=Z80_UNSUPPORTED;goto fail;
     }
     ++cpu->steps;

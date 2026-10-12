@@ -1,4 +1,4 @@
-name: Ys native C11 boot foundation
+name: Ys native C11 startup and VDP
 on:
   push:
     branches: [Ys]
@@ -8,20 +8,20 @@ on:
 permissions:
   contents: read
 jobs:
-  native-memory-and-boot:
+  native-startup-vdp:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Configure C11 runtime
+      - name: Configure strict C11 runtime
         run: cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Debug
-      - name: Compile native bus and bounded Z80
+      - name: Compile SMS bus, VDP and bounded Z80
         run: cmake --build build-native --parallel
-      - name: Test memory and instruction behavior
+      - name: Test SMS bus, VDP and CPU
         run: ctest --test-dir build-native --output-on-failure
-      - name: Reconstruct SHA-verified ROM entirely from source
+      - name: Reconstruct SHA-verified 16-bank ROM entirely from source
         run: python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-native-boot.sms"
-      - name: Trace real Ys reset through first startup call
+      - name: Trace continuous SRAM boot and separate source VDP initializer
         run: ./build-native/ys-native-trace "$RUNNER_TEMP/ys-native-boot.sms"
       - name: Ensure no tracked source changed
         run: git diff --exit-code

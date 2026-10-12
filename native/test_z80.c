@@ -101,7 +101,54 @@ static void test_fail_closed(void) {
     setup(); LOAD(0,0xED,0x00);
     assert(ys_z80_step(&cpu)==Z80_UNSUPPORTED && cpu.pc==0);
 }
+static void test_extended_startup_instructions(void) {
+    setup();
+    LOAD(0,0x06,0x03,        /* LD B,03 */
+           0x10,0xFE,        /* DJNZ $0002 (three passes) */
+           0x3E,0x10,        /* LD A,10 */
+           0xF6,0x07,        /* OR 07 */
+           0xE6,0x0F,        /* AND 0F */
+           0x21,0x00,0xC0,   /* LD HL,C000 */
+           0xBE,             /* CP (HL) */
+           0x20,0x02,        /* JR NZ, HALT */
+           0x3E,0xAA,        /* skipped */
+           0x76);
+    assert(ys_sms_bus_write(&bus,0xC000,6));
+    run(18,24);
+    assert(cpu.b==0 && cpu.a==7 && !(cpu.f & Z80_F_Z));
+    assert(ys_z80_step(&cpu)==Z80_HALTED);
+}
+static void test_vdp_cpu_ports_and_rst(void) {
+    setup();
+    YsSmsVdp vdp;
+    ys_sms_vdp_reset(&vdp);
+    ys_z80_attach_vdp(&cpu,&vdp);
+    vdp.status=0x80;
+    LOAD(0,0x3E,0x56,0xD3,0xBF, /* reg 1 value 56 */
+           0x3E,0x81,0xD3,0xBF,
+           0x3E,0x10,0xD3,0xBF, /* CRAM address 10 */
+           0x3E,0xC0,0xD3,0xBF,
+           0xAF,0xD3,0xBE,      /* zero palette entry */
+           0xDB,0xBF);          /* read/reset status */
+    run(21,11);
+    assert(cpu.a==0x80 && vdp.status==0);
+    assert(vdp.registers[1]==0x56 && vdp.register_writes==1);
+    assert(vdp.cram[0x10]==0 && vdp.cram_writes==1);
+    assert(vdp.control_writes==4);
+    setup();
+    ys_sms_vdp_reset(&vdp);
+    ys_z80_attach_vdp(&cpu,&vdp);
+    cpu.sp=0xDFF0;
+    cpu.e=0x10;cpu.d=0xC0;
+    LOAD(0,0xEF); /* RST $28 */
+    LOAD(0x28,0xF3,0x7B,0xD3,0xBF,0x7A,0xD3,0xBF,0xFB,0xC9);
+    run(1,12);
+    assert(cpu.sp==0xDFF0 && cpu.iff1);
+    assert(vdp.code==3 && vdp.address==0x10);
+}
 int main(void) {
+    test_extended_startup_instructions();
+    test_vdp_cpu_ports_and_rst();
     boot_prefix_source_fixture();
     test_control_and_stack();
     test_flags_and_relative_jumps();
