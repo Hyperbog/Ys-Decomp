@@ -45,9 +45,19 @@ def unpack_chunks(chunks,start,end):
 def source_parts(bank,root=ROOT):
  if bank not in BANKS:raise ValueError('Bank is not in final-four reconstruction')
  obj=json.loads((root/source_file(bank)).read_text())
- if obj.get('schema')!=f'ys-bank{bank:02}-source-v1':raise ValueError('Source schema drift')
+ schema=obj.get('schema')
+ if schema not in (f'ys-bank{bank:02}-source-v1', 'ys-bank13-source-v2' if bank==13 else ''):
+  raise ValueError('Source schema drift')
  pad=FILL_START[bank];payload_end=POINTER_START if bank==13 else pad
- payload=unpack_chunks(obj['unresolved_asset_chunks'],START,payload_end)
+ if bank==13 and schema=='ys-bank13-source-v2':
+  from bank13_semantic_source_m15 import encode_resources
+  directory=obj.get('indexed_resource_directory',{})
+  encoded=encode_resources(obj.get('rle_resource_records'),directory.get('pointers'))
+  tail=unpack_chunks(obj['unresolved_asset_chunks'],START+len(encoded),payload_end)
+  if len(tail)!=5607:raise ValueError('Bank13 unresolved tail length drift')
+  payload=encoded+tail
+ else:
+  payload=unpack_chunks(obj['unresolved_asset_chunks'],START,payload_end)
  sections=[(START,payload,'asset/resource bytes: semantics unresolved')]
  if bank==13:
   directory=obj.get('indexed_resource_directory')
