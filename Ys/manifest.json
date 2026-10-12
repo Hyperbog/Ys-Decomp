@@ -1,0 +1,16 @@
+{
+  "game": "Ys: The Vanished Omens",
+  "platform": "Sega Master System",
+  "sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "crc32": "B33E2827",
+  "rom_bytes": 262144,
+  "banks_16k": 16,
+  "header_offset": 32752,
+  "header_bytes": "54 4D 52 20 53 45 47 41 20 20 98 52 01 75 01 40",
+  "header_checksum": 21144,
+  "computed_checksum": 21144,
+  "verified_listing_rom_range": "0000-0101",
+  "reset_vector": "0000",
+  "startup": "0089",
+  "mapper": "Sega standard (inferred from writes to $FFFC-$FFFF)"
+}
