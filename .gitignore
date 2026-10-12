@@ -8,3 +8,7 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Restored from committed lossless .gz evidence archives
+/Ys/whole_system/evidence_graph.json
+/Ys/whole_system/evidence_graph_m3.json
