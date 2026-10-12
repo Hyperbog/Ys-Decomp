@@ -1,0 +1,46 @@
+{
+  "schema": "ys-m3-fixed-bank-frontier-v1",
+  "source_graph": "whole_system/evidence_graph_m3.json",
+  "missing_fixed_bank0_targets": [
+    {
+      "cpu": "1033",
+      "incoming": [
+        "0102F"
+      ],
+      "status": "missing_verified_instruction_start",
+      "comment": "Needs overlapping-entry or code/data investigation; not automatically classified"
+    },
+    {
+      "cpu": "1036",
+      "incoming": [
+        "01077",
+        "010BE",
+        "010CA",
+        "010EA",
+        "0113D",
+        "01184",
+        "01190",
+        "011A0"
+      ],
+      "status": "missing_verified_instruction_start",
+      "comment": "Needs overlapping-entry or code/data investigation; not automatically classified"
+    },
+    {
+      "cpu": "1681",
+      "incoming": [
+        "03BBF"
+      ],
+      "status": "missing_verified_instruction_start",
+      "comment": "Needs overlapping-entry or code/data investigation; not automatically classified"
+    }
+  ],
+  "count": 3,
+  "previous_m2_frontier_closed": [
+    "06E8",
+    "0702",
+    "0718",
+    "0739",
+    "07D5"
+  ],
+  "qualification": "Static branch targets do not imply code starts without independent boundary evidence."
+}

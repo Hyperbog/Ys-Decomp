@@ -1,0 +1,158 @@
+{
+  "fixed_bank0_targets_without_verified_instruction": [
+    {
+      "cpu": "0702",
+      "incoming_verified_code_sites": [
+        "03CFB",
+        "03F6D"
+      ],
+      "instruction_bytes_claimed": 0,
+      "physical_bank": 0,
+      "status": "unexamined_target_not_verified_code"
+    },
+    {
+      "cpu": "07D5",
+      "incoming_verified_code_sites": [
+        "03DB7",
+        "03E0F"
+      ],
+      "instruction_bytes_claimed": 0,
+      "physical_bank": 0,
+      "status": "unexamined_target_not_verified_code"
+    },
+    {
+      "cpu": "06E8",
+      "incoming_verified_code_sites": [
+        "03D37"
+      ],
+      "instruction_bytes_claimed": 0,
+      "physical_bank": 0,
+      "status": "unexamined_target_not_verified_code"
+    },
+    {
+      "cpu": "0718",
+      "incoming_verified_code_sites": [
+        "026F0"
+      ],
+      "instruction_bytes_claimed": 0,
+      "physical_bank": 0,
+      "status": "unexamined_target_not_verified_code"
+    },
+    {
+      "cpu": "0739",
+      "incoming_verified_code_sites": [
+        "03E7D"
+      ],
+      "instruction_bytes_claimed": 0,
+      "physical_bank": 0,
+      "status": "unexamined_target_not_verified_code"
+    }
+  ],
+  "mapper_ambiguous_target_sites": [
+    {
+      "caller_instruction_ids": [
+        "01D74"
+      ],
+      "cpu": "42BA",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "00DCC"
+      ],
+      "cpu": "476C",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "00DCF"
+      ],
+      "cpu": "60B5",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "027A0",
+        "02FFE"
+      ],
+      "cpu": "61AE",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "00E20"
+      ],
+      "cpu": "6215",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "00E7F"
+      ],
+      "cpu": "64CD",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "047C2",
+        "0486C",
+        "048DF"
+      ],
+      "cpu": "807C",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "000BB"
+      ],
+      "cpu": "8803",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "00052"
+      ],
+      "cpu": "8842",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "02704"
+      ],
+      "cpu": "9932",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "02C02"
+      ],
+      "cpu": "9966",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "037D4",
+        "03E19"
+      ],
+      "cpu": "9EFC",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    },
+    {
+      "caller_instruction_ids": [
+        "03F03"
+      ],
+      "cpu": "9F68",
+      "status": "mapper_slot_unknown_not_proven_reachable"
+    }
+  ],
+  "priority": "fixed_bank0_code_target_candidate_first",
+  "qualification": "Candidates are high-priority investigation roots, not new code coverage. Source-only bank 0 is still incomplete.",
+  "schema": "ys-code-frontier-v1",
+  "source_rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9",
+  "summary": {
+    "missing_fixed_bank0_ref_count": 7,
+    "missing_fixed_bank0_target_count": 5,
+    "new_source_backed_bytes": 0,
+    "unresolved_mapper_ref_count": 17
+  }
+}

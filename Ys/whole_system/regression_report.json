@@ -1,0 +1,194 @@
+{
+  "schema": "ys-whole-system-regression-v1",
+  "count": 31,
+  "passed": 31,
+  "all_passed": true,
+  "cases": [
+    {
+      "suite": "phase1",
+      "status": "passed",
+      "elapsed_seconds": 3.831,
+      "output_tail": "PASS: reference ROM matches manifest SHA-256\nPASS: clean ROM and listing accepted: \nPASS: altered ROM rejected by fingerprint\nPASS: baseline listing first byte found\nPASS: altered disassembly listing rejected by byte comparison\nPASS: Phase 1 regression suite (3 acceptance/rejection scenarios)\n"
+    },
+    {
+      "suite": "phase2",
+      "status": "passed",
+      "elapsed_seconds": 4.845,
+      "output_tail": "PASS: input ROM fingerprint\nPASS: Phase 2 snapshot: \nPASS: bank 2 $8803 falls through into $8842 (no intervening RET)\nPASS: exact 24-byte SRAM signature\nPASS: interrupt dispatch targets at $01AC-$01B3\nPASS: wrong ROM rejected\nPASS: altered instruction snapshot rejected\nPASS: altered data anchor rejected\nPASS: Phase 2 regression suite (8 checks)\n"
+    },
+    {
+      "suite": "phase3",
+      "status": "passed",
+      "elapsed_seconds": 6.836,
+      "output_tail": "PASS: exact input ROM SHA-256\nPASS: Phase 2 listing: \nPASS: Phase 3 listing: \nPASS: partial bank-2 assembly matches decoded mnemonics: \nPASS: Phase 3 adds 541 non-overlapping classified ROM bytes\nPASS: nine original secondary dispatch targets\nPASS: C105 indexes table at 01EB via RST 08; entry zero is RET\nPASS: explicit mapper slot 2 selection: banks 3 and 7\nPASS: bank 2 8000 updater calls four original routines\nPASS: DE61 timer reload and six +20h record increments\nPASS: SRAM mapping enabled and zero-fill parameters verified\nPASS: SRAM initialized 8010\u20139FFE, 24-byte signature at 8010\u20138027\nPASS: modified secondary jump table rejected\nPASS: modified banked-code listing rejected\nPASS: modified annotated assembly rejected\nPASS: Phase 3 complete (15 checks)\n"
+    },
+    {
+      "suite": "phase4",
+      "status": "passed",
+      "elapsed_seconds": 5.743,
+      "output_tail": "PASS: ROM fingerprint\nPASS: fixed Phase 4 listing and data anchors\nPASS: partial command-dispatch assembly text and labels\nPASS: 603 distinct new bytes without Phase 1\u20133 overlap\nPASS: continued channel path switches to FM register output\nPASS: FM preset uses upper nibble and outputs 18 port bytes\nPASS: two 18-byte FM preset streams with explicit pointers\nPASS: BC/BD dispatches through two-word target table\nPASS: commands 81..9F load timing fields from 8D40 table\nPASS: command record setup performs nine LDI transfers\nPASS: queued command high-bit and priority lookup / stack skip\nPASS: mutated Phase 4 listing rejected\nPASS: mutated FM preset data anchor rejected\nPASS: mutated command-dispatch source rejected\nPASS: Phase 4 suite complete (14 checks)\n"
+    },
+    {
+      "suite": "phase5",
+      "status": "passed",
+      "elapsed_seconds": 6.738,
+      "output_tail": "PASS: original ROM SHA-256\nPASS: reproducible listing and metrics ()\nPASS: independent instruction-byte listing check (2055 / 4154)\nPASS: 780 non-overlapping, independently digest-anchored data bytes\nPASS: 4,934 new distinct ROM bytes, 7,002 cumulative\nPASS: bank-aware code-byte accounting\nPASS: 20 event dispatch destinations correspond to decoded instruction starts\nPASS: one music pointer directory marker and 55 bank-dependent addresses\nPASS: unknown bank-0 to slot-2 call is not misclassified as bank-2 code\nPASS: FM register-select hardware writes are ROM backed\nPASS: mutated disassembly listing rejected\nPASS: mutated coverage report rejected\nPASS: corrupt audio dispatch-table hash rejected\nPASS: code entrypoint inside anchored table rejected\nPASS: modified ROM rejected\nPASS: Phase 5 complete (15 substantive checks)\n"
+    },
+    {
+      "suite": "phase6",
+      "status": "passed",
+      "elapsed_seconds": 8.83,
+      "output_tail": "PASS: original ROM fingerprint\nPASS: reproduce phase6 code listing and report\nPASS: reproduce typed audio descriptor CSV\nPASS: independent instruction start/byte comparisons (2,027 / 4,474)\nPASS: data digest 0205A\u2013020AB\nPASS: data digest 02533\u201302584\nPASS: data digest 02585\u201302653\nPASS: data digest 02C24\u201302C35\nPASS: data digest 08D5F\u20130AA76\nPASS: data digest 0AA77\u20130AD7F\nPASS: data digest 0AD80\u20130B318\nPASS: 10,047 unique data bytes exclude all instruction bytes\nPASS: 14,521 new bytes, 21,523 cumulative\nPASS: Phase 6 exceeds twice Phase 5 new coverage\nPASS: dispatch table $205A, 41 destinations are instruction starts\nPASS: dispatch table $2C24, 9 destinations are instruction starts\nPASS: 55 song-directory entries resolve to 45 distinct pointers\nPASS: 21 regular four-channel audio descriptors = 84 distinct records\nPASS: audio stream pointers independently verified (77 unique)\nPASS: prior bank-0 mapper ambiguity retained unresolved\nPASS: game-state dispatch words not treated as instructions\nPASS: modified listing rejected\nPASS: modified metrics rejected\nPASS: corrupt table digest rejected\nPASS: dispatch-table-as-code rejected\nPASS: corrupt descriptor CSV rejected\nPASS: modified ROM rejected\nPASS: Phase 6 independent regression checks complete\n"
+    },
+    {
+      "suite": "phase7",
+      "status": "passed",
+      "elapsed_seconds": 5.789,
+      "output_tail": "PASS: input fingerprint is exact\nPASS: Phase7 snapshot reproducible\nPASS: startup sets mapper $FFFC=$80, $FFFD=0, $FFFE=1, $FFFF=2\nPASS: bank-1 seeds originate from six fixed-bank direct references\nPASS: multiple independent callers to bank-1 $61AE\nPASS: 376 instruction starts, 763 matching disjoint bytes\nPASS: independent bank-1 instruction-byte digest\nPASS: all mapped entrypoints are instruction boundaries\nPASS: four contiguous provisional bank-3 sections total 14,541 bytes\nPASS: 1,843-byte terminal FF padding excluded\nPASS: 15,304 additional distinct candidate ROM bytes\nPASS: previous snapshots preserved and candidate cumulative sum correct\nPASS: provisional classification and remaining limits explicit\nPASS: mapper-dependent calls are recorded as unresolved\nPASS: altered listing refused\nPASS: altered coverage refused\nPASS: modified ROM refused\nPASS: changed padding boundary refused\nPASS: Phase 7 regression checks finished\n"
+    },
+    {
+      "suite": "phase8",
+      "status": "passed",
+      "elapsed_seconds": 6.698,
+      "output_tail": "PASS: original ROM SHA-256 matches\nPASS: mapper + banked listing reproducible\nPASS: tile classification reproducible\nPASS: 46 mapper writes audited, with explicit source values where available\nPASS: mapper-selected jump/call destinations match ROM operand bytes\nPASS: 797 disjoint instruction bytes and 502 instruction boundaries backed by ROM\nPASS: separate physical-bank instruction digests match\nPASS: 31 indexed bank-4 records disjoint from code\nPASS: 176 Mode-4-compatible tiles round-trip to 5,632 original bytes\nPASS: candidate coverage is a distinct-byte union; no tile double-counting\nPASS: mapper_audit.json mutation rejected\nPASS: tile_metadata.json mutation rejected\nPASS: changed bank-7 ROM rejected\nPASS: changed graphics ROM rejected\nPASS Phase 8 suite finished\n"
+    },
+    {
+      "suite": "phase9",
+      "status": "passed",
+      "elapsed_seconds": 9.084,
+      "output_tail": "PASS: 256 KiB source ROM identity verified\nPASS: assembly report reproduced independently from source\nPASS: exactly 111 assembled bytes in four nonoverlapping ranges\nPASS: restricted two-pass Z80 assembly --check succeeds\nPASS: graphics uploader --check succeeds\nPASS: section addresses, assembler output and symbols agree\nPASS: critical word and tile loop targets located at correct addresses\nPASS: both original relative branches target $06DA\nPASS: independent decoder aligns at every assembled instruction boundary\nPASS: gaps between assembled spans are not falsely claimed as rebuilt code\nPASS: VDP upload report reproduced from actual call-site operand bytes\nPASS: four bank-3 uploads, source union and no double-counted bytes\nPASS: unsupported, duplicate, overlapping and out-of-range inputs rejected\nPASS: Phase 9A off-by-one branch-label regression rejected\nPASS: regression reports the precise original mismatch $06E4\nPASS: changed immediate opcode rejected\nPASS: modified encoder opcode rejected\nPASS: tampered assembly report rejected\nPASS: tampered upload analysis rejected\nPASS: z80_subset_asm_phase9.py: changed ROM rejected\nPASS: vdp_upload_phase9.py: changed ROM rejected\nPASS Phase 9B suite completed\n"
+    },
+    {
+      "suite": "phase10",
+      "status": "passed",
+      "elapsed_seconds": 1.337,
+      "output_tail": "PASS: unaltered source ROM SHA-256 and size\nPASS: 10 independent opcode encoding vectors, including RLD/RL D distinction\nPASS: reject invalid opcode: jrz $0400\nPASS: reject invalid opcode: jr z,$0700\nPASS: reject invalid opcode: ld a,(ix+180)\nPASS: reject invalid opcode: made_up $01\nPASS: 4,960 unique physical instruction addresses / 10,188 bytes\nPASS: explicit bank inventory and 16-KiB address mapping\nPASS: independent original Z80 decoder agrees with all 4,960 boundaries\nPASS: all generated ASM assembles to source ROM bytes; unique union includes Phase 9\nPASS: committed report reproducibility\nPASS: reject one-byte ROM mutation\nPASS: source to mutate has correct branch\nPASS: reject incorrect ASM operand before any matching claim\nPASS: reject incorrect listing byte independently of encoder\nPASS: reject wrong fixed-bank CPU/ROM address mapping\nPASS: reject duplicate/overlapping instruction spans\nPASS: complete source-to-bytes assembly on original relative branch span\nPHASE 10B: PASS\n"
+    },
+    {
+      "suite": "phase11",
+      "status": "passed",
+      "elapsed_seconds": 1.165,
+      "output_tail": "PASS: exact original ROM fingerprint\nPASS: previous 4,960 instructions and 10,188 bytes unchanged\nPASS: 1,198 additional instructions / 2,251 independently mapped code bytes\nPASS: 6,158 unique starts / 12,439 bytes, no overlaps\nPASS: 228 newly traced bank-6 instructions / 403 bytes\nPASS: independent decoder agrees with 6,158 instruction boundaries\nPASS: 64 index-addressed bank-6 pointers distinct and physically bounded\nPASS: rejection: out-of-bank pointer\nPASS: rejection: unjustified table extension\nPASS: 176 reversibly interpreted 32-byte tiles\nPASS: no coverage double-counting; 531 new code/table ROM bytes\nPASS: committed report reproducibility\nPASS: rejection: modified bank-6 ROM opcode\nPASS: rejection: modified graphics ROM byte\nPASS: rejection: mutated bank-6 assembly source\nPHASE 11: PASS\n"
+    },
+    {
+      "suite": "phase11b",
+      "status": "passed",
+      "elapsed_seconds": 1.071,
+      "output_tail": "PASS: 64 count-prefixed records and cumulative output simulation at three origins\nPASS: exact committed metadata, unique physical offsets\nPASS: rejected invalid record count and span\nPASS: rejected out-of-range pointer\nPASS: rejected payload corruption\nPASS: rejected incorrect record metadata\nPASS: rejected broken reversible record\nPASS: checked Phase 11B deltas and cumulative coverage without pointer double-counting\nPASS: retained 12,439 ROM-identical assembled code bytes\nPHASE 11B: PASS\n"
+    },
+    {
+      "suite": "phase12",
+      "status": "passed",
+      "elapsed_seconds": 1.11,
+      "output_tail": "PASS: ROM fingerprint and reproducible source/metadata\nPASS: 119 independent opcode boundaries / 241 assembled bytes\nPASS: fixed bank-to-bank6 mapper writes and VDP 64+128 byte transfer\nPASS: 17 object slots, 8 handlers, bounded 14/16-sprite offset tables\nPASS: rejects ROM dispatcher\nPASS: rejects ROM sprite offsets\nPASS: rejects VDP upload opcode\nPASS: rejects work-record pointer\nPASS: rejects modified assembly source\nPASS: rejects inflated coverage metadata\nPHASE 12: PASS\n"
+    },
+    {
+      "suite": "phase13",
+      "status": "passed",
+      "elapsed_seconds": 0.822,
+      "output_tail": "PASS ROM SHA-256, deterministic source, metadata, coverage totals\nPASS two directories, 64 exact adjacent graphics records, 64 adjacent secondary records\nPASS 673 decoded Z80 instructions, 1,345 assembler-matched bytes\nPASS reversible 1-plane to four-plane 40,224-byte cumulative transfer model\nPASS rejects: unrolled entry pointer (past fingerprint)\nPASS rejects: record pointer coverage (past fingerprint)\nPASS rejects: secondary 22-byte stride (past fingerprint)\nPASS rejects: OUTI opcode (past fingerprint)\nPASS rejects: mutated Z80 mnemonic source\nPASS rejects: inflated candidate coverage\nPHASE 13: PASS\n"
+    },
+    {
+      "suite": "phase14",
+      "status": "passed",
+      "elapsed_seconds": 1.334,
+      "output_tail": "test_committed_metadata_matches_recomputed (__main__.OverlayTests.test_committed_metadata_matches_recomputed) ... ok\ntest_complete_image_has_exact_original_sha (__main__.OverlayTests.test_complete_image_has_exact_original_sha) ... ok\ntest_duplicate_module_rejected_without_double_count (__main__.OverlayTests.test_duplicate_module_rejected_without_double_count) ... ok\ntest_mutated_assembly_is_rejected_not_template_masked (__main__.OverlayTests.test_mutated_assembly_is_rejected_not_template_masked) ... ok\ntest_physical_bank_mappings_and_boundaries (__main__.OverlayTests.test_physical_bank_mappings_and_boundaries) ... ok\ntest_reference_index_is_explicitly_conservative (__main__.OverlayTests.test_reference_index_is_explicitly_conservative) ... ok\ntest_source_bank_mapping_error_rejected (__main__.OverlayTests.test_source_bank_mapping_error_rejected) ... ok\ntest_strict_coverage_partition_and_11_sources (__main__.OverlayTests.test_strict_coverage_partition_and_11_sources) ... ok\ntest_wrong_rom_rejected_including_single_changed_byte (__main__.OverlayTests.test_wrong_rom_rejected_including_single_changed_byte) ... ok\n\n----------------------------------------------------------------------\nRan 9 tests in 0.375s\n\nOK\n"
+    },
+    {
+      "suite": "phase15",
+      "status": "passed",
+      "elapsed_seconds": 1.84,
+      "output_tail": "test_altered_structured_pointer_rejected (__main__.Phase15Tests.test_altered_structured_pointer_rejected) ... ok\ntest_data_little_endian_and_header (__main__.Phase15Tests.test_data_little_endian_and_header) ... ok\ntest_db_dw_parser_fail_closed (__main__.Phase15Tests.test_db_dw_parser_fail_closed) ... ok\ntest_mapper_candidates_are_adjacent_constant_writes (__main__.Phase15Tests.test_mapper_candidates_are_adjacent_constant_writes) ... ok\ntest_original_and_image_match (__main__.Phase15Tests.test_original_and_image_match) ... ok\ntest_report_and_symbols_reproducible (__main__.Phase15Tests.test_report_and_symbols_reproducible) ... ok\ntest_source_accounting_exact_no_double_count (__main__.Phase15Tests.test_source_accounting_exact_no_double_count) ... ok\ntest_source_modular_counts (__main__.Phase15Tests.test_source_modular_counts) ... ok\ntest_symbols_have_physical_bank_locations (__main__.Phase15Tests.test_symbols_have_physical_bank_locations) ... ok\ntest_tables_are_standalone_metadata_derived (__main__.Phase15Tests.test_tables_are_standalone_metadata_derived) ... ok\ntest_wrong_bank_and_overlap_rejected (__main__.Phase15Tests.test_wrong_bank_and_overlap_rejected) ... ok\ntest_wrong_rom_or_size_rejected (__main__.Phase15Tests.test_wrong_rom_or_size_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 0.723s\n\nOK\n"
+    },
+    {
+      "suite": "phase16",
+      "status": "passed",
+      "elapsed_seconds": 1.833,
+      "output_tail": "PASS: semantic record extraction reproduces checked-in source\nPASS: 7,902 separately reencoded record bytes match ROM\nPASS: three symbolic Z80 views preserve canonical assembly\nPASS: complete ROM template overlay matches original SHA-256\nPASS: rejects wrong record count\nPASS: rejects corrupted delta\nPASS: rejects corrupted secondary record\nPASS: rejects corrupted offset table\nPASS: rejects corrupted bank4 record\nPASS: rejects duplicate index\nPASS: rejects out-of-range source byte\nPASS: rejects wrong ROM fingerprint\nPASS: wrong symbolic address creates mismatched opcode bytes\nPASS: rejects undefined symbolic target\nPHASE 16: PASS\n"
+    },
+    {
+      "suite": "phase17",
+      "status": "passed",
+      "elapsed_seconds": 1.777,
+      "output_tail": ".............\n----------------------------------------------------------------------\nRan 13 tests in 0.954s\n\nOK\n"
+    },
+    {
+      "suite": "phase18",
+      "status": "passed",
+      "elapsed_seconds": 0.877,
+      "output_tail": "st_c_all_four_uploaders_execute (__main__.Phase18Tests.test_c_all_four_uploaders_execute) ... ok\ntest_d_mapper_state_and_vram_command (__main__.Phase18Tests.test_d_mapper_state_and_vram_command) ... ok\ntest_e_sprite_attribute_table_upload (__main__.Phase18Tests.test_e_sprite_attribute_table_upload) ... ok\ntest_f_all_bank7_entries_execute (__main__.Phase18Tests.test_f_all_bank7_entries_execute) ... ok\ntest_g_bank7_sha_recomputed_independently (__main__.Phase18Tests.test_g_bank7_sha_recomputed_independently) ... ok\ntest_h_bad_rom_fingerprint_rejected (__main__.Phase18Tests.test_h_bad_rom_fingerprint_rejected) ... ok\ntest_i_invalid_z80_opcode_fails_closed (__main__.Phase18Tests.test_i_invalid_z80_opcode_fails_closed) ... ok\ntest_j_non_vram_vdp_command_rejected (__main__.Phase18Tests.test_j_non_vram_vdp_command_rejected) ... ok\ntest_k_incomplete_control_command_rejected (__main__.Phase18Tests.test_k_incomplete_control_command_rejected) ... ok\ntest_l_budget_exhaustion_detected (__main__.Phase18Tests.test_l_budget_exhaustion_detected) ... ok\ntest_m_wrong_mapper_produces_other_rom_bytes (__main__.Phase18Tests.test_m_wrong_mapper_produces_other_rom_bytes) ... ok\ntest_n_ram_seed_range_safety (__main__.Phase18Tests.test_n_ram_seed_range_safety) ... ok\ntest_o_mapper_mutation_changes_output_or_fails_closed (__main__.Phase18Tests.test_o_mapper_mutation_changes_output_or_fails_closed) ... ok\n\n----------------------------------------------------------------------\nRan 15 tests in 0.071s\n\nOK\n"
+    },
+    {
+      "suite": "phase19",
+      "status": "passed",
+      "elapsed_seconds": 0.937,
+      "output_tail": ".. ok\ntest_06_producer_loop_at_record_start (__main__.Phase19Tests.test_06_producer_loop_at_record_start) ... ok\ntest_07_pointer_advance_from_count (__main__.Phase19Tests.test_07_pointer_advance_from_count) ... ok\ntest_08_buffer_hashes_recomputed_from_raw_rom (__main__.Phase19Tests.test_08_buffer_hashes_recomputed_from_raw_rom) ... ok\ntest_09_combined_hash_from_case_order (__main__.Phase19Tests.test_09_combined_hash_from_case_order) ... ok\ntest_10_origin_changes_are_visible (__main__.Phase19Tests.test_10_origin_changes_are_visible) ... ok\ntest_11_wrong_rom_rejected (__main__.Phase19Tests.test_11_wrong_rom_rejected) ... ok\ntest_12_unknown_opcode_fails_closed (__main__.Phase19Tests.test_12_unknown_opcode_fails_closed) ... ok\ntest_13_bad_producer_opcode_fails_closed (__main__.Phase19Tests.test_13_bad_producer_opcode_fails_closed) ... ok\ntest_14_budget_detects_nontermination (__main__.Phase19Tests.test_14_budget_detects_nontermination) ... ok\ntest_15_wrong_mapper_changes_opcode_stream (__main__.Phase19Tests.test_15_wrong_mapper_changes_opcode_stream) ... ok\ntest_16_no_new_coverage_claims (__main__.Phase19Tests.test_16_no_new_coverage_claims) ... ok\ntest_17_missing_report_case_is_detectable (__main__.Phase19Tests.test_17_missing_report_case_is_detectable) ... ok\ntest_18_sat_buffer_is_traced_with_rom_opcodes (__main__.Phase19Tests.test_18_sat_buffer_is_traced_with_rom_opcodes) ... ok\n\n----------------------------------------------------------------------\nRan 18 tests in 0.153s\n\nOK\n"
+    },
+    {
+      "suite": "phase20",
+      "status": "passed",
+      "elapsed_seconds": 1.398,
+      "output_tail": "..............\n----------------------------------------------------------------------\nRan 14 tests in 0.385s\n\nOK\n"
+    },
+    {
+      "suite": "phase21",
+      "status": "passed",
+      "elapsed_seconds": 3.746,
+      "output_tail": "..................\n----------------------------------------------------------------------\nRan 18 tests in 2.719s\n\nOK\n"
+    },
+    {
+      "suite": "scratch_workflow",
+      "status": "passed",
+      "elapsed_seconds": 0.885,
+      "output_tail": "PASS unchanged ROM and bank-7 1,345-byte assembly region\nPASS detects changed mnemonic without trusting source annotations\nPASS rejects wrong ROM, bank mismatch, invalid slot and empty source\nLOCAL MATCHING WORKFLOW: PASS\n"
+    },
+    {
+      "suite": "full_rom_overlay",
+      "status": "passed",
+      "elapsed_seconds": 2.006,
+      "output_tail": "Phase21 source-backed 46349 fallback 215795 SHA 02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9\n"
+    },
+    {
+      "suite": "wholebank07_source_only",
+      "status": "passed",
+      "elapsed_seconds": 1.08,
+      "output_tail": "PASS: complete bank 7: 16384 ROM-independent bytes SHA256=86c86574d85f58dbde305325f8ea0d6c92c75a53bdcebf222e2909f1932bfce4; +2753 beyond Phase21\n"
+    },
+    {
+      "suite": "wholebank07_tests",
+      "status": "passed",
+      "elapsed_seconds": 3.707,
+      "output_tail": ") ... ok\ntest_06_text_directory_and_spans (__main__.FullBankTests.test_06_text_directory_and_spans) ... ok\ntest_07_structurally_unresolved_not_hidden (__main__.FullBankTests.test_07_structurally_unresolved_not_hidden) ... ok\ntest_08_system_overlay_exact_sha (__main__.FullBankTests.test_08_system_overlay_exact_sha) ... ok\ntest_09_system_report_matches_committed (__main__.FullBankTests.test_09_system_report_matches_committed) ... ok\ntest_10_mutated_unresolved_art_rejected (__main__.FullBankTests.test_10_mutated_unresolved_art_rejected) ... ok\ntest_11_mutated_map_record_rejected (__main__.FullBankTests.test_11_mutated_map_record_rejected) ... ok\ntest_12_corrupt_pointer_directory_rejected (__main__.FullBankTests.test_12_corrupt_pointer_directory_rejected) ... ok\ntest_13_corrupt_text_directory_rejected (__main__.FullBankTests.test_13_corrupt_text_directory_rejected) ... ok\ntest_14_corrupt_text_payload_rejected (__main__.FullBankTests.test_14_corrupt_text_payload_rejected) ... ok\ntest_15_corrupt_pad_rejected (__main__.FullBankTests.test_15_corrupt_pad_rejected) ... ok\ntest_16_corrupt_z80_mnemonic_rejected (__main__.FullBankTests.test_16_corrupt_z80_mnemonic_rejected) ... ok\ntest_17_bad_mixed_z80_opcode_rejected (__main__.FullBankTests.test_17_bad_mixed_z80_opcode_rejected) ... ok\ntest_18_bad_rom_fingerprint_rejected (__main__.FullBankTests.test_18_bad_rom_fingerprint_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 18 tests in 2.705s\n\nOK\n"
+    },
+    {
+      "suite": "wholebank07_integrated",
+      "status": "passed",
+      "elapsed_seconds": 1.991,
+      "output_tail": "Whole-bank source backed: 49102 fallback: 213042 SHA: 02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9\n"
+    },
+    {
+      "suite": "wholebank03_source_only",
+      "status": "passed",
+      "elapsed_seconds": 1.157,
+      "output_tail": "PASS: source-only bank3 16384 SHA256 b9ade48d112c574b642f026fd770e78cb939bb717328e4c6a3fdc228cc7c2c15 +4147 source-backed bytes\n"
+    },
+    {
+      "suite": "wholebank03_tests",
+      "status": "passed",
+      "elapsed_seconds": 2.349,
+      "output_tail": "test_01_original_rom_exact (__main__.Bank3Tests.test_01_original_rom_exact) ... ok\ntest_02_source_only_bank_byte_ownership (__main__.Bank3Tests.test_02_source_only_bank_byte_ownership) ... ok\ntest_03_compressed_visual_unknown (__main__.Bank3Tests.test_03_compressed_visual_unknown) ... ok\ntest_04_60_text_directory_records (__main__.Bank3Tests.test_04_60_text_directory_records) ... ok\ntest_05_verified_uniform_ff_padding (__main__.Bank3Tests.test_05_verified_uniform_ff_padding) ... ok\ntest_06_whole_bank_mixed_source_roundtrip (__main__.Bank3Tests.test_06_whole_bank_mixed_source_roundtrip) ... ok\ntest_07_mutated_visual_bytes_rejected (__main__.Bank3Tests.test_07_mutated_visual_bytes_rejected) ... ok\ntest_08_bad_pointer_rejected (__main__.Bank3Tests.test_08_bad_pointer_rejected) ... ok\ntest_09_changed_parameter_rejected (__main__.Bank3Tests.test_09_changed_parameter_rejected) ... ok\ntest_10_mutated_text_prefix_rejected (__main__.Bank3Tests.test_10_mutated_text_prefix_rejected) ... ok\ntest_11_truncated_padding_rejected (__main__.Bank3Tests.test_11_truncated_padding_rejected) ... ok\ntest_12_entire_16bank_rom_output (__main__.Bank3Tests.test_12_entire_16bank_rom_output) ... ok\ntest_13_wrong_rom_rejected (__main__.Bank3Tests.test_13_wrong_rom_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 13 tests in 1.448s\n\nOK\n"
+    },
+    {
+      "suite": "whole_system_tests",
+      "status": "passed",
+      "elapsed_seconds": 5.233,
+      "output_tail": "test_01_complete_bank_is_independent (__main__.SystemTests.test_01_complete_bank_is_independent) ... ok\ntest_02_bank_assembly_is_not_rom_copying (__main__.SystemTests.test_02_bank_assembly_is_not_rom_copying) ... ok\ntest_03_integrated_system_matches_user_rom (__main__.SystemTests.test_03_integrated_system_matches_user_rom) ... ok\ntest_04_every_physical_bank_counted_once (__main__.SystemTests.test_04_every_physical_bank_counted_once) ... ok\ntest_05_system_report_is_reproducible (__main__.SystemTests.test_05_system_report_is_reproducible) ... ok\ntest_06_no_false_semantic_or_external_claims (__main__.SystemTests.test_06_no_false_semantic_or_external_claims) ... ok\ntest_07_both_original_bank_digests_match (__main__.SystemTests.test_07_both_original_bank_digests_match) ... ok\n\n----------------------------------------------------------------------\nRan 7 tests in 4.476s\n\nOK\n"
+    },
+    {
+      "suite": "whole_system_overlay",
+      "status": "passed",
+      "elapsed_seconds": 2.03,
+      "output_tail": "Whole system: source-backed 53249 fallback 208895 whole banks [3, 7] SHA256 02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9\n"
+    }
+  ]
+}

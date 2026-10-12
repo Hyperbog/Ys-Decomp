@@ -1,0 +1,40 @@
+{
+  "schema": "ys-bank08-10-static-mapper-links-v1",
+  "references": [
+    {
+      "fixed_bank_pc": "0FB1",
+      "mapper_register": "FFFF",
+      "mapper_value": 8,
+      "control_transfer": "call",
+      "target_cpu": "BEE8",
+      "physical_target": "23EE8",
+      "target_first_opcode": "3E",
+      "evidence": "contiguous fixed-bank instructions; not emulator-derived mapper state"
+    },
+    {
+      "fixed_bank_pc": "38C4",
+      "mapper_register": "FFFF",
+      "mapper_value": 10,
+      "control_transfer": "jp",
+      "target_cpu": "BF16",
+      "physical_target": "2BF16",
+      "target_first_opcode": "06",
+      "evidence": "contiguous fixed-bank instructions; not emulator-derived mapper state"
+    },
+    {
+      "fixed_bank_pc": "3E86",
+      "mapper_register": "FFFF",
+      "mapper_value": 10,
+      "control_transfer": "jp",
+      "target_cpu": "BEF7",
+      "physical_target": "2BEF7",
+      "target_first_opcode": "EF",
+      "evidence": "contiguous fixed-bank instructions; not emulator-derived mapper state"
+    }
+  ],
+  "count": 3,
+  "limitations": [
+    "Sequences are static candidates, not gameplay execution traces.",
+    "Effects of any intervening interrupt or external mapper changes not modeled."
+  ]
+}
