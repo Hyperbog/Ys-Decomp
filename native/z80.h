@@ -24,13 +24,15 @@ typedef struct {
     uint8_t a_alt, f_alt, b_alt, c_alt, d_alt, e_alt, h_alt, l_alt;
     uint8_t ei_delay; /* Interrupt recognition blocked until after following instruction. */
     bool iff1, iff2;
-    uint64_t steps;
+    uint64_t steps, total_tstates;
+    uint8_t last_tstates; /* 0 means unavailable, including failed steps. */
     Z80Status status;
 } YsZ80;
 void ys_z80_reset(YsZ80 *cpu, YsSmsBus *bus);
 void ys_z80_attach_vdp(YsZ80 *cpu, YsSmsVdp *vdp);
 void ys_z80_attach_sound(YsZ80 *cpu, YsSmsSound *sound);
 void ys_z80_attach_input(YsZ80 *cpu, YsSmsInput *input);
+/* Successful steps record documented instruction T-states (no bus waits). */
 Z80Status ys_z80_step(YsZ80 *cpu);
 /* External caller provides the VBlank/IRQ event; no timing is synthesized. */
 bool ys_z80_irq(YsZ80 *cpu);

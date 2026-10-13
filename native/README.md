@@ -1,3 +1,24 @@
+# M28 — CPU-timed VBlank runtime (Development build)
+
+The native Z80 core now records per-instruction T-state counts and a
+running total. `ys_sms_runtime_step_auto` advances the M27 NTSC/PAL
+frame clock from those counts, including conditional-branch timing,
+a 13-T IM1 acknowledge, and 4-T refresh while HALTed. This enables
+automatic *hardware event recognition* without manually injecting IRQ
+events, but it is not yet a playable or faithfully synchronized Ys game.
+
+The ROM-independent Development executable
+`ys-native-timing --check` verifies the full synthetic NOP/EI → VBlank
+→ IM1 `$0038` → status-acknowledge sequence. This new milestone does
+**not** change the source-ROM execution boundary at M25 PC `$0B22`.
+No proprietary ROM, assets, or full reconstruction are required.
+
+See [M28 timing contract and tests](research/M28_TIMING.md). Alpha
+promotion gates remain false pending genuine game-frame execution,
+desktop game rendering, live input, and interactive gameplay.
+
+## Previous milestone: M27
+
 # M27 — Frame clock, automatic VBlank recognition and synthetic live frames
 
 The native C11 Development build now includes an explicitly T-state-driven

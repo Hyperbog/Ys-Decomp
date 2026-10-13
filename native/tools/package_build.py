@@ -22,7 +22,8 @@ REQUIRED = {
     "final": ("cross_platform", "fidelity_validation", "release_audit"),
 }
 EXE_NAMES = ("ys-native-info", "ys-native-probe", "ys-native-trace",
-             "ys-native-preview", "ys-native-frames")
+             "ys-native-preview", "ys-native-frames",
+             "ys-native-timing")
 OPTIONAL_EXE_NAMES = ("ys-native-display",)
 IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,47}$")
 
@@ -113,6 +114,8 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         "    bin/ys-native-trace PATH_TO_YOUR.sms --frame checkpoint.ppm\n"
         "Export ROM-independent synthetic VDP frames:\n"
         "    bin/ys-native-frames demo 12 ntsc\n"
+        "Auto-timed synthetic Z80/IM1 VBlank check:\n"
+        "    bin/ys-native-timing --check\n"
         "Optional bin/ys-native-display is an SDL2 diagnostic window;\n"
         "it requires a separately installed SDL2 runtime (not bundled).\n"
         "These are PPM files readable by image editors and viewers.\n"

@@ -20,11 +20,11 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M27 (frame clock and animated synthetic snapshots; Z80 execution still ends at M25). The last validated continuous native trace reached
+- **Checkpoint:** M28 (per-instruction Z80 timing and automatic VBlank recognition; source-ROM trace still ends at M25). The last validated continuous native trace reached
   Z80 PC `$0B22` after 17,224 instructions, with one explicitly injected
   VBlank interrupt.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
-  `ys-native-trace`, `ys-native-preview`, `ys-native-frames`. These are CLI **diagnostic tools**,
+  `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`. These are CLI **diagnostic tools**,
   including a stateless video preview, not a PC game.
 - **Not available:** Automatic video/IRQ scheduler, game display window,
   live input, native audio output, playable native game executable.
@@ -73,10 +73,10 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m27-dev-linux-x64-<commit>.zip
+dist/ys-m28-dev-linux-x64-<commit>.zip
 ```
 
-The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`),
+The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`),
 `README.txt`, `manifest.json`,
 and `SHA256SUMS.txt`. It embeds the Git revision, release channel,
 milestone and file checksums. No cartridge image, proprietary game ROM,
@@ -89,6 +89,7 @@ legally obtained 256 KiB Ys SMS image to the diagnostic executables:
 ./bin/ys-native-trace /path/to/your/Ys.sms
 ./bin/ys-native-preview synthetic.ppm
 ./bin/ys-native-frames demo 12 ntsc
+./bin/ys-native-timing --check
 ./bin/ys-native-trace /path/to/your/Ys.sms --frame checkpoint.ppm
 ```
 
@@ -159,3 +160,14 @@ when SDL2 is available to CMake; the optional executable may be packaged
 if found. Its SDL2 shared runtime is not distributed and may need to be
 installed separately. A window containing synthetic tiles/sprites is not
 a native Ys gameplay or title screen. The Alpha gates remain blocked.
+
+
+### M28 measured Z80 timing (Development only)
+
+`ys-native-timing --check` executes a synthetic NOP/EI instruction stream
+with automatic scanline-clock advancement and confirms an IM1 VBlank
+interrupt and VDP status acknowledgment. Instruction timings are known
+for the current bounded Z80 subset; a new opcode without timing is not
+accepted by the timed runtime. Nominal T-state timing does **not** prove
+real-game fidelity. The source-built Ys trace still stops at $0B22 after
+one deliberately injected VBlank, and Alpha remains blocked.

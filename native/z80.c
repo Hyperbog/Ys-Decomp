@@ -140,11 +140,91 @@ bool ys_z80_irq(YsZ80 *cpu) {
     return true;
 }
 
+/* Documented baseline Z80 T-states for the opcodes this interpreter
+   currently implements. Return zero for instructions without a known timing.
+   Conditional costs use flags from before execution, never post-call flags.
+   This is instruction-granular timing, not VDP bus contention or I/O wait. */
+static bool timed_condition(uint8_t opcode, uint8_t f) {
+    uint8_t mask = (opcode & 0x30u)==0x00u ? Z80_F_Z :
+                   (opcode & 0x30u)==0x10u ? Z80_F_C :
+                   (opcode & 0x30u)==0x20u ? Z80_F_PV : Z80_F_S;
+    return ((f & mask)!=0u)==((opcode & 0x08u)!=0u);
+}
+static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
+                              uint8_t sub, uint8_t f_before,
+                              uint8_t b_before, uint16_t start) {
+    if (opcode>=0x40u && opcode<=0x7Fu)
+        return opcode==0x76u ? 4u :
+               (opcode&7u)==6u || ((opcode>>3)&7u)==6u ? 7u : 4u;
+    if ((opcode&0xC7u)==0x06u)
+        return ((opcode>>3)&7u)==6u ? 10u : 7u;
+    if ((opcode&0xC7u)==0x04u || (opcode&0xC7u)==0x05u)
+        return ((opcode>>3)&7u)==6u ? 11u : 4u;
+    if (opcode>=0x80u && opcode<=0xBFu)
+        return (opcode&7u)==6u ? 7u : 4u;
+    if ((opcode&0xC7u)==0xC7u) return 11u; /* RST $00-$38 */
+    if ((opcode&0xCFu)==0x09u) return 11u; /* ADD HL,rr */
+    if ((opcode&0xC7u)==0xC0u)
+        return timed_condition(opcode,f_before) ? 11u : 5u; /* RET cc */
+    if ((opcode&0xC7u)==0xC4u)
+        return timed_condition(opcode,f_before) ? 17u : 10u; /* CALL cc */
+    if ((opcode&0xC7u)==0xC2u) return 10u; /* JP cc */
+    switch(opcode) {
+    case 0x00: case 0x08: case 0x2F: case 0xD9:
+    case 0xF3: case 0xFB: return 4u;
+    case 0xCB: return (sub&7u)==6u ? 12u : 8u; /* BIT b,r */
+    case 0xDD: case 0xFD:
+        switch(sub) {
+        case 0xE5: return 15u; /* PUSH IX/IY */
+        case 0xE1: return 14u; /* POP IX/IY */
+        case 0x21: return 14u; /* LD IX/IY,nn */
+        case 0x09: case 0x19: case 0x29: case 0x39:
+            return 15u;       /* ADD IX/IY,rr */
+        case 0xCB: return 20u;/* BIT b,(IX/IY+d) */
+        default: return 0u;
+        }
+    case 0x02: case 0x0A: case 0x12: case 0x1A: return 7u;
+    case 0x01: case 0x11: case 0x21: case 0x31: return 10u;
+    case 0x03: case 0x13: case 0x23:
+    case 0x0B: case 0x1B: case 0x2B: return 6u;
+    case 0x22: case 0x2A: return 16u;
+    case 0x32: case 0x3A: return 13u;
+    case 0xE6: case 0xF6: case 0xFE: return 7u;
+    case 0xC3: return 10u;
+    case 0xE9: return 4u;
+    case 0xC9: return 10u;
+    case 0xCD: return 17u;
+    case 0xC5: case 0xD5: case 0xE5: case 0xF5: return 11u;
+    case 0xC1: case 0xD1: case 0xE1: case 0xF1: return 10u;
+    case 0x10: return (uint8_t)(b_before!=1u ? 13u : 8u);
+    case 0x18: return 12u;
+    case 0x20: case 0x28:
+        return ((f_before & Z80_F_Z)!=0u)==(opcode==0x28u)?12u:7u;
+    case 0x30: case 0x38:
+        return ((f_before & Z80_F_C)!=0u)==(opcode==0x38u)?12u:7u;
+    case 0xD3: case 0xDB: return 11u;
+    case 0xED:
+        if (sub==0x56u) return 8u; /* IM 1 */
+        if (sub==0x45u || sub==0x4Du) return 14u; /* RETN/RETI */
+        if (sub==0x6Fu) return 18u; /* RLD */
+        if (sub==0xA0u || sub==0xA3u || sub==0xABu) return 16u;
+        if (sub==0xB0u) return cpu->pc==start ? 21u : 16u; /* LDIR */
+        if ((sub&0xC7u)==0x41u && sub!=0x71u) return 12u;
+        return 0u;
+    default: return 0u;
+    }
+}
+
 Z80Status ys_z80_step(YsZ80 *cpu) {
     if (!cpu || !cpu->bus) return Z80_UNSUPPORTED;
     if (cpu->status != Z80_RUNNING) return cpu->status;
     uint16_t start = cpu->pc;
+    cpu->last_tstates=0u;
+    uint8_t f_before=cpu->f, b_before=cpu->b;
     uint8_t opcode = fetch(cpu);
+    uint8_t timing_sub=(opcode==0xCBu || opcode==0xDDu ||
+                        opcode==0xFDu || opcode==0xEDu) ?
+                        ys_sms_bus_read(cpu->bus,cpu->pc) : 0u;
     if (opcode >= 0x40u && opcode <= 0x7Fu) {
         if (opcode == 0x76u) cpu->status = Z80_HALTED;
         else if (!w8(cpu, (opcode >> 3) & 7u, r8(cpu, opcode & 7u)))
@@ -469,10 +549,14 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     }
     default: cpu->status=Z80_UNSUPPORTED;goto fail;
     }
+    cpu->last_tstates=opcode_tstates(cpu,opcode,timing_sub,f_before,
+                                      b_before,start);
+    cpu->total_tstates+=cpu->last_tstates;
     ++cpu->steps;
     if (cpu->ei_delay) --cpu->ei_delay;
     return cpu->status;
 fail:
+    cpu->last_tstates=0;
     cpu->fault_pc=start;
     cpu->pc=start; /* Fail closed: identify original opcode address. */
     return cpu->status;

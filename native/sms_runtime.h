@@ -21,4 +21,9 @@ bool ys_sms_runtime_advance(YsSmsRuntime *rt, uint32_t tstates,
 /* Execute one bounded CPU instruction, then advance its caller-supplied
    T-state duration. This is NOT an instruction-timing decoder. */
 Z80Status ys_sms_runtime_step(YsSmsRuntime *rt, uint32_t instruction_tstates);
+
+/* M28: advance the clock using the Z80's measured opcode T-states, or
+   fail closed when timing is unavailable. Recognize pending VBlank IRQ.
+   HALT consumes 4 T-states on each call until an eligible IRQ wakes CPU. */
+Z80Status ys_sms_runtime_step_auto(YsSmsRuntime *rt);
 #endif
