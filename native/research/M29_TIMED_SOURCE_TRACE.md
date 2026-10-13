@@ -72,3 +72,37 @@ Limitations: the VDP frame scheduler only models line-192 VBlank; CPU
 nominal instruction T-states omit bus contention; no line interrupt,
 NMIs, sound synthesis or physical display. The first timed interrupt
 does not prove normal later-frame playability or an Alpha game build.
+
+## Verified run — first timed source-ROM interrupt
+
+Commit [733a6c702d88](https://github.com/Hyperbog/Ys-Decomp/commit/733a6c702d88c66eff4720483382ca0fba63611c)
+executed the gated M10 source-ROM check in
+[GitHub Actions run 38343836595](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38343836595):
+
+```text
+M10: 16/16 source-only banks, 262144 bytes; ROM fallback=0
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+PASS timed actual Ys reset to first IM1: instructions=16379
+T-states=338842 VBlank=5 IRQ=1 savedPC=$0764 PC=$003B SP=$DFE8
+No injected IRQ; source ISR status acknowledgment verified.
+```
+
+**Significance:** the first accepted interrupt occurred at `$0764`,
+right after the VDP register initialization's `RST $28` helper
+(`$0763`, `$0028-$0030`). The prior DI/long memory initialization
+had already consumed **five** scanline-clock VBlank events; the IRQ
+became eligible when the helper's EI one-instruction delay ended.
+The actual original ISR executed its `PUSH AF` and status-port read at
+`$0038/$0039`, leaving `PC=$003B`, `SP=$DFE8`.
+This differs from the existing manually injected M25 first wait IRQ
+at `$0049`; **these are independent branches of the same authentic
+startup** and should not be conflated.
+
+All 13 strict native tests and the old M25 continuous trace
+(`17,224` Z80 instructions, `PC=$0B22`) also passed.
+
+**Next execution target:** continue from `$003B` through the
+`$0102` handler, evaluate the zero-state branch to `$0148`,
+and verify a full return to `$0764` without disturbing the
+register snapshot. That requires further source-backed opcode coverage
+and one new gated ROM check if the execution boundary advances.

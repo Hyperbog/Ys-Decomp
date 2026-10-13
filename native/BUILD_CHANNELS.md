@@ -183,3 +183,10 @@ VDP status acknowledgment at `$003B`. It requires a user-supplied
 M25 trace ending at `$0B22`, which injected its first VBlank explicitly.
 Neither path establishes a playable desktop game or original-hardware
 cycle-accurate timing. See `native/research/M29_TIMED_SOURCE_TRACE.md`.
+
+**M29 verified evidence:** The first automatically accepted IRQ in the
+real reconstructed cartridge occurred at interrupt return PC `$0764`
+after 338,842 nominal T-states, with five generated VBlank events
+and one accepted IM1. The original ISR cleared VBlank status at
+`$003B`. See [gated CI 38343836595](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38343836595).
+This does not change Alpha eligibility.

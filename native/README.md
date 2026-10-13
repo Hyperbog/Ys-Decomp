@@ -8,6 +8,14 @@ status. It stops after the source ISR `$0038 PUSH AF` /
 It prints actual CPU instructions, nominal T-states, scanline, IRQ
 count and interrupted return PC.
 
+**Verified full-ROM result:** [GitHub Actions 38343836595](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38343836595)
+passed, confirming `16,379` instructions and `338,842` nominal
+T-states, with **5** generated VBlank events and **1** accepted IM1 IRQ.
+The interrupted PC was `$0764` (during VDP initialization), and the
+original status read stopped at `PC=$003B`, `SP=$DFE8`.
+The established 256 KiB ROM checksum matched the source-only rebuild.
+The separately gated M25 trace still passed to `$0B22`.
+
 ```sh
 bin/ys-native-timed-rom /path/to/your/Ys.sms
 ```
