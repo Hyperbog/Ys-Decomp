@@ -46,8 +46,8 @@ jobs:
         run: |
           $exe = Join-Path (Get-Location) 'build-native-phase/Release/ys-native-window.exe'
           if (-not (Test-Path $exe)) { throw "Windows graphical EXE is missing: $exe" }
-          & $exe --self-test
-          if ($LASTEXITCODE -ne 0) { throw "Windows graphical EXE self-test failed: $LASTEXITCODE" }
+          $proc = Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
+          if ($proc.ExitCode -ne 0) { throw "Windows graphical EXE self-test failed: $($proc.ExitCode)" }
           $bytes = [System.IO.File]::ReadAllBytes($exe)
           if ($bytes.Length -lt 512) { throw 'Graphical EXE is unexpectedly small' }
           $pe = [System.BitConverter]::ToInt32($bytes, 0x3C)
