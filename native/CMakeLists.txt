@@ -55,7 +55,7 @@ target_link_libraries(ys-native-preview PRIVATE ys_sms_video ys_video_fixture)
 if(WIN32)
     add_executable(ys-native-window WIN32 window_win32.c)
     target_link_libraries(ys-native-window PRIVATE
-        ys_sms_clock ys_sms_video ys_video_fixture user32 gdi32 shell32
+        ys_sms_clock ys_sms_video ys_video_fixture user32 gdi32 shell32)
     if(MSVC)
         target_compile_options(ys-native-window PRIVATE /W4)
     else()
