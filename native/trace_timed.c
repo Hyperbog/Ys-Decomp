@@ -1,6 +1,6 @@
-/* M29 original-ROM reset to FIRST CLOCK-GENERATED VBlank IM1.
-   This is a strictly bounded diagnostic, not interactive gameplay.
-   It never injects a VBlank or calls ys_z80_irq directly. */
+/* M30 original-ROM reset through TWO clock-generated VBlank IM1 events,
+   including legitimate immediate re-entry and a stable return to $0764.
+   This is a bounded diagnostic, never interactive gameplay. No injected IRQ. */
 #include "sms_runtime.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,7 +37,7 @@ static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
 int main(int argc,char **argv) {
     if (argc!=2) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms\n"
-              "Stop after first source-ROM IM1 ISR acknowledges timed VBlank.\n",
+              "Stop after two real timed VBlank ISRs return to source PC $0764.\n",
               stderr);
         return EXIT_FAILURE;
     }

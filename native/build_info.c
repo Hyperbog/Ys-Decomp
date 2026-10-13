@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
         puts("ys-native-preview output.ppm (synthetic mode-4 scene)");
         puts("ys-native-frames demo 12 ntsc (synthetic frame sequence)");
         puts("ys-native-timing --check (synthetic timed Z80 + VBlank)");
-        puts("ys-native-timed-rom Ys.sms (natural source-ROM VBlank)");
+        puts("ys-native-timed-rom Ys.sms (two source-ROM VBlanks and ISR return)");
         puts("ys-native-display (optional SDL2 diagnostic window)");
         puts("ys-native-trace ROM.sms --frame checkpoint.ppm (snapshot)");
         puts("The trace ends at a bounded reconstruction checkpoint.");

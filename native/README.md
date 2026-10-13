@@ -1,3 +1,34 @@
+# M30 — Timed zero-state ISR return to original startup
+
+The full source-ROM trace now executes from cold reset through **two
+naturally generated VBlank interrupt entries**. The first ISR returns
+from `$01AA EI / $01AB RET` while another VBlank is pending, so
+IM1 immediately re-enters at `$0038`. The second zero-state ISR
+finishes with a stable return to **PC=$0764**, before the source
+`POP AF` at that address.
+
+**Verified:** [GitHub Actions run 38344640720](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38344640720):
+17,205 executed Z80 instructions, 346,813 nominal T-states, 6
+generated VBlank events, 2 accepted interrupts, final SP=$DFEC,
+mapper control $80, bank 2 selected. Both the initial re-entry and
+the final return preserve main/alternate Z80 general registers,
+IX/IY and mapper state. The original 16-bank source-built
+256 KiB cartridge matched SHA-256, and 13 CTest suites passed.
+
+```sh
+bin/ys-native-timed-rom /path/to/your/Ys.sms
+```
+
+This is still a **Development** diagnostic, not a game window, title,
+continuous startup or playable Alpha. The older `ys-native-trace`
+continues to verify the separate manually injected M25 path to
+`$0B22`. [M30 detailed source/clock trace](research/M30_TIMED_ISR.md).
+
+No further M10 rebuild is needed for these documentation and build-label
+changes. Alpha/Beta/Final promotion gates remain false.
+
+## Previous milestone — M29
+
 # M29 — Actual source-ROM reset to first timed VBlank
 
 The Development build now includes `ys-native-timed-rom`, a

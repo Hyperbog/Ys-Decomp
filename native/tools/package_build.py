@@ -116,7 +116,7 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         "    bin/ys-native-frames demo 12 ntsc\n"
         "Auto-timed synthetic Z80/IM1 VBlank check:\n"
         "    bin/ys-native-timing --check\n"
-        "Use your own ROM to trace the first naturally timed IRQ:\n"
+        "Use your own ROM to trace natural Ys VBlank ISR re-entry and return:\n"
         "    bin/ys-native-timed-rom PATH_TO_YOUR.sms\n"
         "Optional bin/ys-native-display is an SDL2 diagnostic window;\n"
         "it requires a separately installed SDL2 runtime (not bundled).\n"

@@ -78,3 +78,23 @@ This is a bounded execution checkpoint, not a true game-frame loop,
 title screen or playable PC build. No native video window with Ys game
 content, live input or sound synthesis has been established. Alpha,
 Beta and Final release gates remain unpassed.
+
+
+## Verified completion
+
+[Gated GitHub Actions run 38344640720](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38344640720)
+passed the two source-ROM acceptance boundaries and all 13 strict native
+test suites (no ROM fallback; 16/16 source-only banks, 262144 bytes):
+
+```text
+PASS timed actual Ys reset to first IM1: instructions=16379 T-states=338842 VBlank=5 IRQ=1 savedPC=$0764 PC=$003B SP=$DFE8
+PASS natural second VBlank re-entry after $01AB RET: PC=$0038 savedPC=$0764 VBlank=6 IRQ=2 handler_steps=412
+PASS timed Ys second zero-state ISR stable return to $0764: first_steps=412 second_steps=414 total_steps=17205 T-states=346813 SP=$DFEC mapper=80 bank2=2 IRQ=2
+Stop BEFORE executing $0764 POP AF; normal startup not yet resumed.
+```
+
+This completion did **not** establish any additional timed startup
+state transition. The next meaningful checkpoint is execution of
+`$0764 POP AF`, return to `$00C1` and subsequent automatic
+VBlank wait handling. One new gated reconstruction should be run only
+after that path and its hardware assumptions are source verified.

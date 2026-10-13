@@ -20,7 +20,7 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M29 (source-ROM first natural VBlank ISR entry, in addition to the existing M25 full startup trace). The last validated continuous native trace reached
+- **Checkpoint:** M30 (source-ROM two natural VBlank IRQs, complete ISR re-entry and return to `$0764`; separate M25 manual-VBlank trace). The last validated continuous native trace reached
   Z80 PC `$0B22` after 17,224 instructions, with one explicitly injected
   VBlank interrupt.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
@@ -73,7 +73,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m29-dev-linux-x64-<commit>.zip
+dist/ys-m30-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -190,3 +190,16 @@ after 338,842 nominal T-states, with five generated VBlank events
 and one accepted IM1. The original ISR cleared VBlank status at
 `$003B`. See [gated CI 38343836595](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38343836595).
 This does not change Alpha eligibility.
+
+
+### M30 verified timed ISR completion
+
+[Full source-ROM CI 38344640720](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38344640720)
+verified **17,205** instructions and **346,813** nominal CPU T-states,
+**6** clock-generated VBlank events, **2** accepted IM1 interrupts,
+a legitimate immediate second IRQ after the first ISR `EI; RET`,
+and a stable second ISR return to **PC=$0764 / SP=$DFEC**.
+All main/alternate general-purpose registers, IX/IY and ROM mapper
+state were restored. The original cartridge SHA-256 remained unchanged.
+These bounded source-ROM diagnostics still do **not** show actual
+Ys title-screen rendering or interactive Alpha gameplay.
