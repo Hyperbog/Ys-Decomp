@@ -114,7 +114,48 @@ static void unknown_index_opcode_still_fails(void) {
     setup();
     assert(!ys_z80_irq(&cpu));
 }
+static void ys_source_vblank_vdp_commands_and_rst08(void) {
+    setup();
+    /* Source-backed bank-0 $0108-$0124 and RST $08 helper opcodes. */
+    CODE(0x0108,0x21,0x1A,0xC0,0x01,0xBF,0x8B,
+         0xED,0xAB,0xED,0x41,0xED,0xAB,0xED,0x41,
+         0xED,0xAB,0xED,0x41,0x21,0xFF,0x85,
+         0xED,0x69,0xED,0x61,0x21,0xAA,0x01,0xCF);
+    CODE(0x0008,0x87,0x85,0x6F,0x30,0x01,0x24,
+         0x7E,0x23,0x66,0x6F,0xE9);
+    CODE(0x01AA,0xFB,0xC9,0xB4,0x01,0xBA,0x01,0xD7,0x01,0xB8,0x03);
+    assert(ys_sms_bus_write(&bus,0xC01A,0x45));
+    assert(ys_sms_bus_write(&bus,0xC019,0x23));
+    assert(ys_sms_bus_write(&bus,0xC018,0x11));
+    cpu.pc=0x0108;
+    cpu.a=1; /* First VBlank dispatch selector is one-based. */
+    until(0x01B4,40);
+    assert(vdp.control_writes==8 && vdp.register_writes==4);
+    assert(vdp.registers[10]==0x45 && vdp.registers[9]==0x23);
+    assert(vdp.registers[8]==0x11 && vdp.registers[5]==0xFF);
+    assert(cpu.b==0x88 && cpu.c==0xBF);
+    assert(cpu.a==0xB4 && cpu.h==0x01 && cpu.l==0xB4);
+    assert(cpu.sp==0xDFEE &&
+           ys_sms_bus_read(&bus,0xDFEE)==0x25 &&
+           ys_sms_bus_read(&bus,0xDFEF)==0x01);
+}
+static void test_add_a_8bit_flags(void) {
+    setup();
+    CODE(0x0000,0x3E,0x7F,0x87,0x06,0x01,0x80);
+    until(0x0003,2); /* ADD A,A => $FE, signed overflow. */
+    assert(cpu.a==0xFE && (cpu.f&Z80_F_PV) &&
+           (cpu.f&Z80_F_H) && (cpu.f&Z80_F_S));
+    until(0x0006,2); /* ADD A,B => $FF, no carry. */
+    assert(cpu.a==0xFF && !(cpu.f&Z80_F_C));
+    setup();
+    CODE(0,0x3E,0x80,0x87);
+    until(3,2);
+    assert(cpu.a==0 && (cpu.f&Z80_F_C) &&
+           (cpu.f&Z80_F_Z) && (cpu.f&Z80_F_PV));
+}
 int main(void) {
+    ys_source_vblank_vdp_commands_and_rst08();
+    test_add_a_8bit_flags();
     shadow_and_index_registers();
     conditional_jp_sign();
     ei_delay_and_im1_irq();

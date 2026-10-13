@@ -66,6 +66,16 @@ static uint8_t sub_flags(uint8_t lhs, uint8_t rhs, uint8_t result) {
         (((lhs ^ rhs) & (lhs ^ result) & 0x80u) ? Z80_F_PV : 0) |
         (lhs < rhs ? Z80_F_C : 0));
 }
+
+/* Z80 8-bit ADD A,r, including carry, half-carry, overflow and X/Y. */
+static uint8_t add8_flags(uint8_t lhs, uint8_t rhs, uint8_t result,
+                          unsigned full_result) {
+    return (uint8_t)(sz53(result) |
+        (((lhs & 15u) + (rhs & 15u) > 15u) ? Z80_F_H : 0u) |
+        (((~(lhs ^ rhs) & (lhs ^ result)) & 0x80u) ? Z80_F_PV : 0u) |
+        (full_result > 0xFFu ? Z80_F_C : 0u));
+}
+
 static bool push16(YsZ80 *cpu, uint16_t value) {
     uint16_t hi = (uint16_t)(cpu->sp - 1u), lo = (uint16_t)(hi - 1u);
     if (!store(cpu, hi, (uint8_t)(value >> 8)) ||
@@ -139,6 +149,16 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         uint8_t old = r8(cpu, i), result = (uint8_t)(old - 1u);
         if (!w8(cpu, i, result)) goto fail;
         cpu->f = dec_flags(old, result, cpu->f & Z80_F_C);
+    } else if (opcode>=0x80u && opcode<=0x87u) {
+        uint8_t rhs=r8(cpu,opcode&7u);
+        uint8_t old=cpu->a;
+        unsigned full=(unsigned)old+rhs;
+        cpu->a=(uint8_t)full;
+        cpu->f=add8_flags(old,rhs,cpu->a,full);
+    } else if ((opcode & 0xC7u)==0xC7u) {
+        /* One-byte RST vectors; execute the original bank-0 dispatch helper. */
+        if(!push16(cpu,cpu->pc)) goto fail;
+        cpu->pc=(uint16_t)(opcode&0x38u);
     } else if ((opcode & 0xCFu) == 0x09u) {
         uint16_t hl=pair(cpu->h,cpu->l);
         unsigned index=(opcode >> 4) & 3u;
@@ -221,6 +241,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         uint8_t rhs=fetch(cpu);
         cpu->f=sub_flags(cpu->a,rhs,(uint8_t)(cpu->a-rhs));break;
     }
+    case 0xE9: cpu->pc=pair(cpu->h,cpu->l);break;
     case 0xC3: cpu->pc=fetch16(cpu);break;
     case 0xC2: case 0xCA: case 0xD2: case 0xDA:
     case 0xE2: case 0xEA: case 0xF2: case 0xFA: {
@@ -289,6 +310,19 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_C)) |
                     (bc ? Z80_F_PV : 0u) | (u & Z80_F_3) |
                     ((u & 2u)<<4));
+            break;
+        }
+        if (sub==0xAB) { /* OUTD: send (HL) to port C, decrement HL and B. */
+            uint16_t hl=pair(cpu->h,cpu->l);
+            uint8_t value=ys_sms_bus_read(cpu->bus,hl);
+            if(!out_port(cpu,cpu->c,value)) goto fail;
+            split((uint16_t)(hl-1u),&cpu->h,&cpu->l);
+            cpu->b=(uint8_t)(cpu->b-1u);
+            unsigned k=(unsigned)cpu->l+value;
+            cpu->f=(uint8_t)(sz53(cpu->b) |
+                ((value&0x80u)?Z80_F_N:0) |
+                ((k>0xFFu)?(Z80_F_H|Z80_F_C):0) |
+                (parity((uint8_t)((k&7u)^cpu->b))?Z80_F_PV:0));
             break;
         }
         if (sub==0xA3) { /* OUTI: write at (HL), increment HL, decrement B. */
