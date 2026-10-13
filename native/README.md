@@ -1,3 +1,49 @@
+# Ys native C11 — M22: first VBlank VDP dispatch checkpoint
+
+## M22 acceptance boundary
+
+The bounded native interpreter now executes the real bank-0 ISR from
+`$0108` through the Z80 `OUTD`/indirect-port register transfers and
+one-based `RST $08` dispatch, stopping **before the handler at `$01B4`**.
+The prior source-ROM trace reaches `$0108` from reset, the SRAM and WRAM
+initializers, the bank-2 sound initializer, the VDP initializer, and an
+**explicitly injected** IM 1 VBlank interrupt. M22 adds no automatic clock,
+frame generation, or fabricated return from that handler.
+
+The ROM-dependent trace checks:
+- Four additional VDP register commands for registers 10, 9, 8 and 5.
+- Source-RAM bytes `$C01A`, `$C019`, `$C018`, and constant `$FF`
+  are written to those registers in that order.
+- A total of 15 VDP register writes and 32 VDP control-port bytes
+  since initial native VDP reset.
+- `RST $08` indexes the ROM word table at `$01AA` with selector 1,
+  resolves target `$01B4`, and leaves return address `$0125`
+  on the stack. The test does not execute the `$01B4` routine.
+
+Native Z80 additions are `OUTD` (`ED AB`), `ADD A,r` (8-bit),
+`JP (HL)` and the eight Z80 `RST` opcodes. `test_irq.c` executes
+source-backed synthetic bytes for both the ISR and `RST $08`
+helper, including VDP register and stack assertions.
+
+### Efficient verification
+
+The GitHub native workflow runs CMake/CTest **without** rebuilding the
+cartridge on routine pushes and pull requests. Full ROM reconstruction is
+reserved for an explicit workflow dispatch with `rom_trace=true`, or a
+commit message containing `[rom-check]`. The independent integrity workflow
+still runs for changes to the original `Ys/**` source and on manual dispatch.
+A source-ROM rebuild is warranted for this new `$01B4` checkpoint.
+
+### Limits
+
+No clock-driven interrupts, ISR return, main loop dispatch, controller polling,
+VDP rendering, audio synthesis, SDL display or playable PC build are claimed.
+The original ROM reconstruction, source data and digests remain untouched.
+The next objective is to investigate the handler at `$01B4` and its callees,
+then resume the interrupted startup after independently verified state changes.
+
+## Earlier milestone notes
+
 # Ys native C11 — M21 interrupt-entry checkpoint
 
 Current M21 boundary: continuous reset executes through the banked sound

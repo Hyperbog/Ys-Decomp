@@ -118,8 +118,39 @@ int main(int argc, char **argv) {
     }
     printf("PASS Ys VBlank wait + explicit IM1 entry: %llu instructions, PC=$%04X SP=$%04X\n",
            (unsigned long long)cpu.steps,cpu.pc,cpu.sp);
-    puts("Stop before $0108 ISR body: VBlank event was injected, not clock-generated.");
-    puts("No full boot, input, frame rendering, sound synthesis or gameplay claim.");
+    /* M22: the real ISR emits four additional VDP register commands via
+       OUTD/OUT (C),r and dispatches the one-based C021 state via RST $08.
+       No other VBlank event or CPU/device state is injected. */
+    const uint8_t reg10=ys_sms_bus_read(bus,0xC01A);
+    const uint8_t reg9=ys_sms_bus_read(bus,0xC019);
+    const uint8_t reg8=ys_sms_bus_read(bus,0xC018);
+    result=ys_z80_run_until(&cpu,0x01B4,48);
+    if (result!=Z80_RUNNING || cpu.pc!=0x01B4 ||
+        cpu.sp!=0xDFD0 || cpu.a!=0xB4 ||
+        cpu.h!=0x01 || cpu.l!=0xB4 ||
+        cpu.b!=0x88 || cpu.c!=0xBF ||
+        ys_sms_bus_read(bus,0xDFD0)!=0x25 ||
+        ys_sms_bus_read(bus,0xDFD1)!=0x01 ||
+        vdp->register_writes!=15 ||
+        vdp->control_writes!=32 ||
+        vdp->registers[10]!=reg10 ||
+        vdp->registers[9]!=reg9 ||
+        vdp->registers[8]!=reg8 ||
+        vdp->registers[5]!=0xFF ||
+        vdp->cram_writes!=1 ||
+        vdp->vram_writes!=0) {
+        int code=fail("Ys first VBlank VDP commands and RST $08 dispatch",&cpu);
+        fprintf(stderr,"  VDP regs=%llu ctrl=%llu r10=%02X/%02X r9=%02X/%02X r8=%02X/%02X r5=%02X\n",
+                (unsigned long long)vdp->register_writes,
+                (unsigned long long)vdp->control_writes,
+                vdp->registers[10],reg10,vdp->registers[9],reg9,
+                vdp->registers[8],reg8,vdp->registers[5]);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    printf("PASS Ys first VBlank VDP update and RST $08 dispatch: %llu instructions, PC=$%04X SP=$%04X\n",
+           (unsigned long long)cpu.steps,cpu.pc,cpu.sp);
+    puts("Stop before $01B4 handler; no ISR exit, resumed main loop, or frame clock claim.");
+    puts("Video event was explicitly injected; rendering and gameplay remain unimplemented.");
     free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }
