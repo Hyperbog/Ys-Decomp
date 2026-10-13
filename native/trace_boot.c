@@ -75,7 +75,50 @@ int main(int argc, char **argv) {
     printf("PASS continuous Ys reset through bank-2 sound and VDP: %llu instructions, PC=$%04X\n",
            (unsigned long long)cpu.steps,cpu.pc);
     puts("PASS source-matched PSG=11 bytes, FM=6 register/data pairs, VDP=11 registers + 1 CRAM byte");
-    puts("Stop before $0BC5; audio synthesis, rendering, inputs, interrupts and gameplay are not implemented.");
+    /* Phase 5: execute the actual $0BC5 context-saving bridge and the
+       $0042 VBlank wait until its EI has executed. There is no synthetic
+       frame clock: the event below is injected deliberately and separately. */
+    result=ys_z80_run_until(&cpu,0x0046,128);
+    if (result!=Z80_RUNNING || cpu.pc!=0x0046 ||
+        cpu.sp!=0xDFD8 || cpu.ei_delay!=1 ||
+        !cpu.iff1 || ys_sms_bus_read(bus,0xC021)!=1 ||
+        bus->mapped_bank[2]!=2) {
+        int code=fail("saved register context and VBlank wait entry",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    if (ys_z80_irq(&cpu)) {
+        fputs("FAIL: maskable IRQ accepted during EI defer\n",stderr);
+        free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+    }
+    result=ys_z80_run_until(&cpu,0x0049,1);
+    if (result!=Z80_RUNNING || cpu.a!=1 || cpu.ei_delay!=0) {
+        int code=fail("VBlank wait load after EI defer",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    vdp->status |= 0x80; /* Explicit test event, NOT emulated scanline timing. */
+    if (!ys_z80_irq(&cpu) || cpu.pc!=0x0038 || cpu.sp!=0xDFD6 ||
+        ys_sms_bus_read(bus,0xDFD6)!=0x49 ||
+        ys_sms_bus_read(bus,0xDFD7)!=0 ||
+        cpu.iff1) {
+        int code=fail("explicit maskable IM1 interrupt",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    result=ys_z80_run_until(&cpu,0x0102,5);
+    if (result!=Z80_RUNNING || cpu.pc!=0x0102 ||
+        cpu.a!=0x80 || vdp->status!=0 || cpu.sp!=0xDFD4) {
+        int code=fail("actual Ys IM1 ISR and VDP status read",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    result=ys_z80_run_until(&cpu,0x0108,3);
+    if (result!=Z80_RUNNING || cpu.a!=1 ||
+        ys_sms_bus_read(bus,0xC021)!=1 || cpu.sp!=0xDFD4) {
+        int code=fail("actual Ys VBlank-state dispatch",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    printf("PASS Ys VBlank wait + explicit IM1 entry: %llu instructions, PC=$%04X SP=$%04X\n",
+           (unsigned long long)cpu.steps,cpu.pc,cpu.sp);
+    puts("Stop before $0108 ISR body: VBlank event was injected, not clock-generated.");
+    puts("No full boot, input, frame rendering, sound synthesis or gameplay claim.");
     free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }

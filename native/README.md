@@ -1,3 +1,24 @@
+# Ys native C11 — M21 interrupt-entry checkpoint
+
+Current M21 boundary: continuous reset executes through the banked sound
+initializer and initial VDP register programming, then enters the actual
+$0BC5 bridge and $0042 VBlank wait. The test explicitly injects one IM 1
+interrupt **after EI defer expires** and runs the original $0038 handler
+through $0102 to the $0108 branch point. The event is manually injected;
+there is no frame clock or automatic interrupt delivery.
+
+Implemented M21 Z80 support: EX AF/AF', EXX, PUSH/POP IX/IY, conditional JP,
+RETI/RETN, EI deferral and externally delivered maskable interrupts. Synthetic
+and source-backed unit cases are in test_irq.c. All unsupported IX/IY prefixed
+opcodes still fail closed.
+
+Fast CI runs the five native test suites without cartridge reconstruction.
+The ROM-dependent trace runs only when explicitly requested with rom_trace=true
+or a [rom-check] commit marker. No playable native game loop, graphics renderer,
+audio output, clock-driven IRQs or controller input is claimed.
+
+## Prior checkpoint: M20
+
 # Ys native C11 — M20: continuous banked sound + VDP startup
 
 This is a **bounded execution harness**, not a playable port or a complete
