@@ -41,6 +41,9 @@ static void setup(void) {
 static void check_pixel(unsigned x,unsigned y,
                         unsigned r,unsigned g,unsigned b) {
     const uint8_t *p=frame+3u*(y*YS_SMS_SCREEN_WIDTH+x);
+    if (p[0]!=r || p[1]!=g || p[2]!=b)
+        fprintf(stderr,"pixel (%u,%u) got RGB=%u,%u,%u expected=%u,%u,%u\n",
+                x,y,p[0],p[1],p[2],r,g,b);
     assert(p[0]==r && p[1]==g && p[2]==b);
 }
 static void draw(void) {
@@ -139,7 +142,7 @@ static void test_scroll_mask_and_tall_zoom(void) {
     v.registers[0]|=0x20u; /* blank left 8 columns */
     v.registers[7]=3u;
     draw();
-    check_pixel(0,0,0,0,255);
+    check_pixel(0,0,255,0,0); /* CRAM[19] is red backdrop */
     check_pixel(8,0,0,255,0);
     setup();
     fill_tile(6,1);
