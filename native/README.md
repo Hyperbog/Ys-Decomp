@@ -1,3 +1,38 @@
+# M40 — Original bank-2 sound initializer completed; recomp integration review
+
+The original Ys SMS source-ROM executes the authentic bank-2
+`$8803–$8877` sound-state reset and returns to
+**PC=$0C55** after **105,009 instructions** and **1,196,582 nominal
+Z80 T-states**, preserving the earlier natural 16 IRQs and
+20 VBlank events. No original ROM source, registers or CPU state
+were patched to reach this checkpoint.
+
+[Gated source-ROM verification](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38453169948)
+passed: ten overlapping sound workspace `LDI` operations,
+eleven PSG writes to `$7F`, and six YM2413 `$F0/$F1`
+register-address/data pairs. All 16 source-built ROM banks
+still match SHA-256
+`02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9`.
+**The sound backend logs register writes but plays no audio.**
+
+**SMS/GG Recomp Phase 1:** the optional adapter, ROM hash/CRC
+identity check, Ys TOML configuration, Make targets and independent
+synthetic provenance tests are integrated. The real source-ROM identity
+passed its adapter preflight. However, CI does **not** invoke a real
+upstream SmsRecomp generator, and no generated-C CPU code has
+been compiled or linked into the native game. This remains
+an integration scaffold, not a functioning static recompile.
+
+Windows: extract both ZIP layers, run `START_HERE.cmd`,
+choose **1** for a ROM-free synthetic video test or **3** to
+trace your legal Ys ROM to `$0C55` and view the saved VDP image.
+The screenshot is frozen, potentially blank, and not a game.
+
+See [M40 original sound initialization and recomp boundary](research/M40_SOUND_INIT.md).
+Alpha, Beta and Final release gates remain blocked.
+
+## Previous milestone — M39
+
 # M39 — Verified bank-2 sound call and SMS/GG Recomp ROM preflight
 
 The original Ys SMS source-ROM trace now reaches **Z80 PC=$8803** by

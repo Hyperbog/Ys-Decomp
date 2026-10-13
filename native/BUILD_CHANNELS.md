@@ -20,10 +20,11 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M39 — source-ROM execution reaches bank 2 at
-  `PC=$8803` after **104,749** instructions and **16** natural
-  IM1 interrupts; the CALL stack holds return `$0C55`. The previous
-  M38 1,792-byte VDP name-table clear remains verified.
+- **Checkpoint:** M40 — original bank-2 sound initialization returns
+  naturally to Z80 `PC=$0C55` after **105,009** instructions,
+  including 11 original PSG writes and six YM2413 address/data pairs;
+  16 clock-accepted IRQs and 20 VBlanks remain verified. This
+  verifies I/O state, **not native sound playback**.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
   `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
   including a stateless video preview, not a PC game.
@@ -77,7 +78,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m39-dev-linux-x64-<commit>.zip
+dist/ys-m40-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -348,3 +349,15 @@ The same CI job also verified `shared_decomp/smsgg_recomp.py --preflight`
 against the **actual source-rebuilt 256 KiB Ys ROM**: SHA-256 and
 configured CRC-32 `B33E2827` both matched. This proves identity,
 not compilation or execution of generated C, nor audio/gameplay.
+
+
+### M40 bank-2 sound command initialization
+
+[Gated source-ROM verification run 38453169948](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38453169948)
+passed at `PC=$0C55`, after 105,009 Z80 instructions,
+1,196,582 nominal T-states, ten overlapping sound-state LDI
+clears, 11 PSG writes and six YM2413 address/data register pairs.
+The validated SMS/GG static-recompiler adapter remains an **optional
+Phase-1 code-generation pipeline**, not a compiled or linked native
+game. No genuine generated C is included in the Development ZIP.
+Alpha/Beta/Final gates remain false.

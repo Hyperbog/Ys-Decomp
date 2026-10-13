@@ -71,3 +71,21 @@ continuous interpreted source trace. Generated proprietary content
 must remain out of version control and Development ZIP artifacts.
 
 All Alpha, Beta, and Final release gates remain blocked.
+
+## Real cartridge verification
+
+[CI 38453169948](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38453169948)
+passed on [commit b6a7ce1104](https://github.com/Hyperbog/Ys-Decomp/commit/b6a7ce110410e19c4da81d690b8235a2e8758f68):
+
+```text
+M10: 16/16 source-only banks, 262144 bytes; ROM fallback=0
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+PASS Ys source bank-2 sound handoff: PC=$8803 savedPC=$0C55 bank2=2 opcode=$E5 steps=104749 T-states=1194183 IRQ=16 VBlank=20
+PASS authentic Ys bank-2 sound init return: PC=$0C55 LDI=10 PSG=11 FMaddr=6 FMdata=6 steps=105009 T-states=1196582 IRQ=16 VBlank=20
+PASS authentic timed VDP image: 147471 bytes
+```
+
+All 13 native CTest cases passed. This proves register-level
+sound initialization on the original source-ROM interpreter;
+it is not native audio playback, a statically recompiled runner
+or a playable Ys game.

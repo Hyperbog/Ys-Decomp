@@ -123,7 +123,7 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         "    bin/ys-native-frames demo 12 ntsc",
         "Auto-timed synthetic Z80/IM1 VBlank check:",
         "    bin/ys-native-timing --check",
-        "Trace original ROM through natural VBlank and 1792-byte VRAM clear:",
+        "Trace original ROM through actual bank-2 PSG and FM sound reset:",
         "    bin/ys-native-timed-rom PATH_TO_YOUR.sms",
         "    bin/ys-native-timed-rom PATH_TO_YOUR.sms --frame checkpoint.ppm",
     ]
