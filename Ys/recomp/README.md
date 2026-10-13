@@ -127,3 +127,16 @@ real `OUTI` writes, ending at `PC=$0C7E`. This establishes
 a reference CPU/VDP/mapper/timing boundary for **future**
 static-recompiled code differential testing; it does **not**
 mean any `SmsRecomp` generated code ran. Phase-1 only.
+
+
+## M44 differential graphics reference for future recompiled code
+
+[Source-ROM CI 38474627069](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38474627069)
+verified 12,288 original interleaved VRAM graphics bytes at
+source `PC=$0C87`, matching a separate host decoder after
+382,973 Z80 instructions, 50 naturally accepted interrupts and
+54 generated VBlanks. This provides strong future
+CPU/mapper/VDP/timing reference evidence for native compilation
+of `SmsRecomp` output. These results remain from the
+**C11 Z80 interpreter**, not statically recompiled execution;
+the external adapter is still Phase-1 only.

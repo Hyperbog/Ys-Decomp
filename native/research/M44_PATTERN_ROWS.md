@@ -61,3 +61,20 @@ execution or gameplay equivalence has been established.
 No `Ys/**` original source data, game ROM or generated C files
 are changed or distributed. All Alpha/Beta/Final promotion gates
 remain false until genuine interactive Ys PC gameplay is verified.
+
+## Verified M44 source-ROM results
+
+[CI run 38474627069](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38474627069)
+passed for the original source-rebuilt 16-bank ROM, with
+SHA-256 `02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9`:
+
+```text
+PASS original Ys 4-row pattern decompression to $0C87: bytes=12288 OUT=12288 sourceHL=$A4D1 Z80steps=382973 T-states=3233133 IRQ=50 VBlank=54 VRAMwrites=18177
+PASS authentic timed VDP image: 147471 bytes
+```
+
+The initial 200,000-instruction helper bound was insufficient
+for 12,288 actual source `OUT` operations. A bounded increase
+to 500,000 helper instructions allowed all four original rows
+to complete; every expected VRAM output matched. No PC,
+IRQ, hardware-state or cartridge contents were patched.

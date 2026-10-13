@@ -1,3 +1,35 @@
+# M44 — Source Ys 4-row graphics decompression verified
+
+[Full source-ROM CI run 38474627069](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38474627069)
+passed with **382,973 original Z80 instructions**, **3,233,133**
+nominal T-states, **50** naturally accepted IM1 IRQs,
+**54** generated VBlank events and **18,177** cumulative VRAM writes,
+ending at CPU **PC=$0C87**.
+
+The original `$0695-$06C0` graphics decoder executed **12,288
+`OUT ($BE),A` instructions**, expanding four interleaved
+graphics rows from the mapped cartridge. An independently written
+reference decoder matched every VRAM byte at each changed address.
+The native Z80 interpreter gained tested `RES b,r` and
+`RES b,(HL)` instructions for `RES 7,B`.
+
+[SMS/GG Recomp adapter CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38472231122)
+passed **14/14 codegen/provenance tests**. The integration remains
+**Phase 1**: actual upstream-generated C has not been compiled,
+linked or executed in the native game runtime. These graphics
+results are from the **existing C11 Z80 interpreter**, not an
+AOT-recompiled game.
+
+Windows: extract both ZIP layers and double-click `START_HERE.cmd`.
+Option **1** opens synthetic graphics; option **3** traces your
+own Ys Master System ROM to `$0C87` and opens its **static**
+cartridge-derived 256×192 VDP image. It is not playable Ys.
+
+See [M44 graphics differential](research/M44_PATTERN_ROWS.md).
+Alpha/Beta/Final promotion gates remain false.
+
+## Previous milestone — M43
+
 # M43 — Source Ys graphics VRAM upload verified
 
 [Original-ROM CI 38471475804](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38471475804)

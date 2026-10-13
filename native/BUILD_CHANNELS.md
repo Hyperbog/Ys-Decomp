@@ -20,11 +20,12 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M43 — native original-ROM execution reaches
-  **PC=$0C7E**, **127,325** instructions and **1,376,546**
-  nominal T-states. **1,536 real OUTI** port writes upload
-  verified source data to `VRAM[$3900–$3EFF]`, naturally
-  accepting 19 IRQs and 23 VBlank events. No gameplay yet.
+- **Checkpoint:** M44 — the original-ROM interpreter reaches
+  CPU `PC=$0C87` after **382,973** source Z80 instructions,
+  **50** naturally accepted interrupts and **54** generated VBlanks.
+  A separate host reference decoder verifies **12,288** original
+  four-row graphics bytes at their actual interleaved VRAM addresses.
+  This is still Development, not playable native Ys.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
   `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
   including a stateless video preview, not a PC game.
@@ -78,7 +79,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m43-dev-linux-x64-<commit>.zip
+dist/ys-m44-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -393,3 +394,17 @@ verified 1,536 source Z80 OUTI instructions into VRAM
 CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38470606026)
 passed 14/14 tests, but external generated C is not built
 or executed. All Alpha gameplay gates remain false.
+
+
+### M44 four-row source graphics upload
+
+[Gated source-ROM CI run 38474627069](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38474627069)
+passed at `$0C87` with **382,973** instructions,
+**3,233,133** nominal T-states, 50 naturally accepted IRQs,
+54 VBlank events and 18,177 cumulative VRAM writes.
+Source `$0695` wrote 12,288 bytes exactly matched by an
+independent host-side decoder. SMS/GG Recomp remains a
+**provenance/codegen-only** integration without compiled
+generated-C execution. Windows `START_HERE.cmd` retains
+the ROM-free visual test and frozen original-ROM VDP image.
+All Alpha/Beta/Final gates remain false.

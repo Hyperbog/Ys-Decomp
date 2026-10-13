@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "checkpoint": "M43",
+  "checkpoint": "M44",
   "gates": {
     "boot_to_title": {
       "passed": false,
