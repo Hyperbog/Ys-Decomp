@@ -1,3 +1,46 @@
+# M27 — Frame clock, automatic VBlank recognition and synthetic live frames
+
+The native C11 Development build now includes an explicitly T-state-driven
+SMS NTSC/PAL scanline clock, an IM1 VBlank-delivery bridge, and a
+ROM-independent `ys-native-frames` CLI capable of exporting a sequence of
+animated 256×192 PPM frames. No original ROM/image assets are bundled.
+
+```sh
+bin/ys-native-frames --check
+bin/ys-native-frames demo 12 ntsc
+bin/ys-native-frames demo-pal 12 pal
+```
+
+The second command writes `demo-000.ppm` through `demo-011.ppm`.
+Each image uses the synthetic M26 tile-and-sprite fixture, not Ys game art.
+On systems where the SDL2 development library was installed when CMake
+configured the build, an **optional** `ys-native-display` executable
+opens a scaled desktop window with this *same synthetic animation*.
+The SDL2 runtime library must also be installed on the recipient machine.
+The cross-platform downloadable Development build **always** supports
+headless PPM sequences but **may not** include the optional window binary.
+
+Core device interfaces: `sms_clock.[ch]` emits NTSC 262-line and PAL
+313-line clocks with 228 caller-supplied Z80 T-states per line. Line 192
+sets the sticky VDP VBlank status bit (0x80), which persists until a VDP
+status-port read. `sms_runtime.[ch]` advances this clock and automatically
+vectors an eligible IM1 CPU interrupt when VBlank is enabled in VDP
+register 1, bit 5, respecting CPU IFF1 and EI delay.
+
+**Timing limitation:** `z80.c` does not yet report instruction T-state
+durations. The runtime bridge consumes T-states supplied by its caller.
+Its synthetic animation advances a whole frame clock per generated image;
+it does not claim Z80 instruction-accurate gameplay frames. The existing
+source-ROM execution trace still stops before `$0B22` after 17,224
+instructions and one specifically injected VBlank. This milestone
+**does not** pass a new original-ROM checkpoint, so no M10 rebuild is
+required and original ROM/source files are unchanged.
+
+The Alpha gates for boot-to-title, frame accuracy, finished renderer,
+live game controls and interactive gameplay all remain false.
+
+## Previous checkpoint — M26
+
 # M26 — Native SMS video snapshots (Development build)
 
 The Development artifacts now contain **ys-native-preview**, a standalone

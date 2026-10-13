@@ -22,7 +22,8 @@ REQUIRED = {
     "final": ("cross_platform", "fidelity_validation", "release_audit"),
 }
 EXE_NAMES = ("ys-native-info", "ys-native-probe", "ys-native-trace",
-             "ys-native-preview")
+             "ys-native-preview", "ys-native-frames")
+OPTIONAL_EXE_NAMES = ("ys-native-display",)
 IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,47}$")
 
 
@@ -77,6 +78,11 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         # A passing checklist does not make a diagnostic trace playable.
         names.append("ys-native-game")
     binaries = {name: locate_binary(build_dir, name, platform) for name in names}
+    for name in OPTIONAL_EXE_NAMES:
+        try:
+            binaries[name] = locate_binary(build_dir, name, platform)
+        except FileNotFoundError:
+            pass  # SDL2 viewer is optional, not a playable game.
     output_dir.mkdir(parents=True, exist_ok=True)
     stem = "ys-" + checkpoint.lower() + "-" + channel + "-" + platform + "-" + revision[:8]
     archive = output_dir / (stem + ".zip")
@@ -105,6 +111,10 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         "    bin/ys-native-preview synthetic.ppm\n"
         "Snapshot actual VDP state at the bounded checkpoint:\n"
         "    bin/ys-native-trace PATH_TO_YOUR.sms --frame checkpoint.ppm\n"
+        "Export ROM-independent synthetic VDP frames:\n"
+        "    bin/ys-native-frames demo 12 ntsc\n"
+        "Optional bin/ys-native-display is an SDL2 diagnostic window;\n"
+        "it requires a separately installed SDL2 runtime (not bundled).\n"
         "These are PPM files readable by image editors and viewers.\n"
         "Use a compatible SMS emulator to play the original cartridge; "
         "these binaries are a native reconstruction workbench.\n"

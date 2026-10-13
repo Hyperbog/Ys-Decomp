@@ -20,6 +20,8 @@ int main(int argc, char **argv) {
         puts("ys-native-probe <user-supplied 256 KiB SMS image>");
         puts("ys-native-trace <user-supplied 256 KiB SMS image>");
         puts("ys-native-preview output.ppm (synthetic mode-4 scene)");
+        puts("ys-native-frames demo 12 ntsc (synthetic frame sequence)");
+        puts("ys-native-display (optional SDL2 diagnostic window)");
         puts("ys-native-trace ROM.sms --frame checkpoint.ppm (snapshot)");
         puts("The trace ends at a bounded reconstruction checkpoint.");
     }

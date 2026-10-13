@@ -18,7 +18,7 @@ class PackageTests(unittest.TestCase):
         self.build.mkdir()
         self.output = self.base / "dist"
         self.gates = self.base / "gates.json"
-        self.state = {"schema_version": 1, "checkpoint": "M25",
+        self.state = {"schema_version": 1, "checkpoint": "M27",
                       "gates": {name: {"passed": False, "evidence": ""}
                                 for group in release.REQUIRED.values()
                                 for name in group}}
@@ -35,18 +35,19 @@ class PackageTests(unittest.TestCase):
 
     def test_development_bundle_contains_diagnostics_and_hashes(self):
         path = self.archive()
-        self.assertEqual(path.name, "ys-m25-dev-linux-x64-aaaaaaaa.zip")
+        self.assertEqual(path.name, "ys-m27-dev-linux-x64-aaaaaaaa.zip")
         with zipfile.ZipFile(path) as archive:
             names = set(archive.namelist())
             self.assertEqual(names, {"bin/ys-native-info", "bin/ys-native-probe",
                                      "bin/ys-native-trace", "bin/ys-native-preview",
+                                     "bin/ys-native-frames",
                                      "README.txt", "manifest.json",
                                      "SHA256SUMS.txt"})
             manifest = json.loads(archive.read("manifest.json"))
             self.assertFalse(manifest["playable"])
             self.assertFalse(manifest["rom_included"])
             self.assertEqual(manifest["channel"], "dev")
-            self.assertEqual(manifest["checkpoint"], "M25")
+            self.assertEqual(manifest["checkpoint"], "M27")
             self.assertIn(b"NOT A PLAYABLE PC GAME", archive.read("README.txt"))
             self.assertIn(b"ys-native-preview synthetic.ppm",archive.read("README.txt"))
             for name, digest in manifest["sha256"].items():
@@ -103,6 +104,19 @@ class PackageTests(unittest.TestCase):
         self.save_gates()
         with self.assertRaises(ValueError):
             self.archive()
+
+    def test_optional_sdl_viewer_is_not_mandatory(self):
+        # The headless distribution is complete without system SDL2.
+        path = self.archive()
+        with zipfile.ZipFile(path) as z:
+            self.assertNotIn("bin/ys-native-display",z.namelist())
+        (self.build / "ys-native-display").write_bytes(b"SDL2 fixture executable")
+        path = self.archive()
+        with zipfile.ZipFile(path) as z:
+            self.assertIn("bin/ys-native-display",z.namelist())
+            manifest=json.loads(z.read("manifest.json"))
+            self.assertFalse(manifest["playable"])
+            self.assertIn("bin/ys-native-display",manifest["sha256"])
 
     def test_windows_release_bin_layout(self):
         for name in release.EXE_NAMES:
