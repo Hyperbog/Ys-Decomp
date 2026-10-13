@@ -76,6 +76,15 @@ static uint8_t add8_flags(uint8_t lhs, uint8_t rhs, uint8_t result,
         (full_result > 0xFFu ? Z80_F_C : 0u));
 }
 
+static uint8_t bit_flags(uint8_t flags, uint8_t value, unsigned bit,
+                         uint8_t undocumented) {
+    bool set=(value & (1u<<bit))!=0;
+    return (uint8_t)((flags & Z80_F_C) | Z80_F_H |
+        (set?0u:(Z80_F_Z|Z80_F_PV)) |
+        (bit==7u && set?Z80_F_S:0u) |
+        (undocumented & (Z80_F_3|Z80_F_5)));
+}
+
 static bool push16(YsZ80 *cpu, uint16_t value) {
     uint16_t hi = (uint16_t)(cpu->sp - 1u), lo = (uint16_t)(hi - 1u);
     if (!store(cpu, hi, (uint8_t)(value >> 8)) ||
@@ -152,6 +161,9 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         uint8_t old = r8(cpu, i), result = (uint8_t)(old - 1u);
         if (!w8(cpu, i, result)) goto fail;
         cpu->f = dec_flags(old, result, cpu->f & Z80_F_C);
+    } else if (opcode>=0xB8u && opcode<=0xBFu) {
+        uint8_t rhs=r8(cpu,opcode&7u);
+        cpu->f=sub_flags(cpu->a,rhs,(uint8_t)(cpu->a-rhs));
     } else if (opcode>=0xA0u && opcode<=0xA7u) {
         cpu->a=(uint8_t)(cpu->a & r8(cpu,opcode&7u));
         cpu->f=(uint8_t)(sz53(cpu->a)|Z80_F_H|
@@ -189,6 +201,15 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             (sum>0xFFFFu? Z80_F_C:0));
     } else switch (opcode) {
     case 0x00: break; /* NOP */
+    case 0xCB: {
+        uint8_t operation=fetch(cpu);
+        if ((operation & 0xC0u)!=0x40u) {
+            cpu->status=Z80_UNSUPPORTED;goto fail;
+        }
+        uint8_t value=r8(cpu,operation&7u);
+        cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,value);
+        break;
+    }
     case 0x2F: /* CPL: SZPV/C unchanged; set H/N, 3/5 from A. */
         cpu->a=(uint8_t)~cpu->a;
         cpu->f=(uint8_t)((cpu->f & (Z80_F_S|Z80_F_Z|Z80_F_PV|Z80_F_C)) |
@@ -210,6 +231,30 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             if(!push16(cpu,*index)) goto fail;
         } else if(sub==0xE1) {
             *index=pop16(cpu);
+        } else if(sub==0x21) {
+            *index=fetch16(cpu);
+        } else if(sub==0x09 || sub==0x19 || sub==0x29 || sub==0x39) {
+            uint16_t rhs=sub==0x09?pair(cpu->b,cpu->c):
+                         sub==0x19?pair(cpu->d,cpu->e):
+                         sub==0x29?*index:cpu->sp;
+            unsigned sum=(unsigned)*index+rhs;
+            uint16_t next=(uint16_t)sum;
+            cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
+                ((next>>8)&(Z80_F_3|Z80_F_5)) |
+                (((*index&0xFFFu)+(rhs&0xFFFu)>0xFFFu)?Z80_F_H:0) |
+                (sum>0xFFFFu?Z80_F_C:0));
+            *index=next;
+        } else if(sub==0xCB) {
+            int8_t displacement=(int8_t)fetch(cpu);
+            uint8_t operation=fetch(cpu);
+            if ((operation&0xC7u)!=0x46u) {
+                cpu->status=Z80_UNSUPPORTED;goto fail;
+            }
+            uint16_t addr=(uint16_t)(*index+displacement);
+            uint8_t value=ys_sms_bus_read(cpu->bus,addr);
+            /* On indexed BIT, undocumented F3/F5 come from address high. */
+            cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,
+                              (uint8_t)(addr>>8));
         } else {
             cpu->status=Z80_UNSUPPORTED;goto fail;
         }
@@ -281,6 +326,19 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                      (opcode&0x30u)==0x20u ? Z80_F_PV : Z80_F_S;
         bool expected=(opcode & 0x08u)!=0;
         if(((cpu->f&mask)!=0)==expected) cpu->pc=pop16(cpu);
+        break;
+    }
+    case 0xC4: case 0xCC: case 0xD4: case 0xDC:
+    case 0xE4: case 0xEC: case 0xF4: case 0xFC: {
+        uint16_t target=fetch16(cpu);
+        uint8_t mask=(opcode&0x30u)==0x00u?Z80_F_Z:
+                     (opcode&0x30u)==0x10u?Z80_F_C:
+                     (opcode&0x30u)==0x20u?Z80_F_PV:Z80_F_S;
+        bool expected=(opcode&0x08u)!=0;
+        if(((cpu->f&mask)!=0)==expected) {
+            if(!push16(cpu,cpu->pc)) goto fail;
+            cpu->pc=target;
+        }
         break;
     }
     case 0xCD: {

@@ -224,7 +224,58 @@ static void test_conditional_return(void) {
     until(0x1234,1);
     assert(cpu.sp==0xDFF2);
 }
+static void test_source_bank2_idle_sound_channel_scan(void) {
+    setup();
+    /* Exact bank-2 $8042-$8066 path, from phase11_roundtrip/bank02.asm.
+       Initializer has left six FM channels inactive (bit 7 clear). */
+    const uint8_t idle[]={0xDD,0x21,0xAF,0xDE,0x06,0x06,
+        0xC5,0x3E,0x03,0xB8,0x28,0x10,
+        0xDD,0xCB,0x00,0x7E,0xC4,0x47,0x89,
+        0x11,0x20,0x00,0xDD,0x19,0xC1,0x10,0xEB,0xC9,
+        0xDD,0xCB,0x00,0x7E,0xC4,0x89,0x88,0x18,0xEE};
+    assert(sizeof(idle)==0x25u);
+    memcpy(rom+0x8042,idle,sizeof(idle));
+    assert(ys_sms_bus_write(&bus,0xFFFF,2));
+    assert(ys_sms_bus_write(&bus,0xDFF0,0x38));
+    assert(ys_sms_bus_write(&bus,0xDFF1,0x01));
+    cpu.pc=0x8042;
+    until(0x0138,90);
+    assert(cpu.ix==0xDF6F && cpu.b==0 && cpu.sp==0xDFF2);
+    assert(cpu.a==3 && (cpu.f&Z80_F_Z));
+}
+static void test_index_bit_and_conditional_call_flags(void) {
+    setup();
+    CODE(0,0xDD,0x21,0x00,0xC0,  /* LD IX,$C000 */
+           0x11,0x20,0x00,        /* LD DE,$0020 */
+           0xDD,0x19,             /* ADD IX,DE */
+           0xDD,0xCB,0xFE,0x7E,   /* BIT 7,(IX-2) */
+           0xC4,0x20,0x00,        /* CALL NZ,$0020 (not taken) */
+           0x3E,0x80,0xCB,0x7F); /* BIT 7,A (set) */
+    assert(ys_sms_bus_write(&bus,0xC01E,0));
+    until(0x0009,3); /* IX arithmetic itself updates carry. */
+    assert(cpu.ix==0xC020);
+    cpu.f=Z80_F_C;
+    until(0x000D,1); /* Indexed BIT must preserve carry. */
+    assert(cpu.ix==0xC020 && (cpu.f&Z80_F_Z) &&
+           (cpu.f&Z80_F_PV) && (cpu.f&Z80_F_C) &&
+           (cpu.f&Z80_F_H) && !(cpu.f&Z80_F_S));
+    until(0x0014,3);
+    assert(cpu.a==0x80 && !(cpu.f&Z80_F_Z) &&
+           !(cpu.f&Z80_F_PV) && (cpu.f&Z80_F_S));
+    setup();
+    CODE(0,0xDD,0xCB,0x00,0x46); /* BIT 0,(IX+0), address $C000 */
+    cpu.ix=0xC000;
+    assert(ys_sms_bus_write(&bus,0xC000,1));
+    until(4,1);
+    assert(!(cpu.f&Z80_F_Z) && (cpu.f&Z80_F_H));
+    setup();
+    CODE(0,0xDD,0xCB,0x00,0x06); /* unsupported indexed rotate */
+    assert(ys_z80_step(&cpu)==Z80_UNSUPPORTED);
+    assert(cpu.pc==0 && cpu.fault_pc==0);
+}
 int main(void) {
+    test_source_bank2_idle_sound_channel_scan();
+    test_index_bit_and_conditional_call_flags();
     test_ys_sprite_table_transfer_and_return();
     test_ys_controller_sample();
     test_conditional_return();
