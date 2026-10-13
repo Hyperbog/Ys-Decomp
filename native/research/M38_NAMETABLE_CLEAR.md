@@ -71,3 +71,23 @@ title. The optional separate SMS/GG Recomp adapter now merged
 into the repository performs only generated-C provenance checks;
 it does not yet link or execute a statically recompiled runner.
 All Alpha/Beta/Final release gates remain false.
+
+## Authentic ROM checkpoint achieved
+
+[Full source-ROM CI run 38425466962](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38425466962)
+verified the unchanged 16-bank, 262,144-byte ROM and all
+13 strict native test suites:
+
+```text
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+PASS original Ys first VRAM clear to $0A77: zero_bytes=64 R8=$00 R9=$00 steps=97144 T-states=1129966 IRQ=15 VBlank=19 VRAMwrites=2561
+PASS original Ys name-table clear natural IRQ: savedPC=$06DE IRQ=16 VBlank=20 written=727/726
+PASS original Ys 1792-byte name-table VRAM clear: PC=$0C4D words=896 steps=104746 T-states=1194146 IRQ=16 VBlank=20 VRAMwrites=4353
+PASS authentic timed VDP image: 147471 bytes
+```
+
+The IRQ arrived between the original low/high byte writes.
+The native runtime kept the resulting VDP address state and
+allowed the source loop to complete without artificially
+reprogramming the VDP. A return to `$0C4D` is still early
+initialization, not a title or playable game.

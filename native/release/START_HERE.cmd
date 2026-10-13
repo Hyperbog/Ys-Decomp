@@ -68,7 +68,7 @@ set "RESULT=%errorlevel%"
 type "last-diagnostic.txt"
 echo.
 echo Exit code: %RESULT%   Log: last-diagnostic.txt
-echo This is a saved early VRAM-clear snapshot, not a live Ys game.
+echo This is a post-name-table-clear screenshot, not live Ys gameplay.
 if "%RESULT%"=="0" if exist "checkpoint.ppm" (
     echo Opening the real cartridge VDP checkpoint in the Windows viewer.
     echo Its screen may be blank because game graphics are not yet initialized.

@@ -1,3 +1,39 @@
+# M38 — Original 1792-byte VRAM name-table clearing
+
+The continuous original Ys SMS Z80 trace executes **104,746**
+instructions and **1,194,146** nominal T-states from cold reset
+through a genuine VBlank interrupt during the original
+`$0A77 / $06D4` VRAM name-table clear.
+
+The source wrote **896 16-bit words (1,792 bytes)** through VDP
+port `$BE`, and a real IM1 IRQ suspended CPU execution at
+`$06DE`. The native runtime preserved and resumed original
+execution to **PC=$0C4D**, with **16** accepted interrupts,
+**20** generated VBlanks and **4,353** cumulative VRAM writes.
+[Full source-ROM verification passed](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38425466962);
+all 16 original ROM banks and the 256 KiB hash were unchanged.
+
+The separate [SMS/GG Static Recomp Phase 1](../Ys/recomp/README.md)
+adapter is also integrated. It verifies an owner's ROM hash/CRC,
+invokes a separately installed recompiler and checks the hashes
+of generated C files. It does **not** currently build or execute
+a recompiled Ys runner, and its integration is not gameplay evidence.
+
+Windows users should extract both ZIP layers and double-click
+`START_HERE.cmd`. Option **1** runs a synthetic SMS hardware
+test; option **3** traces a user-supplied Ys ROM and opens the
+**saved static VDP snapshot** at `$0C4D`. This is still
+a Development diagnostic, not playable Ys.
+
+```sh
+bin/ys-native-timed-rom /path/to/your/Ys.sms --frame checkpoint.ppm
+```
+
+See [M38 original source and IRQ trace](research/M38_NAMETABLE_CLEAR.md).
+Alpha/Beta/Final gates remain blocked.
+
+## Previous milestone — M37
+
 # M37 — First source ROM graphics-memory clear verified
 
 The continuous native Z80 implementation has now executed the actual
