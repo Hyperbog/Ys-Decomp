@@ -38,7 +38,7 @@ static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
 int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops at graphics init $0A5E after bank-7 copy (no gameplay).\n",
+              "Stops after sound register initialization $0C55 (no gameplay).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -881,7 +881,109 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
-    puts("Stop BEFORE bank-2 $8803 sound-init execution; not playable.");
+    puts("M39 bank-2 sound entry validated; M40 enters original sound init.");
+
+    /* M40: source bank-2 $8803-$8877 is an actual sound-state reset
+       and hardware initialization. Observe its 10 overlapping LDI
+       clears and 8 zero-filled channel records, then its 11 PSG and
+       6 YM2413 address/data writes. Continue naturally to $0C55.
+       This verifies I/O LEDGER updates, not audible native audio. */
+    const uint16_t sound_init_sp=cpu.sp;
+    const uint64_t init_irq=runtime.recognized_irqs;
+    const uint64_t init_vblank=runtime.clock.vblank_events;
+    const uint64_t init_vram=vdp->vram_writes;
+    const uint64_t init_cram=vdp->cram_writes;
+    const uint64_t init_psg=sound->psg_write_count;
+    const uint64_t init_fm_address=sound->fm_address_count;
+    const uint64_t init_fm_data=sound->fm_data_count;
+    const uint8_t init_bank=bus->mapped_bank[2];
+    const uint16_t saved_hl=(uint16_t)(((uint16_t)cpu.h<<8)|cpu.l);
+    const uint16_t saved_de=(uint16_t)(((uint16_t)cpu.d<<8)|cpu.e);
+    const uint16_t saved_bc=(uint16_t)(((uint16_t)cpu.b<<8)|cpu.c);
+    unsigned long init_steps=0u;
+    unsigned ldi_steps=0u;
+    unsigned psg_out_steps=0u;
+    unsigned fm_addr_steps=0u;
+    unsigned fm_data_steps=0u;
+    bool visited_workspace=false;
+    while(cpu.pc!=0x0C55u && init_steps<500ul &&
+          runtime.recognized_irqs==init_irq) {
+        const uint16_t prev_pc=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M40 original bank-2 sound init unsupported",&runtime);
+            fprintf(stderr,"  soundPC=$%04X initSteps=%lu PSG=%llu FM=%llu/%llu\n",
+                    prev_pc,init_steps,
+                    (unsigned long long)sound->psg_write_count,
+                    (unsigned long long)sound->fm_address_count,
+                    (unsigned long long)sound->fm_data_count);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++init_steps;
+        if(prev_pc>=0x880Eu && prev_pc<=0x8820u &&
+           !(prev_pc&1u) && cpu.pc==prev_pc+2u) ++ldi_steps;
+        if(prev_pc==0x883Au && cpu.pc==0x883Cu) {
+            visited_workspace=true;
+            bool cleared=true;
+            for(unsigned j=0;j<11u;++j)
+                cleared=cleared &&
+                    ys_sms_bus_read(bus,(uint16_t)(0xDE63u+j))==0u;
+            if(!cleared || ldi_steps!=10u) {
+                int result=fail("M40 bank-2 sound workspace clear",&runtime);
+                free(rom);free(bus);free(vdp);free(sound);return result;
+            }
+        }
+        if(prev_pc>=0x8849u && prev_pc<=0x885Du &&
+           (prev_pc&1u) && cpu.pc==prev_pc+2u)
+            ++psg_out_steps;
+        if(prev_pc==0x8867u) ++fm_addr_steps;
+        if(prev_pc==0x886Du) ++fm_data_steps;
+    }
+    bool init_ok=cpu.pc==0x0C55u && init_steps>100ul &&
+        init_steps<500ul && visited_workspace &&
+        ldi_steps==10u && psg_out_steps==11u &&
+        fm_addr_steps==6u && fm_data_steps==6u &&
+        cpu.sp==(uint16_t)(sound_init_sp+2u) &&
+        (((uint16_t)cpu.h<<8)|cpu.l)==saved_hl &&
+        (((uint16_t)cpu.d<<8)|cpu.e)==saved_de &&
+        (((uint16_t)cpu.b<<8)|cpu.c)==saved_bc &&
+        ys_sms_bus_read(bus,0xDE68u)==0xE4u &&
+        bus->mapped_bank[2]==init_bank &&
+        runtime.recognized_irqs==init_irq &&
+        runtime.clock.vblank_events==init_vblank &&
+        vdp->vram_writes==init_vram &&
+        vdp->cram_writes==init_cram &&
+        sound->psg_write_count==init_psg+11u &&
+        sound->fm_address_count==init_fm_address+6u &&
+        sound->fm_data_count==init_fm_data+6u;
+    for(unsigned address=0x20u;address<=0x25u;++address)
+        init_ok=init_ok && sound->fm_touched[address] &&
+            sound->fm_registers[address]==0u;
+    if(!init_ok) {
+        int result=fail("M40 sound PSG/FM initialization and $0C55 return",&runtime);
+        fprintf(stderr,"  initsteps=%lu LDI=%u PSG=%u FM=%u/%u"
+                " SP=$%04X DE68=%02X"
+                " PSGcount=%llu->%llu FMaddr=%llu->%llu FMdata=%llu->%llu\n",
+                init_steps,ldi_steps,psg_out_steps,fm_addr_steps,fm_data_steps,
+                cpu.sp,ys_sms_bus_read(bus,0xDE68u),
+                (unsigned long long)init_psg,
+                (unsigned long long)sound->psg_write_count,
+                (unsigned long long)init_fm_address,
+                (unsigned long long)sound->fm_address_count,
+                (unsigned long long)init_fm_data,
+                (unsigned long long)sound->fm_data_count);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS authentic Ys bank-2 sound init return: PC=$0C55"
+           " LDI=%u PSG=%u FMaddr=%u FMdata=%u"
+           " steps=%llu T-states=%llu IRQ=%llu VBlank=%llu\n",
+           ldi_steps,psg_out_steps,fm_addr_steps,fm_data_steps,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events);
+    puts("Stop at $0C55 after sound I/O ledger setup. No native audio playback.");
+
 
 
 
@@ -905,7 +1007,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$8803: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0C55: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);

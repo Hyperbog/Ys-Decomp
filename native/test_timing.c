@@ -510,7 +510,46 @@ static void test_m39_source_bank2_sound_call_handoff(void) {
     assert(cpu.sp==0xDFF0u && cpu.total_tstates==47u);
 }
 
+static void test_m40_bank2_sound_workspace_cascade(void) {
+    setup();
+    /* Byte-identical source-ROM bank-2 $8803-$8821. The overlapping
+       LDI chain clears eleven sound command bytes without patching
+       the CPU or bypassing the Sega slot-2 mapper. */
+    const uint8_t source[]={
+        0xE5,0xD5,0xC5,0x21,0x63,0xDE,0x11,0x64,0xDE,0x36,0x00,
+        0xED,0xA0,0xED,0xA0,0xED,0xA0,0xED,0xA0,0xED,0xA0,
+        0xED,0xA0,0xED,0xA0,0xED,0xA0,0xED,0xA0,0xED,0xA0
+    };
+    memcpy(rom+2u*YS_ROM_BANK_BYTES+0x0803u,source,sizeof(source));
+    for(unsigned i=0;i<11u;++i)
+        assert(ys_sms_bus_write(&bus,(uint16_t)(0xDE63u+i),0x5Au));
+    assert(ys_sms_bus_write(&bus,0xFFFFu,2u));
+    cpu.pc=0x8803u;cpu.sp=0xDFF0u;
+    cpu.h=0x12u;cpu.l=0x34u;
+    cpu.d=0x56u;cpu.e=0x78u;
+    cpu.b=0u;cpu.c=11u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0u,ldi=0u;
+    while(cpu.pc!=0x8822u && steps<32u) {
+        uint16_t prior=cpu.pc;
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+        if(prior>=0x880Eu && prior<=0x8820u &&
+           !(prior&1u) && cpu.pc==(uint16_t)(prior+2u))
+            ++ldi;
+    }
+    assert(cpu.pc==0x8822u && steps==16u && ldi==10u);
+    assert(cpu.sp==0xDFEAu && cpu.h==0xDEu && cpu.l==0x6Du &&
+           cpu.d==0xDEu && cpu.e==0x6Eu &&
+           cpu.b==0u && cpu.c==1u);
+    for(unsigned i=0;i<11u;++i)
+        assert(ys_sms_bus_read(&bus,(uint16_t)(0xDE63u+i))==0u);
+    assert(bus.mapped_bank[2]==2u && runtime.recognized_irqs==0u);
+    assert(runtime.clock.vblank_events==0u);
+}
+
 int main(void) {
+    test_m40_bank2_sound_workspace_cascade();
     test_m39_source_bank2_sound_call_handoff();
     test_m38_source_name_table_clear_tail_return();
     test_m37_original_vram_word_clear();
