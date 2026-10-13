@@ -884,7 +884,26 @@ static void test_m46b_source_vdp_irq_gate(void) {
     assert(ys_sms_bus_read(&bus,0xDFEDu)==0x0Au);
 }
 
+
+static void test_m46b_cb_set_register_and_memory(void) {
+    setup();
+    CODE(0,0xCB,0xEB,0xCB,0xFE,0xCB,0xC6);
+    cpu.e=0u;cpu.h=0xC0u;cpu.l=0x00u;
+    cpu.f=(uint8_t)(Z80_F_Z|Z80_F_C);
+    assert(ys_sms_bus_write(&bus,0xC000u,0u));
+    assert(ys_sms_bus_write(&bus,0xC001u,0x57u));
+    measured(8u,0x0002u); /* SET 5,E */
+    assert(cpu.e==0x20u && cpu.f==(Z80_F_Z|Z80_F_C));
+    measured(15u,0x0004u); /* SET 7,(HL) */
+    assert(ys_sms_bus_read(&bus,0xC000u)==0x80u);
+    measured(15u,0x0006u); /* SET 0,(HL) */
+    assert(ys_sms_bus_read(&bus,0xC000u)==0x81u);
+    assert(ys_sms_bus_read(&bus,0xC001u)==0x57u);
+    assert(cpu.f==(Z80_F_Z|Z80_F_C) && cpu.total_tstates==38u);
+}
+
 int main(void) {
+    test_m46b_cb_set_register_and_memory();
     test_m46b_source_vdp_irq_gate();
     test_m46_video_setup_prefix();
     test_m45_source_four_column_resource();
