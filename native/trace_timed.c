@@ -38,7 +38,7 @@ static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
 int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops at the original cold-boot frame-wait entry $0046.\n",
+              "Stops after the first automatically timed frame-wait ISR at $00C4.\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -266,7 +266,94 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.clock.vblank_events,
            (unsigned long long)cpu.steps,
            (unsigned long long)cpu.total_tstates);
-    puts("Stop before source $0046 wait poll; no title or playable frame.");
+    /* M33: the source's $0046/$0049/$004A busy-wait must advance the
+       instruction clock until the NEXT VBlank arrives. The frame handler
+       clears $C021 and returns into the interrupted poll. $0BC5 then
+       restores the saved register context and RETs to startup $00C4.
+       No VDP/status injection, PC edit, synthetic stack/IRQ or host input. */
+    const YsZ80 startup_at_wait=cpu;
+    const uint64_t irq_before_wait=runtime.recognized_irqs;
+    const uint64_t vblank_before_wait=runtime.clock.vblank_events;
+    const uint64_t vram_before_wait=vdp->vram_writes;
+    const uint64_t psg_before_wait=sound->psg_write_count;
+    bool captured_wait_irq=false;
+    uint16_t wait_irq_pc=0;
+    uint16_t wait_irq_sp=0;
+    unsigned long wait_iterations=0;
+    while(cpu.pc!=0x00C4u && wait_iterations<90000ul) {
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("source $0046 wait or first natural frame ISR stopped",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++wait_iterations;
+        if(!captured_wait_irq &&
+           runtime.recognized_irqs>irq_before_wait) {
+            if(runtime.recognized_irqs!=irq_before_wait+1u ||
+               cpu.pc!=0x0038u || !(vdp->status&0x80u)) {
+                int result=fail("source first frame-wait IM1 entry",&runtime);
+                free(rom);free(bus);free(vdp);free(sound);return result;
+            }
+            captured_wait_irq=true;
+            wait_irq_sp=cpu.sp;
+            wait_irq_pc=(uint16_t)(
+                (uint16_t)ys_sms_bus_read(bus,cpu.sp) |
+                ((uint16_t)ys_sms_bus_read(bus,(uint16_t)(cpu.sp+1u))<<8));
+            if(wait_irq_pc<0x0046u || wait_irq_pc>0x004Cu) {
+                int result=fail("frame-wait interrupt PC outside source loop",&runtime);
+                fprintf(stderr,"  suspended source PC=$%04X\n",wait_irq_pc);
+                free(rom);free(bus);free(vdp);free(sound);return result;
+            }
+            printf("PASS natural frame-wait VBlank entry:"
+                   " IRQ=%llu VBlank=%llu suspendedPC=$%04X"
+                   " SP=$%04X CPUsteps=%llu\n",
+                   (unsigned long long)runtime.recognized_irqs,
+                   (unsigned long long)runtime.clock.vblank_events,
+                   wait_irq_pc,wait_irq_sp,
+                   (unsigned long long)cpu.steps);
+        }
+        if(runtime.recognized_irqs>irq_before_wait+2u) {
+            int result=fail("unexpected multiple nested frame-wait IRQs",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+    }
+    bool frame_wait_done=captured_wait_irq &&
+        cpu.pc==0x00C4u && cpu.sp==0xDFF0u &&
+        cpu.status==Z80_RUNNING &&
+        ys_sms_bus_read(bus,0xC021u)==0u &&
+        ys_sms_bus_read(bus,0xC10Fu)==0u &&
+        runtime.recognized_irqs>=irq_before_wait+1u &&
+        runtime.clock.vblank_events>vblank_before_wait &&
+        vdp->vram_writes>vram_before_wait &&
+        sound->psg_write_count>psg_before_wait &&
+        bus->mapped_bank[2]==2u &&
+        cpu.ix==startup_at_wait.ix && cpu.iy==startup_at_wait.iy;
+    if(!frame_wait_done) {
+        int result=fail("first original frame wait and source ISR completion",&runtime);
+        fprintf(stderr,"  suspendedPC=$%04X waitsteps=%lu C021=%02X"
+                " C10F=%02X VRAM=%llu->%llu PSG=%llu->%llu\n",
+                wait_irq_pc,wait_iterations,
+                ys_sms_bus_read(bus,0xC021u),
+                ys_sms_bus_read(bus,0xC10Fu),
+                (unsigned long long)vram_before_wait,
+                (unsigned long long)vdp->vram_writes,
+                (unsigned long long)psg_before_wait,
+                (unsigned long long)sound->psg_write_count);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS original Ys frame-wait completed to $00C4:"
+           " steps=%llu T-states=%llu IRQ=%llu VBlank=%llu"
+           " VRAMwrites=%llu PSGwrites=%llu waitsteps=%lu"
+           " suspendedPC=$%04X\n",
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events,
+           (unsigned long long)vdp->vram_writes,
+           (unsigned long long)sound->psg_write_count,
+           wait_iterations,wait_irq_pc);
+    puts("Stop at original startup dispatcher $00C4; no title/gameplay yet.");
+    puts("M32 checkpoint $0046 retained; M33 frame-wait completion reached.");
     if (argc==4) {
         uint8_t *rgb=malloc(YS_SMS_RGB_BYTES);
         if (!rgb) {
@@ -281,10 +368,10 @@ int main(int argc,char **argv) {
         if(output && fclose(output)!=0) ok=false;
         free(rgb);
         if(!ok) {
-            fputs("cannot render/write real Ys startup VDP snapshot\n",stderr);
+            fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0046: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$00C4: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);

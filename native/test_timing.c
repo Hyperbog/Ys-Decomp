@@ -237,7 +237,39 @@ static void test_source_vdp_init_returns_into_wait_bridge(void) {
     assert(ys_sms_bus_read(&bus,cpu.sp)==0xC4u &&
            ys_sms_bus_read(&bus,(uint16_t)(cpu.sp+1u))==0x00u);
 }
+static void test_source_busy_wait_wakes_with_natural_irq(void) {
+    setup();
+    /* Real bank-0 polling opcodes at $0046:
+       LD A,($C021); OR A; JR NZ,$0046; RET.
+       Handler is intentionally SYNTHETIC after the original $0038
+       PUSH AF / $0039 IN A,($BF) prologue. Full handler is checked
+       only by the gated original-ROM source trace. */
+    CODE(0x0046,0x3A,0x21,0xC0,0xB7,0x20,0xFA,0xC9);
+    CODE(0x0038,0xF5,0xDB,0xBF,0xAF,0x32,0x21,0xC0,0xF1,0xFB,0xC9);
+    assert(ys_sms_bus_write(&bus,0xC021u,1u));
+    cpu.pc=0x0046u;
+    cpu.sp=0xDFF0u;
+    cpu.iff1=cpu.iff2=true;
+    cpu.ei_delay=1u; /* authentic $0045 EI just executed */
+    cpu.interrupt_mode=1u;
+    vdp.registers[1]=0x20u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned loops=0;
+    while(cpu.pc!=0x004Cu && loops<18000u) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++loops;
+    }
+    assert(loops>100u && loops<18000u);
+    assert(cpu.pc==0x004Cu && cpu.sp==0xDFF0u);
+    assert(ys_sms_bus_read(&bus,0xC021u)==0);
+    assert(runtime.recognized_irqs==1u &&
+           runtime.clock.vblank_events==1u);
+    assert(vdp.status==0u && cpu.iff1);
+    assert(cpu.total_tstates>=192u*228u);
+}
+
 int main(void) {
+    test_source_busy_wait_wakes_with_natural_irq();
     test_source_vdp_init_returns_into_wait_bridge();
     test_pending_vblank_reenters_after_ei_ret();
     test_source_zero_state_isr_branch_and_mapper_save();
