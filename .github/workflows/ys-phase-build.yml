@@ -1,0 +1,51 @@
+name: Ys native phase builds
+
+on:
+  push:
+    branches: [Ys]
+    paths:
+      - 'native/**'
+      - '.github/workflows/ys-phase-build.yml'
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: 'Release channel (promotion requires verified gates)'
+        type: choice
+        required: true
+        default: dev
+        options:
+          - dev
+          - alpha
+          - beta
+          - final
+
+permissions:
+  contents: read
+
+jobs:
+  phase-package:
+    name: ${{ matrix.os }} / ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'dev' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate build labels, gates, manifests and ROM exclusion
+        run: python -m unittest discover -s native/tools -p "test_*.py" -v
+      - name: Compile, test and package native phase
+        run: python native/tools/build_phase.py --channel "${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'dev' }}"
+      - name: Publish downloadable build for this commit
+        uses: actions/upload-artifact@v4
+        with:
+          name: ys-native-${{ matrix.os }}-${{ github.sha }}
+          path: dist/*.zip
+          if-no-files-found: error
+          retention-days: 30
+      - name: Verify no tracked source changed
+        run: git diff --exit-code

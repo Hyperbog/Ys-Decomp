@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
     printf("Ys C11 memory prototype: reset bytes %02X %02X %02X %02X\n",
            ys_sms_bus_read(bus, 0), ys_sms_bus_read(bus, 1),
            ys_sms_bus_read(bus, 2), ys_sms_bus_read(bus, 3));
-    puts("Memory bus initialized; Z80 execution, VDP, audio and input not yet implemented.");
+    puts("Memory mapper probe completed. Use ys-native-trace for bounded CPU/VDP/audio/input execution; no native gameplay or rendering yet.");
     free(bus); free(rom);
     return EXIT_SUCCESS;
 }

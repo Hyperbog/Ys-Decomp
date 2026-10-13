@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "checkpoint": "M25",
+  "gates": {
+    "boot_to_title": {
+      "passed": false,
+      "evidence": ""
+    },
+    "automatic_frames": {
+      "passed": false,
+      "evidence": ""
+    },
+    "video_renderer": {
+      "passed": false,
+      "evidence": ""
+    },
+    "live_controls": {
+      "passed": false,
+      "evidence": ""
+    },
+    "interactive_gameplay": {
+      "passed": false,
+      "evidence": ""
+    },
+    "complete_game": {
+      "passed": false,
+      "evidence": ""
+    },
+    "save_load": {
+      "passed": false,
+      "evidence": ""
+    },
+    "audio_playback": {
+      "passed": false,
+      "evidence": ""
+    },
+    "content_parity": {
+      "passed": false,
+      "evidence": ""
+    },
+    "no_blocking_bugs": {
+      "passed": false,
+      "evidence": ""
+    },
+    "cross_platform": {
+      "passed": false,
+      "evidence": ""
+    },
+    "fidelity_validation": {
+      "passed": false,
+      "evidence": ""
+    },
+    "release_audit": {
+      "passed": false,
+      "evidence": ""
+    }
+  }
+}
