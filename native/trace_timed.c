@@ -1715,7 +1715,8 @@ int main(int argc,char **argv) {
                 ++bad;
             }
         uint8_t expected_r1=(uint8_t)(source_r1|0x20u);
-        if(bad!=0u || cpu.pc!=0x0AB2u || cpu.sp!=sp_before ||
+        if(bad!=0u || cpu.pc!=0x0AB2u ||
+           cpu.sp!=(uint16_t)(sp_before-2u) ||
            cpu.f!=flags_before || cpu.a!=status_before ||
            cpu.d!=0x81u || cpu.e!=expected_r1 ||
            cpu.steps!=steps_before+14u ||
