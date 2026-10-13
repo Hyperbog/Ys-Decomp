@@ -20,7 +20,7 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M33 (first source-ROM frame wait completion under a natural VBlank to `$00C4`; M32 and M30 earlier boundaries retained). The last validated continuous native trace reached
+- **Checkpoint:** M34 (timed original dispatcher through 32-byte palette RLD nibble transform at `$0AF6`; M33 first frame wait retained). The last validated continuous native trace reached
   Z80 PC `$0B22` after 17,224 instructions, with one explicitly injected
   VBlank interrupt.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
@@ -73,7 +73,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m33-dev-linux-x64-<commit>.zip
+dist/ys-m34-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -215,7 +215,7 @@ log capture and explicit pauses. MSVC Release artifacts use the static
 C runtime to avoid a mandatory VC++ Redistributable dependency.
 
 **Extract both layers** if the GitHub Actions artifact itself contains a
-versioned `ys-m33-dev-windows-x64-...zip`. Double-click
+versioned `ys-m34-dev-windows-x64-...zip`. Double-click
 `START_HERE.cmd` from the folder containing `bin`. Choose 1 for a
 ROM-free animated SMS **test pattern**, or choose 3 for the bounded
 source-ROM timed diagnostic (requires a user-supplied Ys SMS ROM).
@@ -259,3 +259,14 @@ with 192 real VRAM writes and 44 total PSG writes.
 The later saved VDP snapshot passed P6/size checks; the
 Windows executable is still a **Development visual diagnostic**,
 not a playable Ys binary.
+
+
+### M34 timed palette initialization
+
+The Development cartridge trace retains M29–M33 VBlank checkpoints,
+then executes state-0/state-1 dispatch and the exact
+`$0B10` 32-byte staging copy and `$0B22`
+palette-nibble transform before `$0AF6 CALL $0BC5`.
+The saved VDP image is not a finished title or a live game.
+A ROM-free fixture validates the Z80 arithmetic/rotation flags
+and 32 source palette iterations. Alpha gates remain blocked.

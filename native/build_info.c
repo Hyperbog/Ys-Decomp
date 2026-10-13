@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
         puts("ys-native-frames demo 12 ntsc (synthetic frame sequence)");
         puts("ys-native-timing --check (synthetic timed Z80 + VBlank)");
         puts("ys-native-timed-rom Ys.sms --frame checkpoint.ppm (real VRAM state)");
-        puts("  Executes source-ROM through first original frame-wait completion $00C4");
+        puts("  Executes source-ROM through timed dispatcher and first palette-delay boundary $0AF6");
         puts("Windows: extract both ZIP layers, then double-click START_HERE.cmd");
         puts("Windows: bin/ys-native-window.exe opens a persistent synthetic SMS GUI");
         puts("Windows: bin/ys-native-window.exe --ppm checkpoint.ppm views ROM state");

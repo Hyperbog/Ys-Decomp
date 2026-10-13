@@ -1,3 +1,32 @@
+# M34 — Original dispatcher and palette nibble transform
+
+The Development runtime continues from M33's naturally completed
+`$00C4` wait into the source dispatcher, its state 0 initialization
+and state 1 transition at `$0C4A`. It traces the 32-byte
+staging copy `$0B10` and authentic `$0B22` Z80
+`RLD/SUB C/RRCA/RLCA/DJNZ` palette transform, stopping
+at **`$0AF6`** before the next timed palette-delay loop.
+
+The interpreter now supports Z80 `SUB r`, `RLCA` and `RRCA`
+with source-accurate flags and documented nominal T-states.
+A ROM-free, byte-accurate fixture validates 32 iterations;
+the gated original-cartridge check independently validates
+the continuous CPU path. No `Ys/**` sources change.
+
+```sh
+bin/ys-native-timed-rom /path/to/your/Ys.sms --frame checkpoint.ppm
+```
+
+Windows `START_HERE.cmd` option **3** runs this original-cartridge
+trace and shows the saved VDP PPM image in a native GDI window.
+The screenshot is **static early initialization**, not a
+live title or playable game, and may still lack tile graphics.
+
+See [M34 source-backed palette trace](research/M34_TIMED_PALETTE.md).
+Alpha/Beta/Final promotion gates remain false.
+
+## Previous milestone — M33
+
 # M33 — First original frame wait completed under automatic VBlank
 
 The real Ys SMS cartridge's timed execution now targets the first
