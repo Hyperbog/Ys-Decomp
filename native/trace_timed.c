@@ -1388,10 +1388,10 @@ int main(int argc,char **argv) {
             ++row_terminators;
     }
     size_t bad_pixels=0u;
-    unsigned first_bad=0u;
+    unsigned pattern_first_bad=0u;
     for(unsigned i=0u;i<YS_VRAM_BYTES;++i)
         if(pattern_touched[i] && vdp->vram[i]!=pattern_expected[i]) {
-            if(bad_pixels==0u) first_bad=i;
+            if(bad_pixels==0u) pattern_first_bad=i;
             ++bad_pixels;
         }
     bool pattern_ok=cpu.pc==0x0C87u &&
@@ -1414,7 +1414,7 @@ int main(int argc,char **argv) {
                 " HL=$%02X%02X expectedHL=$%04X DE=$%02X%02X"
                 " steps=%u\n",
                 row_terminators,actual_out,pattern_bytes,bad_pixels,
-                first_bad,vdp->vram[first_bad],pattern_expected[first_bad],
+                pattern_first_bad,vdp->vram[pattern_first_bad],pattern_expected[pattern_first_bad],
                 cpu.h,cpu.l,pattern_end_hl,cpu.d,cpu.e,pattern_steps);
         free(rom);free(bus);free(vdp);free(sound);return result;
     }
