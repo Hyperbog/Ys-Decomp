@@ -669,7 +669,74 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
-    puts("Stop at $0A5E before graphics clear / title transfer; not playable.");
+    puts("M36 verified bank-7/VDP register setup; resume at $0A5E.");
+
+    /* M37 source $0A5E-$0A76: program VDP scroll registers 8/9,
+       clear the source video scroll fields at $C018/$C019, and
+       execute CALL $06D4 with BC=$0020. The $06D4 helper writes
+       exactly 32 words of HL=$0000, i.e. 64 zero bytes to VRAM
+       $0000-$003F. Stop at $0A77 before a much longer clear
+       of $3800-$3EFF (which may cross a real frame IRQ).
+       No CPU/VRAM edits, injected IRQ or host-controlled timing. */
+    const uint64_t clear_irq_before=runtime.recognized_irqs;
+    const uint64_t clear_vblank_before=runtime.clock.vblank_events;
+    const uint64_t clear_vram_before=vdp->vram_writes;
+    const uint64_t clear_cram_before=vdp->cram_writes;
+    const uint64_t clear_registers_before=vdp->register_writes;
+    const uint16_t clear_sp_before=cpu.sp;
+    const uint8_t clear_slot2_before=bus->mapped_bank[2];
+    unsigned clear_steps=0u;
+    while(cpu.pc!=0x0A77u && clear_steps<800u &&
+          runtime.recognized_irqs==clear_irq_before) {
+        uint16_t prev_pc=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M37 first source VRAM clear unsupported",&runtime);
+            fprintf(stderr,"  priorPC=$%04X clearsteps=%u\n",prev_pc,clear_steps);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++clear_steps;
+    }
+    bool first_clear_ok=cpu.pc==0x0A77u &&
+        clear_steps>200u && clear_steps<800u &&
+        cpu.sp==clear_sp_before &&
+        cpu.h==0u && cpu.l==0u &&
+        cpu.d==0x40u && cpu.e==0u &&
+        cpu.b==0u && cpu.c==0u &&
+        bus->mapped_bank[2]==clear_slot2_before &&
+        vdp->registers[8]==0u && vdp->registers[9]==0u &&
+        vdp->register_writes==clear_registers_before+2u &&
+        vdp->vram_writes==clear_vram_before+64u &&
+        vdp->cram_writes==clear_cram_before &&
+        vdp->address==0x40u && vdp->code==1u &&
+        ys_sms_bus_read(bus,0xC018u)==0u &&
+        ys_sms_bus_read(bus,0xC019u)==0u &&
+        runtime.recognized_irqs==clear_irq_before &&
+        runtime.clock.vblank_events==clear_vblank_before;
+    for(unsigned i=0u;i<64u;++i)
+        first_clear_ok=first_clear_ok && vdp->vram[i]==0u;
+    if(!first_clear_ok) {
+        int result=fail("M37 source scroll/64-byte VRAM initialization",&runtime);
+        fprintf(stderr,"  steps=%u R8=%02X R9=%02X VRAMwrites=%llu->%llu"
+                " VDPaddr=$%04X code=%u SP=$%04X\n",
+                clear_steps,vdp->registers[8],vdp->registers[9],
+                (unsigned long long)clear_vram_before,
+                (unsigned long long)vdp->vram_writes,
+                vdp->address,vdp->code,cpu.sp);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS original Ys first VRAM clear to $0A77:"
+           " zero_bytes=64 R8=$%02X R9=$%02X"
+           " steps=%llu T-states=%llu IRQ=%llu VBlank=%llu"
+           " VRAMwrites=%llu\n",
+           vdp->registers[8],vdp->registers[9],
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events,
+           (unsigned long long)vdp->vram_writes);
+    puts("Stop at $0A77 before large name-table VRAM clear; not playable.");
+
 
 
 
@@ -690,7 +757,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0A5E: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0A77: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);

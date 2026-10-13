@@ -400,7 +400,51 @@ static void test_m36_original_bank7_rom_transfer(void) {
     assert(runtime.recognized_irqs==0u && runtime.clock.vblank_events==0u);
 }
 
+static void test_m37_original_vram_word_clear(void) {
+    setup();
+    /* Byte-exact original bank-0 $0A5E-$0A76 and $0028-$0030,
+       $06D4-$06E7: scroll R8/R9 setup + 32 word writes.
+       Synthetic ROM is used only to isolate the helper; gated
+       continuous original-ROM trace supplies the real CPU context. */
+    CODE(0x0A5E,
+         0x11,0x00,0x88,0xEF,0x14,0xEF,0xAF,
+         0x32,0x18,0xC0,0x32,0x19,0xC0,
+         0x21,0x00,0x00,0x11,0x00,0x40,
+         0x01,0x20,0x00,0xCD,0xD4,0x06);
+    CODE(0x0028,0xF3,0x7B,0xD3,0xBF,0x7A,
+         0xD3,0xBF,0xFB,0xC9);
+    CODE(0x06D4,0xEF,0x79,0xB7,0x28,0x01,0x04,
+         0x7D,0xD3,0xBE,0xF5,0xF1,0x7C,0xD3,0xBE,
+         0x0D,0x20,0xF5,0x10,0xF3,0xC9);
+    cpu.pc=0x0A5Eu;cpu.sp=0xDFF0u;
+    vdp.registers[8]=0x56u;vdp.registers[9]=0x78u;
+    for(unsigned i=0;i<64u;++i) vdp.vram[i]=0xACu;
+    assert(ys_sms_bus_write(&bus,0xC018u,0x95u));
+    assert(ys_sms_bus_write(&bus,0xC019u,0x27u));
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned executed=0u;
+    while(cpu.pc!=0x0A77u && executed<800u) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++executed;
+    }
+    assert(cpu.pc==0x0A77u && executed>200u && executed<800u);
+    assert(cpu.sp==0xDFF0u &&
+           cpu.h==0u && cpu.l==0u &&
+           cpu.d==0x40u && cpu.e==0u &&
+           cpu.b==0u && cpu.c==0u);
+    assert(vdp.registers[8]==0u && vdp.registers[9]==0u);
+    assert(vdp.register_writes==2u &&
+           vdp.vram_writes==64u && vdp.cram_writes==0u);
+    assert(vdp.code==1u && vdp.address==0x40u);
+    assert(ys_sms_bus_read(&bus,0xC018u)==0u &&
+           ys_sms_bus_read(&bus,0xC019u)==0u);
+    for(unsigned i=0;i<64u;++i) assert(vdp.vram[i]==0u);
+    assert(runtime.recognized_irqs==0u &&
+           runtime.clock.vblank_events==0u);
+}
+
 int main(void) {
+    test_m37_original_vram_word_clear();
     test_m36_original_bank7_rom_transfer();
     test_m35_three_natural_palette_waits();
     test_m34_palette_z80_rotates_and_subtract();
