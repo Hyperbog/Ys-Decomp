@@ -1,3 +1,29 @@
+# M33 — First original frame wait completed under automatic VBlank
+
+The real Ys SMS cartridge's timed execution now targets the first
+**source VBlank-wait completion**, not merely the ISR entry or the
+frame-wait polling instruction. Beginning at M32 `$0046`, the
+interpreter continues through the original `LD A,($C021); OR A;
+JR NZ,$0046` loop. A naturally generated VBlank invokes the actual
+source `$0038` handler. Its nonzero-wait branch updates the VDP,
+handles sprites/input and bank-2 sound, clears the wait flag, and
+returns through the saved-register `$0BC5` bridge to startup
+**PC=$00C4**. No IRQ is injected and no source game state is
+patched or skipped.
+
+`bin/ys-native-timed-rom Ys.sms --frame checkpoint.ppm` captures
+the real 256×192 RGB VDP state at this **later checkpoint**, after
+the first VBlank VRAM transfer, rather than the previous early
+`$0046` blank-state capture. Windows `START_HERE.cmd` option 3
+exports that image and opens it in the GDI viewer. It remains a
+**read-only snapshot**, not live Ys gameplay, and may not display
+the title image until additional initialization has run.
+
+See [M33 source verification contract](research/M33_TIMED_WAIT.md).
+Alpha remains blocked; source-only ROM rebuild remains gated.
+
+## Previous milestone — M32
+
 # M32 — Real Ys startup image linked to Windows Development viewer
 
 The **timed original-cartridge trace** now continues beyond M30's

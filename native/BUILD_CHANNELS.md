@@ -20,7 +20,7 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M32 (real cartridge VDP snapshot exported from a timed source-ROM frame-wait entry; previous M30 ISR verification remains). The last validated continuous native trace reached
+- **Checkpoint:** M33 (first source-ROM frame wait completion under a natural VBlank to `$00C4`; M32 and M30 earlier boundaries retained). The last validated continuous native trace reached
   Z80 PC `$0B22` after 17,224 instructions, with one explicitly injected
   VBlank interrupt.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
@@ -73,7 +73,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m32-dev-linux-x64-<commit>.zip
+dist/ys-m33-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -215,7 +215,7 @@ log capture and explicit pauses. MSVC Release artifacts use the static
 C runtime to avoid a mandatory VC++ Redistributable dependency.
 
 **Extract both layers** if the GitHub Actions artifact itself contains a
-versioned `ys-m32-dev-windows-x64-...zip`. Double-click
+versioned `ys-m33-dev-windows-x64-...zip`. Double-click
 `START_HERE.cmd` from the folder containing `bin`. Choose 1 for a
 ROM-free animated SMS **test pattern**, or choose 3 for the bounded
 source-ROM timed diagnostic (requires a user-supplied Ys SMS ROM).
@@ -238,3 +238,15 @@ appear blank until further game VDP setup is verified. The viewer is
 **not yet a game** and the snapshot is not a live frame loop.
 Tests include the ROM-free synthetic PPM loader and gated cartridge
 reconstruction; Alpha gameplay gates remain unpassed.
+
+
+### M33 original-game frame-wait completion
+
+The bounded `ys-native-timed-rom` command now follows the source
+`$0046` wait loop to the next naturally clocked VBlank ISR,
+through original sprite/VDP/sound processing, and returns to the
+cold-boot dispatcher at `$00C4` once the game itself clears
+`$C021`. With `--frame` it exports the later cartridge-derived
+VDP framebuffer, which can be viewed using Windows
+`START_HERE.cmd` option 3. This is **not** a live Windows game;
+the Alpha, Beta and Final release evidence gates remain false.
