@@ -642,7 +642,52 @@ static void test_m42_source_two_row_staging(void) {
            vdp.vram_writes==0u);
 }
 
+static void test_m43_source_1536_byte_vdp_outi(void) {
+    setup();
+    /* Byte-exact bank-0 $0C72-$0C7D and $06C1-$06D3,
+       with the original RST $28 VDP-port helper.
+       Real source-ROM execution is verified separately. */
+    CODE(0x0C72,0x21,0x00,0xD6,0x11,0x00,0x79,
+         0x01,0x00,0x06,0xCD,0xC1,0x06);
+    CODE(0x06C1,0xEF,0x79,0xB7,0x28,0x01,0x04,
+         0x78,0x41,0x0E,0xBE,0xED,0xA3,0x00,
+         0x20,0xFA,0x3D,0x20,0xF7,0xC9);
+    CODE(0x0028,0xF3,0x7B,0xD3,0xBF,0x7A,
+         0xD3,0xBF,0xFB,0xC9);
+    cpu.pc=0x0C72u;
+    cpu.sp=0xDFF0u;
+    for(unsigned i=0;i<0x600u;++i) {
+        uint8_t expected=(uint8_t)((i*23u+(i>>4)+0x37u)&0xFFu);
+        assert(ys_sms_bus_write(&bus,(uint16_t)(0xD600u+i),expected));
+        vdp.vram[0x3900u+i]=0xAAu;
+    }
+    vdp.vram[0x38FFu]=0x5Au;
+    vdp.vram[0x3F00u]=0xD0u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0u,outi=0u;
+    while(cpu.pc!=0x0C7Eu && steps<15000u) {
+        uint16_t previous=cpu.pc;
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        if(previous==0x06CBu) ++outi;
+        ++steps;
+    }
+    assert(cpu.pc==0x0C7Eu && steps>4500u &&
+           steps<15000u && outi==0x600u);
+    assert(cpu.sp==0xDFF0u && cpu.h==0xDCu && cpu.l==0u &&
+           cpu.d==0x79u && cpu.e==0u &&
+           cpu.b==0u && cpu.c==0xBEu);
+    assert(vdp.code==1u && vdp.address==0x3F00u &&
+           vdp.vram_writes==0x600u && vdp.cram_writes==0u);
+    assert(vdp.vram[0x38FFu]==0x5Au && vdp.vram[0x3F00u]==0xD0u);
+    for(unsigned i=0;i<0x600u;++i)
+        assert(vdp.vram[0x3900u+i]==
+               ys_sms_bus_read(&bus,(uint16_t)(0xD600u+i)));
+    assert(runtime.recognized_irqs==0u &&
+           runtime.clock.vblank_events<=2u);
+}
+
 int main(void) {
+    test_m43_source_1536_byte_vdp_outi();
     test_m42_source_two_row_staging();
     test_m41_bank5_rle_and_ed73_stack_save();
     test_m40_bank2_sound_workspace_cascade();

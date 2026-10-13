@@ -1218,7 +1218,95 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
-    puts("Stop at $0C72 before uploading staged video data to VDP.");
+    puts("M42 staged 1,536 bytes verified; continue original VDP upload.");
+
+    /* M43: original $0C72-$0C7B selects VDP $3900, then CALL $06C1
+       streams exactly BC=$0600 (1536) source bytes from $D600.
+       Do not emulate a memcpy: execute 1536 real ED A3 OUTI
+       instructions, through real $0028 VDP command, NOP/JR loops.
+       Verify each output VRAM byte from a separate WRAM snapshot
+       taken BEFORE execution. Preserve natural IRQ timing. */
+    enum { TILE_UPLOAD_BYTES=0x600u, TILE_VRAM_START=0x3900u };
+    uint8_t upload_reference[TILE_UPLOAD_BYTES];
+    for(unsigned i=0;i<TILE_UPLOAD_BYTES;++i)
+        upload_reference[i]=ys_sms_bus_read(bus,(uint16_t)(0xD600u+i));
+    const uint16_t upload_entry_sp=cpu.sp;
+    const uint64_t upload_entry_vblank=runtime.clock.vblank_events;
+    const uint64_t upload_entry_irq=runtime.recognized_irqs;
+    const uint64_t upload_entry_vram=vdp->vram_writes;
+    const uint64_t upload_entry_cram=vdp->cram_writes;
+    const uint64_t upload_entry_psg=sound->psg_write_count;
+    unsigned upload_steps=0u, upload_outi=0u;
+    bool upload_entered=false, upload_control_set=false;
+    while(cpu.pc!=0x0C7Eu && upload_steps<15000u) {
+        uint16_t prior_pc=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M43 original source VRAM upload unsupported",&runtime);
+            fprintf(stderr,"  lastPC=$%04X upload_steps=%u OUTI=%u\n",
+                    prior_pc,upload_steps,upload_outi);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++upload_steps;
+        if(prior_pc==0x0C7Bu && cpu.pc==0x06C1u) upload_entered=true;
+        if(upload_entered && prior_pc==0x002Du &&
+           vdp->address==TILE_VRAM_START && vdp->code==1u)
+            upload_control_set=true;
+        if(prior_pc==0x06CBu) ++upload_outi;
+    }
+    bool upload_ok=cpu.pc==0x0C7Eu && upload_entered &&
+        upload_control_set && upload_outi==TILE_UPLOAD_BYTES &&
+        upload_steps>4500u && upload_steps<15000u &&
+        cpu.sp==upload_entry_sp &&
+        cpu.h==0xDCu && cpu.l==0u &&
+        cpu.d==0x79u && cpu.e==0u &&
+        cpu.b==0u && cpu.c==0xBEu &&
+        vdp->address==0x3F00u && vdp->code==1u &&
+        vdp->vram_writes>=upload_entry_vram+TILE_UPLOAD_BYTES &&
+        vdp->cram_writes==upload_entry_cram &&
+        runtime.recognized_irqs>=upload_entry_irq &&
+        runtime.recognized_irqs<=upload_entry_irq+3u &&
+        runtime.clock.vblank_events>=upload_entry_vblank &&
+        runtime.clock.vblank_events<=upload_entry_vblank+3u &&
+        sound->psg_write_count>=upload_entry_psg;
+    size_t upload_mismatch=0u;
+    unsigned first_bad=0u;
+    for(unsigned i=0;i<TILE_UPLOAD_BYTES;++i) {
+        if(vdp->vram[TILE_VRAM_START+i]!=upload_reference[i]) {
+            if(upload_mismatch==0u) first_bad=i;
+            ++upload_mismatch;
+        }
+    }
+    upload_ok=upload_ok && upload_mismatch==0u;
+    if(!upload_ok) {
+        int result=fail("M43 source resource to VRAM transfer mismatch",&runtime);
+        fprintf(stderr,"  upload_steps=%u OUTI=%u SP=$%04X"
+                " VRAMwrites=%llu->%llu VDPaddr=$%04X"
+                " IRQ=%llu->%llu VBlank=%llu->%llu"
+                " bad=%zu first=$%04X value=%02X expected=%02X\n",
+                upload_steps,upload_outi,cpu.sp,
+                (unsigned long long)upload_entry_vram,
+                (unsigned long long)vdp->vram_writes,vdp->address,
+                (unsigned long long)upload_entry_irq,
+                (unsigned long long)runtime.recognized_irqs,
+                (unsigned long long)upload_entry_vblank,
+                (unsigned long long)runtime.clock.vblank_events,
+                upload_mismatch,TILE_VRAM_START+first_bad,
+                vdp->vram[TILE_VRAM_START+first_bad],
+                upload_reference[first_bad]);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS original Ys staged tile bytes uploaded to VDP at $0C7E:"
+           " bytes=%u OUTI=%u steps=%llu T-states=%llu"
+           " IRQ=%llu VBlank=%llu VRAMwrites=%llu\n",
+           TILE_UPLOAD_BYTES,upload_outi,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events,
+           (unsigned long long)vdp->vram_writes);
+    puts("Stop before source $0C7E pattern transfer; title not yet playable.");
+
 
 
 
@@ -1245,7 +1333,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0C72: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0C7E: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);
