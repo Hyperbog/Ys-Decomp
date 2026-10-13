@@ -1,3 +1,30 @@
+# M41 — Original Ys resource decompression and SMS/GG recomp review
+
+The verified original-cartridge runtime now reaches **Z80 PC=$0C67**
+after **109,081** instructions and **1,226,741** nominal T-states,
+with 16 accepted interrupts and 20 VBlanks. Bank-5's genuine
+source decompressor consumes 518 bytes and produces **748 verified
+WRAM bytes**, compared byte-for-byte with an independent bounded
+decoder. Z80 `ED 73` now stores SP with authentic 20-T-state timing.
+
+[Source-only ROM CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38463154158)
+passed with all 16 banks and the unchanged 256 KiB digest.
+[SMS/GG Recomp adapter CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38462981399)
+also passed **14/14** synthetic provenance/integration tests.
+The adapter invokes a user-installed upstream recompiler, but
+no real upstream-generated C has been compiled, linked or run
+as an Ys game yet.
+
+Windows: extract both Development ZIP layers and run
+`START_HERE.cmd`; choose **1** for synthetic video diagnostics
+or **3** to trace your own Ys SMS ROM and open its saved
+VDP image at `$0C67`. The image is **static**, not playable
+gameplay. All Alpha, Beta and Final release gates remain false.
+
+See [M41 resource verification](research/M41_BANK5_RLE.md).
+
+## Previous milestone — M40
+
 # M40 — Original bank-2 sound initializer completed; recomp integration review
 
 The original Ys SMS source-ROM executes the authentic bank-2

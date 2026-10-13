@@ -90,3 +90,19 @@ game derived from static recompilation yet. Set
 `runtime_verified` only after comparing generated-code execution
 with the source-ROM reference traces using the same hardware
 state and frame-clock schedule.
+
+## M41 provenance hardening
+
+[SMS/GG adapter CI 38462981399](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38462981399)
+passed **14/14** synthetic tests. The adapter now rejects generated
+C or provenance reports supplied as symbolic links, rejects
+symlinked generated output directories and Boolean ROM lengths,
+and creates uniquely named temporary source/report files before
+atomic replacement to avoid clobbering existing `.tmp` symbolic
+links. Exact input/tool hashes remain mandatory.
+
+M41 also verified a 518-byte original Ys bank-5 compressed stream
+and its 748-byte independent decompression result at source
+`PC=$0C67`. It does not demonstrate compilation or runtime
+correctness of actual upstream-generated C: that integration
+remains a separate unverified milestone.

@@ -20,11 +20,11 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M40 — original bank-2 sound initialization returns
-  naturally to Z80 `PC=$0C55` after **105,009** instructions,
-  including 11 original PSG writes and six YM2413 address/data pairs;
-  16 clock-accepted IRQs and 20 VBlanks remain verified. This
-  verifies I/O state, **not native sound playback**.
+- **Checkpoint:** M41 — the natural original-ROM trace reaches
+  Z80 `PC=$0C67` after **109,081** instructions and **1,226,741**
+  nominal T-states. Bank-5 source resource expands from 518
+  compressed bytes to **748 byte-exact WRAM bytes**; 16 IRQs
+  and 20 VBlanks remain source-verified. This is not gameplay.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
   `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
   including a stateless video preview, not a PC game.
@@ -78,7 +78,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m40-dev-linux-x64-<commit>.zip
+dist/ys-m41-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -361,3 +361,14 @@ The validated SMS/GG static-recompiler adapter remains an **optional
 Phase-1 code-generation pipeline**, not a compiled or linked native
 game. No genuine generated C is included in the Development ZIP.
 Alpha/Beta/Final gates remain false.
+
+
+### M41 verified bank-5 resource and adapter hardening
+
+[Source-ROM verification](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38463154158)
+executed original Z80 `ED 73` and bank-5 source RLE decode to
+`PC=$0C67` with 748 checked output bytes. Separately,
+[SMS/GG adapter CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38462981399)
+passed 14 tests for ROM identity and safe generated-file provenance.
+The optional static recompiler still lacks a validated generated-code
+native runner. The Windows Development viewer is not a playable game.

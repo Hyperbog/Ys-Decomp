@@ -79,3 +79,18 @@ a native game runner can be claimed.
 Keep the original 16-bank 262144-byte source-ROM digest
 `02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9`.
 All Alpha, Beta, Final evidence flags remain false.
+
+## Verified source-ROM run
+
+[Source-ROM CI 38463154158](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38463154158)
+passed commit `c60f1b029dd2` with no ROM fallback:
+
+```text
+M10: 16/16 source-only banks, 262144 bytes
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+PASS original Ys bank-5 compressed resource to $0C67: decoded_bytes=748 source_bytes=518 steps=109081 T-states=1226741 IRQ=16 VBlank=20
+PASS authentic timed VDP image: 147471 bytes
+```
+
+13/13 native CTest cases passed. This is a source-ROM interpreter
+checkpoint, not a native static recompilation.
