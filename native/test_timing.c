@@ -838,7 +838,54 @@ static void test_m46_video_setup_prefix(void) {
            runtime.clock.vblank_events==0u);
 }
 
+
+/* M46b original $0C9C CALL $0AA7 to $0AB2 via $0028 RST helper.
+   Synthetic source opcodes, not a replacement for ROM-backed CI. */
+static void test_m46b_source_vdp_irq_gate(void) {
+    setup();
+    CODE(0x0C9C,0xCD,0xA7,0x0A);
+    CODE(0x0AA7,0x3A,0x11,0xC0,0x5F,0x16,0x81,
+         0xCB,0xEB,0xEF,0xDB,0xBF);
+    CODE(0x0028,0xF3,0x7B,0xD3,0xBF,0x7A,0xD3,0xBF,
+         0xFB,0xC9);
+    cpu.pc=0x0C9Cu;
+    cpu.f=(uint8_t)(Z80_F_Z|Z80_F_C);
+    cpu.sp=0xDFF0u;
+    assert(ys_sms_bus_write(&bus,0xC011u,0x80u));
+    assert(ys_sms_bus_write(&bus,0xC012u,0x67u));
+    vdp.registers[1]=0x80u;
+    vdp.status=0x40u; /* Status read-to-clear, no pending VBlank IRQ. */
+    cpu.interrupt_mode=1u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    const uint16_t pc_seq[]={0x0AA7u,0x0AAAu,0x0AABu,0x0AADu,
+                             0x0AAFu,0x0028u,0x0029u,0x002Au,
+                             0x002Cu,0x002Du,0x002Fu,0x0030u,
+                             0x0AB0u,0x0AB2u};
+    const uint8_t cycles[]={17u,13u,4u,7u,8u,11u,4u,4u,
+                            11u,4u,11u,4u,10u,11u};
+    for(unsigned i=0u;i<14u;++i) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        assert(cpu.pc==pc_seq[i] && cpu.last_tstates==cycles[i]);
+    }
+    assert(cpu.steps==14u && cpu.total_tstates==119u);
+    assert(cpu.sp==0xDFF0u && cpu.f==(Z80_F_Z|Z80_F_C));
+    assert(cpu.d==0x81u && cpu.e==0xA0u && cpu.a==0x40u);
+    assert(cpu.iff1 && cpu.iff2 && cpu.ei_delay==0u);
+    assert(vdp.registers[1]==0xA0u && vdp.status==0u);
+    assert(vdp.control_writes==2u && vdp.register_writes==1u);
+    assert(vdp.vram_writes==0u && vdp.cram_writes==0u);
+    assert(bus.mapped_bank[2]==2u && runtime.recognized_irqs==0u);
+    assert(runtime.clock.vblank_events==0u);
+    assert(ys_sms_bus_read(&bus,0xC011u)==0x80u);
+    assert(ys_sms_bus_read(&bus,0xC012u)==0x67u);
+    assert(ys_sms_bus_read(&bus,0xDFEEu)==0x9Fu);
+    assert(ys_sms_bus_read(&bus,0xDFEFu)==0x0Cu);
+    assert(ys_sms_bus_read(&bus,0xDFECu)==0xB0u);
+    assert(ys_sms_bus_read(&bus,0xDFEDu)==0x0Au);
+}
+
 int main(void) {
+    test_m46b_source_vdp_irq_gate();
     test_m46_video_setup_prefix();
     test_m45_source_four_column_resource();
     test_m44_cb_res_flags_and_cycles();
