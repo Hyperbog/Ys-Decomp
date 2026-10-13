@@ -90,7 +90,7 @@ static void test_ldir_and_mapper(void) {
     assert(cpu.steps==8);
 }
 static void test_fail_closed(void) {
-    setup(); LOAD(0,0xFF);
+    setup(); LOAD(0,0xCB,0x00); /* CB prefix not supported in this bounded core. */
     assert(ys_z80_step(&cpu)==Z80_UNSUPPORTED);
     assert(cpu.pc==0 && cpu.fault_pc==0 && cpu.steps==0);
     setup(); LOAD(0,0x21,0x00,0x80,0x36,0x77);
