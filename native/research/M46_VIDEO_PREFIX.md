@@ -40,10 +40,21 @@ M45 `$0C92` boundary. This opt-in mode stops *before* `$0C9C CALL $0AA7`.
 
 ## Evidence and promotion
 
-Status: **M46a branch candidate**. Until a genuine gated source-ROM run
-passes, the observed instruction count, T-states, IRQ/VBlank counts and
-original WRAM result at `$0C9C` remain **unverified**. The baseline
-Development milestone remains M45. No generated-C code execution,
+Status: **M46a branch candidate with passing gated original-ROM CI**.
+[Actions run 38481243443](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38481243443)
+passed 13/13 native C11 tests, 16/16 source-only ROM banks (262,144 bytes;
+no binary fallback), and the full M45 checkpoint before the optional
+M46a source trace. Original fixed-bank execution reached `PC=$0C9C`
+after four further Z80 instructions and 40 nominal T-states. All 8 KiB
+WRAM bytes matched the unchanged prestate except the expected
+`$C019=$20` and `$DE64=$81`; CPU flags, SP, mapper, IRQ, VBlank,
+VRAM and PSG invariants passed. Cumulative M46a count derived from the
+verified M45 baseline is **430,890 instructions / 3,579,301 T-states**,
+with **56 naturally accepted IRQs / 60 VBlanks**.
+
+This is a verified *bounded source-interpreter path*, **not** a new
+Development release promotion. The baseline milestone remains M45.
+No generated-C code execution,
 interactive title-screen rendering, gameplay, Alpha/Beta/Final promotion
 or externally verified PC port is claimed.
 
