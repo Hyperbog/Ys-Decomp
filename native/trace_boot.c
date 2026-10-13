@@ -257,8 +257,61 @@ int main(int argc, char **argv) {
     }
     printf("PASS first VBlank ISR return to original startup: %llu instructions, PC=$%04X SP=$%04X\n",
            (unsigned long long)cpu.steps,cpu.pc,cpu.sp);
-    puts("Stop before $00C4 startup dispatcher; the VBlank event was injected.");
-    puts("No clock-driven frames, display rendering, sound synthesis or playable game.");
+    /* M25: execute the original dispatcher twice. First state $00 calls
+       $00FC and installs $C01F=1; second state enters $0C4A, which calls
+       $0A5B->$0A80->$0AE8 and the $0B10 32-byte work-RAM copy.
+       Stop before $0B22 (tile-nibble transformation). */
+    const uint8_t first_screen_value=ys_sms_bus_read(bus,0xC018);
+    result=ys_z80_run_until(&cpu,0x00FC,24);
+    if (result!=Z80_RUNNING || cpu.pc!=0x00FC ||
+        cpu.sp!=0xDFEE || ys_sms_bus_read(bus,0xDFEE)!=0xD1 ||
+        ys_sms_bus_read(bus,0xDFEF)!=0 ||
+        ys_sms_bus_read(bus,0xC031)!=first_screen_value ||
+        ys_sms_bus_read(bus,0xC01F)!=0) {
+        int code=fail("first dispatcher state selects $00FC",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    result=ys_z80_run_until(&cpu,0x00C4,8);
+    if (result!=Z80_RUNNING || cpu.sp!=0xDFF0 ||
+        ys_sms_bus_read(bus,0xC01F)!=1) {
+        int code=fail("first state initializes $C01F=1 and returns",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    result=ys_z80_run_until(&cpu,0x0C4A,24);
+    if (result!=Z80_RUNNING || cpu.pc!=0x0C4A ||
+        cpu.sp!=0xDFEE || ys_sms_bus_read(bus,0xDFEE)!=0xD1 ||
+        ys_sms_bus_read(bus,0xDFEF)!=0 ||
+        ys_sms_bus_read(bus,0xC01F)!=1) {
+        int code=fail("second dispatcher state selects $0C4A",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    uint8_t copied_before[32];
+    for(unsigned i=0;i<32;++i)
+        copied_before[i]=ys_sms_bus_read(bus,(uint16_t)(0xC160u+i));
+    result=ys_z80_run_until(&cpu,0x0B22,300);
+    bool copy_ok=result==Z80_RUNNING && cpu.pc==0x0B22 &&
+        cpu.sp==0xDFE6 && cpu.a==0 && cpu.b==0 && cpu.c==0 &&
+        cpu.h==0xC1 && cpu.l==0x80 &&
+        cpu.d==0xC5 && cpu.e==0x50 &&
+        ys_sms_bus_read(bus,0xDFE6)==0xEF &&
+        ys_sms_bus_read(bus,0xDFE7)==0x0A &&
+        ys_sms_bus_read(bus,0xC01F)==1 &&
+        vdp->register_writes==15 && vdp->vram_writes==192 &&
+        sound->psg_write_count==22 && sound->fm_data_count==12;
+    for(unsigned i=0;i<32;++i)
+        copy_ok=copy_ok && ys_sms_bus_read(bus,(uint16_t)(0xC530u+i))==
+                           copied_before[i];
+    if(!copy_ok) {
+        int code=fail("second-state $0B10 sprite-palette staging copy",&cpu);
+        fprintf(stderr,"  SP=%04X HL=%02X%02X DE=%02X%02X BC=%02X%02X state=%02X\n",
+                cpu.sp,cpu.h,cpu.l,cpu.d,cpu.e,cpu.b,cpu.c,
+                ys_sms_bus_read(bus,0xC01F));
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    printf("PASS main dispatcher state 0->$00FC, state 1->$0C4A: %llu instructions\n",
+           (unsigned long long)cpu.steps);
+    puts("PASS second-state $0B10 32-byte WRAM staging copy; PC=$0B22, SP=$DFE6");
+    puts("Stop before RLD palette nibble loop $0B22; no frame scheduler or native rendering.");
     free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }

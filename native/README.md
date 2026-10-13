@@ -1,3 +1,27 @@
+# Ys native C11 — M25: state-table dispatch enters scene preparation
+
+The continuous source-ROM trace now follows the first two startup states
+after the fully verified initial VBlank interrupt and return.
+The dispatch loop at `$00C4` reads `$C01F=0` and vectors via `RST $08`
+to `$00FC`, which sets state `$C01F=1` and returns.
+The next dispatch resolves the ROM word table to `$0C4A` and calls
+`$0A5B` → `$0A80` → `$0AE8` → `$0B10`. The final routine copies 32
+bytes from `$C160` into `$C530`; the acceptance point is PC=`$0B22`,
+**before executing the palette/tile nibble conversion**.
+
+The Z80 core adds `ED 6F` (`RLD`) for upcoming nibble-processing code,
+with carry-preserving flags and fail-closed writes. A source-backed
+nonzero WRAM fixture and dedicated `RLD` tests validate the new behavior.
+See [M25 source trace](research/M25_SOURCE_TRACE.md).
+
+Ordinary native CI continues to run six fast test suites without
+ROM rebuilding. An explicitly tagged `[rom-check]` commit or manual
+`rom_trace=true` dispatch can validate this new ROM-dependent boundary.
+Automatic VBlank frames, rendering, sound synthesis, live controller
+events, fully loaded title-screen data and playable gameplay remain out
+of scope.
+
+## Previous milestones
 # Ys native C11 — M24: first VBlank interrupt returns to startup
 
 The current source-ROM trace reaches **PC=$00C4 / SP=$DFF0** after
