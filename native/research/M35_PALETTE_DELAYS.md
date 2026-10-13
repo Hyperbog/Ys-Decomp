@@ -47,7 +47,8 @@ M29–M34 stages, then advances via `ys_sms_runtime_step_auto`:
   unexpected multiple VBlank events in a single instruction.
 - Verify the loop exits normally at **`PC=$0B00`** with
   `A=4`, `B=0`, the wait flag `$C021=0`, palette control
-  `$C02C=1`, and further VRAM/PSG writes from authentic frame ISRs.
+  `$C02C=0` after the source ISR clears its update flag, and further
+  VRAM/PSG writes from authentic frame ISRs.
 - Keep a 300,000-instruction bound from M34 to M35, and always fail
   closed with the actual PC, SP, IRQ count, VBlank count and hardware
   counters if any invariant fails.
@@ -73,3 +74,7 @@ Both the M25 explicit-IRQ legacy trace and complete M29–M34 automatic
 frame trace must continue to pass. Alpha/Beta/Final gates remain false;
 passing twelve frame waits does **not** demonstrate a Ys title
 screen, a synchronized desktop game loop, live controls or audio output.
+
+## Observation from initial gated validation
+
+The first M35 source-ROM run [38350223086](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38350223086) reached the target `PC=$0B00` with **12** wait returns, **4** palette passes, **12** new IRQs, **96,733** total Z80 instructions and **1,126,507** nominal T-states. A prematurely strict assertion wrongly expected `$C02C=1` at the exit: original bank-0 source `$03E8-$03EE` checks and **clears** the update flag during the interrupt handler. The observed source-correct final value is `$C02C=0`. The test has been corrected; original ROM bytes and emulator state are unchanged.

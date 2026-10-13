@@ -525,7 +525,7 @@ int main(int argc,char **argv) {
        bus->mapped_bank[2]!=bank_saved ||
        bus->mapper_control!=mapper_saved ||
        ys_sms_bus_read(bus,0xC021u)!=0u ||
-       ys_sms_bus_read(bus,0xC02Cu)!=1u) {
+       ys_sms_bus_read(bus,0xC02Cu)!=0u) {
         int result=fail("M35 original 4-level palette fade completion",&runtime);
         fprintf(stderr,"  waits=%u passes=%u wakeups=%u"
                 " steps=%lu A=%02X B=%02X C021=%02X C02C=%02X\n",
