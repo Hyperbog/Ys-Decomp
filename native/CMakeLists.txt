@@ -52,3 +52,15 @@ add_test(NAME z80_core COMMAND ys-z80-tests)
 add_executable(ys-z80-irq-tests test_irq.c)
 target_link_libraries(ys-z80-irq-tests PRIVATE ys_z80)
 add_test(NAME z80_irq COMMAND ys-z80-irq-tests)
+
+# CTest fixtures intentionally use assert() for both checks and setup.
+# Force assert() on even in optimized Release / RelWithDebInfo packaging
+# builds; otherwise -DNDEBUG compiles away setup and can crash tests.
+foreach(target ys-sms-bus-tests ys-sms-vdp-tests ys-sms-sound-tests
+               ys-sms-input-tests ys-z80-tests ys-z80-irq-tests)
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /UNDEBUG)
+    else()
+        target_compile_options(${target} PRIVATE -UNDEBUG)
+    endif()
+endforeach()
