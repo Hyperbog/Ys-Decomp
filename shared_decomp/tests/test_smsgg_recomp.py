@@ -146,5 +146,72 @@ class SmsggAdapterTests(unittest.TestCase):
         self.assertFalse((self.root / "generated").exists())
 
 
+    def test_manifest_boolean_size_rejected(self):
+        self.identity["rom_bytes"] = True
+        self.write_manifest()
+        result = self.invoke("--preflight")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("exact ROM size", result.stderr)
+
+    @unittest.skipIf(os.name == "nt", "POSIX symbolic links")
+    def test_generated_report_symlink_rejected(self):
+        result = self.invoke("--tool", str(self.tool))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = self.root / "generated" / "report.json"
+        original = self.root / "saved-report.json"
+        original.write_bytes(report.read_bytes())
+        report.unlink()
+        report.symlink_to(original)
+        outcome = self.invoke("--tool", str(self.tool), "--verify-generated")
+        self.assertEqual(outcome.returncode, 2)
+        self.assertIn("symbolic links", outcome.stderr)
+
+    @unittest.skipIf(os.name == "nt", "POSIX symbolic links")
+    def test_generated_output_directory_symlink_rejected(self):
+        alternative = self.root / "elsewhere" / "generated"
+        alternative.mkdir(parents=True)
+        (self.root / "generated").symlink_to(alternative, target_is_directory=True)
+        result = self.invoke("--tool", str(self.tool))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("must not be a symbolic link", result.stderr)
+        self.assertEqual(list(alternative.iterdir()), [])
+
+    @unittest.skipIf(os.name == "nt", "mock executable is a POSIX script")
+    def test_generator_symlink_source_is_rejected(self):
+        evil = (
+            "#!/usr/bin/env python3\\n"
+            "from pathlib import Path\\n"
+            "import sys\\n"
+            "cfg = Path(sys.argv[sys.argv.index('--game') + 1])\\n"
+            "out = cfg.parent / 'generated'\\n"
+            "out.mkdir()\\n"
+            "for name in ('full', 'dispatch', 'layout'):\\n"
+            "    target = out / ('ystest_' + name + '.c')\\n"
+            "    if name == 'dispatch':\\n"
+            "        target.symlink_to(cfg)\\n"
+            "    else:\\n"
+            "        target.write_text('/* fixture */\\\\n')\\n"
+        )
+        self.tool.write_text(evil)
+        result = self.invoke("--tool", str(self.tool))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("did not produce ystest_dispatch.c", result.stderr)
+        self.assertFalse((self.root / "generated").exists())
+
+    @unittest.skipIf(os.name == "nt", "POSIX symbolic links")
+    def test_preexisting_temp_symlink_not_followed(self):
+        out = self.root / "generated"
+        out.mkdir()
+        secret = self.root / "sentinel.txt"
+        secret.write_text("do not overwrite")
+        (out / "ystest_dispatch.c.tmp").symlink_to(secret)
+        result = self.invoke("--tool", str(self.tool))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(secret.read_text(), "do not overwrite")
+        self.assertTrue((out / "ystest_dispatch.c.tmp").is_symlink())
+        self.assertEqual(self.invoke("--tool", str(self.tool),
+                                     "--verify-generated").returncode, 0)
+
+
 if __name__ == "__main__":
     unittest.main()

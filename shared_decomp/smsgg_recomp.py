@@ -53,7 +53,7 @@ def verify_rom(rom, manifest):
     expected_size = identity.get("size", data.get("rom_bytes"))
     if not isinstance(expected_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{64}", expected_hash):
         raise RecompError("manifest must specify an exact SHA-256")
-    if not isinstance(expected_size, int) or expected_size <= 0:
+    if not isinstance(expected_size, int) or isinstance(expected_size, bool) or expected_size <= 0:
         raise RecompError("manifest must specify an exact ROM size")
     size = rom.stat().st_size
     sha = digest(rom)
@@ -89,6 +89,8 @@ def read_config(config):
 
 def verify_generated(output, names, size, sha, crc, config, tool):
     report_path = output / "report.json"
+    if output.is_symlink() or report_path.is_symlink():
+        raise RecompError("generated directory/report must not be symbolic links")
     try:
         report = json.loads(report_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
@@ -141,7 +143,10 @@ def execute(args):
     tool = args.tool.resolve(strict=True)
     if not tool.is_file():
         raise RecompError("SmsRecomp tool must be a regular file")
-    output = (args.output or (config.parent / "generated")).resolve()
+    output_candidate = args.output or (config.parent / "generated")
+    if output_candidate.is_symlink():
+        raise RecompError("generated output directory must not be a symbolic link")
+    output = output_candidate.resolve()
     if output.name != "generated":
         raise RecompError("output directory must be named 'generated' (ROM-derived code)")
     names = [f"{prefix}_{suffix}.c" for suffix in ("full", "dispatch", "layout")]
@@ -168,7 +173,7 @@ def execute(args):
             )
         outputs = [staged / "generated" / name for name in names]
         for path in outputs:
-            if not path.is_file() or path.stat().st_size == 0:
+            if path.is_symlink() or not path.is_file() or path.stat().st_size == 0:
                 raise RecompError(f"SmsRecomp did not produce {path.name}")
 
         output.mkdir(parents=True, exist_ok=True)
@@ -176,7 +181,13 @@ def execute(args):
         for source, name in zip(outputs, names):
             target = output / name
             temp_target = output / (name + ".tmp")
-            shutil.copyfile(source, temp_target)
+            # Atomic unique create: never follow an attacker-controlled
+            # pre-existing .tmp symbolic link in the generated directory.
+            with tempfile.NamedTemporaryFile(dir=output,
+                    prefix=".smsgg-" + name + "-", delete=False) as stream:
+                temp_target = Path(stream.name)
+                with source.open("rb") as inp:
+                    shutil.copyfileobj(inp, stream)
             os.replace(temp_target, target)
             evidence[name] = {"bytes": target.stat().st_size, "sha256": digest(target)}
 
@@ -192,8 +203,10 @@ def execute(args):
             "outputs": evidence,
         }
         report_target = output / "report.json"
-        pending = output / "report.json.tmp"
-        pending.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                dir=output, prefix=".smsgg-report-", delete=False) as stream:
+            pending = Path(stream.name)
+            stream.write(json.dumps(report, indent=2, sort_keys=True) + "\n")
         os.replace(pending, report_target)
         verify_generated(output, names, size, sha, crc, config, tool)
         print(f"Generated {len(names)} C files in {output}")
