@@ -78,6 +78,9 @@ static uint16_t pop16(YsZ80 *cpu) {
     return pair(hi, lo);
 }
 
+static void exchange(uint8_t *left, uint8_t *right) {
+    uint8_t old=*left; *left=*right; *right=old;
+}
 void ys_z80_reset(YsZ80 *cpu, YsSmsBus *bus) {
     memset(cpu, 0, sizeof(*cpu));
     cpu->bus = bus;
@@ -95,6 +98,24 @@ static bool out_port(YsZ80 *cpu, uint8_t port, uint8_t value) {
         (cpu->sound && ys_sms_sound_write(cpu->sound,port,value))) return true;
     cpu->status=Z80_UNSUPPORTED_PORT;
     return false;
+}
+
+bool ys_z80_irq(YsZ80 *cpu) {
+    if (!cpu || !cpu->bus || !cpu->iff1 || cpu->ei_delay ||
+        cpu->interrupt_mode!=1 || (cpu->status!=Z80_RUNNING &&
+                                     cpu->status!=Z80_HALTED))
+        return false;
+    /* IM 1: maskable interrupt acknowledges IFF1, vectors to $0038.
+       IFF2 is preserved for RETN/NMI semantics. */
+    if (!push16(cpu,cpu->pc)) {
+        cpu->fault_pc=cpu->pc;
+        return false;
+    }
+    cpu->iff1=false;
+    cpu->ei_delay=0;
+    cpu->pc=0x0038u;
+    cpu->status=Z80_RUNNING;
+    return true;
 }
 
 Z80Status ys_z80_step(YsZ80 *cpu) {
@@ -133,6 +154,27 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             (sum>0xFFFFu? Z80_F_C:0));
     } else switch (opcode) {
     case 0x00: break; /* NOP */
+    case 0x08:
+        exchange(&cpu->a,&cpu->a_alt);
+        exchange(&cpu->f,&cpu->f_alt);
+        break; /* EX AF,AF' */
+    case 0xD9:
+        exchange(&cpu->b,&cpu->b_alt); exchange(&cpu->c,&cpu->c_alt);
+        exchange(&cpu->d,&cpu->d_alt); exchange(&cpu->e,&cpu->e_alt);
+        exchange(&cpu->h,&cpu->h_alt); exchange(&cpu->l,&cpu->l_alt);
+        break; /* EXX */
+    case 0xDD: case 0xFD: {
+        uint8_t sub=fetch(cpu);
+        uint16_t *index=opcode==0xDD ? &cpu->ix : &cpu->iy;
+        if(sub==0xE5) {
+            if(!push16(cpu,*index)) goto fail;
+        } else if(sub==0xE1) {
+            *index=pop16(cpu);
+        } else {
+            cpu->status=Z80_UNSUPPORTED;goto fail;
+        }
+        break;
+    }
     case 0x02: if (!store(cpu,pair(cpu->b,cpu->c),cpu->a)) goto fail;break;
     case 0x0A: cpu->a=ys_sms_bus_read(cpu->bus,pair(cpu->b,cpu->c));break;
     case 0x12: if (!store(cpu,pair(cpu->d,cpu->e),cpu->a)) goto fail;break;
@@ -180,6 +222,16 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         cpu->f=sub_flags(cpu->a,rhs,(uint8_t)(cpu->a-rhs));break;
     }
     case 0xC3: cpu->pc=fetch16(cpu);break;
+    case 0xC2: case 0xCA: case 0xD2: case 0xDA:
+    case 0xE2: case 0xEA: case 0xF2: case 0xFA: {
+        uint16_t target=fetch16(cpu);
+        uint8_t mask=opcode==0xC2 || opcode==0xCA ? Z80_F_Z :
+                     opcode==0xD2 || opcode==0xDA ? Z80_F_C :
+                     opcode==0xE2 || opcode==0xEA ? Z80_F_PV : Z80_F_S;
+        bool set=(cpu->f & mask)!=0;
+        if(set==((opcode & 0x08u)!=0)) cpu->pc=target;
+        break;
+    }
     case 0xC9: cpu->pc=pop16(cpu);break;
     case 0xCD: {
         uint16_t target=fetch16(cpu);
@@ -216,10 +268,15 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         break;
     }
     case 0xF3: cpu->iff1=false;cpu->iff2=false;break;
-    case 0xFB: cpu->iff1=true;cpu->iff2=true;break; /* EI delay not modeled. */
+    case 0xFB: cpu->iff1=true;cpu->iff2=true;cpu->ei_delay=2;break;
     case 0xED: {
         uint8_t sub=fetch(cpu);
         if (sub==0x56) {cpu->interrupt_mode=1;break;}
+        if (sub==0x45 || sub==0x4D) {
+            cpu->pc=pop16(cpu);
+            if(sub==0x45) cpu->iff1=cpu->iff2; /* RETN */
+            break;
+        }
         if (sub==0xA0) { /* LDI: preserve S,Z,C; update PV and 3/5. */
             uint16_t hl=pair(cpu->h,cpu->l),de=pair(cpu->d,cpu->e);
             uint8_t value=ys_sms_bus_read(cpu->bus,hl);
@@ -279,6 +336,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     default: cpu->status=Z80_UNSUPPORTED;goto fail;
     }
     ++cpu->steps;
+    if (cpu->ei_delay) --cpu->ei_delay;
     return cpu->status;
 fail:
     cpu->fault_pc=start;
