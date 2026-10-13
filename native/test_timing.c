@@ -593,7 +593,57 @@ static void test_m41_bank5_rle_and_ed73_stack_save(void) {
            runtime.clock.vblank_events==0u);
 }
 
+static void test_m42_source_two_row_staging(void) {
+    setup();
+    /* Byte-for-byte bank-0 opcodes at $0C67-$0C6F and
+       $0BEF-$0C1F; synthetic row data exercises both literal
+       and repeat commands and two interleaved destination rows.
+       Real ROM source data is verified separately in gated CI. */
+    CODE(0x0C67,0x21,0x00,0xC6,0x11,0x00,0xD6,
+                0x0E,0x02,0xCD,0xEF,0x0B);
+    CODE(0x0BEF,
+         0x41,0xD5,0xC5,0x7E,0xB7,0x28,0x23,
+         0xF2,0x0A,0x0C,0xE6,0x7F,0x47,0x23,
+         0x7E,0x12,0x79,0x83,0x5F,0x30,0x01,
+         0x14,0x10,0xF5,0x23,0x18,0xE8,
+         0x47,0x23,0x7E,0x12,0x79,0x83,0x5F,
+         0x30,0x01,0x14,0x10,0xF6,0x23,0x18,0xD9,
+         0xC1,0xD1,0x13,0x23,0x10,0xD1,0xC9);
+    const uint8_t encoded[]={0x82,0x11,0x22,0x03,0xA0,0x00,
+                             0x02,0x55,0x81,0x66,0x00};
+    for(unsigned i=0u;i<sizeof(encoded);++i)
+        assert(ys_sms_bus_write(&bus,(uint16_t)(0xC600u+i),encoded[i]));
+    for(unsigned i=0u;i<16u;++i)
+        assert(ys_sms_bus_write(&bus,(uint16_t)(0xD600u+i),0xEEu));
+    assert(ys_sms_bus_write(&bus,0xD5FFu,0x6Bu));
+    assert(ys_sms_bus_write(&bus,0xD610u,0x4Cu));
+    cpu.pc=0x0C67u;cpu.sp=0xDFF0u;
+    cpu.a=0x85u;cpu.f=Z80_F_C;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0u;
+    while(cpu.pc!=0x0C72u && steps<600u) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+    }
+    assert(cpu.pc==0x0C72u && steps>70u && steps<600u);
+    assert(cpu.sp==0xDFF0u && cpu.b==0u && cpu.c==2u);
+    assert(cpu.h==0xC6u && cpu.l==0x0Bu &&
+           cpu.d==0xD6u && cpu.e==0x02u);
+    const uint8_t expected[]={
+        0x11,0x55,0x22,0x55,0xA0,0x66,0xA0,0xEE,
+        0xA0,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE,0xEE
+    };
+    for(unsigned i=0u;i<sizeof(expected);++i)
+        assert(ys_sms_bus_read(&bus,(uint16_t)(0xD600u+i))==expected[i]);
+    assert(ys_sms_bus_read(&bus,0xD5FFu)==0x6Bu);
+    assert(ys_sms_bus_read(&bus,0xD610u)==0x4Cu);
+    assert(runtime.recognized_irqs==0u &&
+           runtime.clock.vblank_events==0u &&
+           vdp.vram_writes==0u);
+}
+
 int main(void) {
+    test_m42_source_two_row_staging();
     test_m41_bank5_rle_and_ed73_stack_save();
     test_m40_bank2_sound_workspace_cascade();
     test_m39_source_bank2_sound_call_handoff();

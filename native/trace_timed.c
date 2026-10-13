@@ -69,10 +69,53 @@ static bool reference_bank5_decode(const uint8_t *rom,
     return false;
 }
 
+
+/* Independent reference model for source bank-0 $0BEF-$0C1F's
+   two interleaved resource rows. Command 0 terminates one row,
+   0x80..0xFF copies N literal bytes, 1..127 repeats one value N
+   times; each output step advances by C=2. The Z80 CPU still
+   executes all source instructions; this model only checks output. */
+static bool reference_staged_rows(const uint8_t *source,size_t size,
+                                  uint8_t *expected,size_t capacity,
+                                  size_t *consumed,size_t *written) {
+    size_t at=0u,writes=0u;
+    if(!source || !expected || !consumed || !written || capacity<2u)
+        return false;
+    for(unsigned row=0u;row<2u;++row) {
+        size_t dest=row;
+        bool terminated=false;
+        for(unsigned commands=0u;commands<2048u && at<size;++commands) {
+            uint8_t cmd=source[at++];
+            if(cmd==0u) {terminated=true;break;}
+            unsigned n=(cmd&0x80u) ? (cmd&0x7Fu) : cmd;
+            if(n==0u) n=256u; /* actual Z80 DJNZ wrap */
+            if(cmd&0x80u) {
+                if(at+n>size) return false;
+                for(unsigned i=0u;i<n;++i) {
+                    if(dest>=capacity) return false;
+                    expected[dest]=source[at++];
+                    dest+=2u;++writes;
+                }
+            } else {
+                if(at>=size) return false;
+                uint8_t repeated=source[at++];
+                for(unsigned i=0u;i<n;++i) {
+                    if(dest>=capacity) return false;
+                    expected[dest]=repeated;
+                    dest+=2u;++writes;
+                }
+            }
+        }
+        if(!terminated) return false;
+    }
+    *consumed=at;*written=writes;
+    return writes>0u;
+}
+
 int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops after original bank-5 RLE decompression $0C67 (no gameplay).\n",
+              "Stops after original staged tile/resource transform $0C72 (no gameplay).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1074,7 +1117,86 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
-    puts("Stop at $0C67 before staging decompressed resource to video.");
+
+    /* M42: the original decompressed bank-5 resource is *staged*
+       through bank-0 $0BEF's two-row interleaved command stream.
+       Independently decode the $C600 bytes read by the source Z80
+       interpreter, compare the entire $D600-$DFFF destination
+       workspace and preserve the frame/mapper state. */
+    enum { STAGING_CAPACITY=0xA00u };
+    uint8_t expected_staging[STAGING_CAPACITY];
+    uint8_t source_staging[0x1000];
+    for(unsigned i=0u;i<STAGING_CAPACITY;++i)
+        expected_staging[i]=ys_sms_bus_read(bus,(uint16_t)(0xD600u+i));
+    for(size_t i=0u;i<expected_bytes;++i)
+        source_staging[i]=ys_sms_bus_read(bus,(uint16_t)(0xC600u+i));
+    size_t staging_used=0u,staging_written=0u;
+    if(!reference_staged_rows(source_staging,expected_bytes,
+                              expected_staging,sizeof(expected_staging),
+                              &staging_used,&staging_written)) {
+        fputs("M42 decompressed resource has invalid two-row staging commands\n",
+              stderr);
+        free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+    }
+    const uint64_t stage_irq=runtime.recognized_irqs;
+    const uint64_t stage_vblank=runtime.clock.vblank_events;
+    const uint64_t stage_vram=vdp->vram_writes;
+    const uint64_t stage_psg=sound->psg_write_count;
+    const uint16_t stage_sp=cpu.sp;
+    const uint8_t stage_bank=bus->mapped_bank[2];
+    unsigned long stage_steps=0ul;
+    bool entered_decoder=false;
+    while(cpu.pc!=0x0C72u && stage_steps<60000ul) {
+        uint16_t prev_pc=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M42 original resource staging unsupported",&runtime);
+            fprintf(stderr,"  lastPC=$%04X stage_steps=%lu\n",
+                    prev_pc,stage_steps);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++stage_steps;
+        if(prev_pc==0x0C6Fu && cpu.pc==0x0BEFu)
+            entered_decoder=true;
+    }
+    const uint16_t actual_stage_hl=(uint16_t)(((uint16_t)cpu.h<<8)|cpu.l);
+    const uint16_t actual_stage_de=(uint16_t)(((uint16_t)cpu.d<<8)|cpu.e);
+    bool stage_ok=cpu.pc==0x0C72u && entered_decoder &&
+        stage_steps>15ul && stage_steps<60000ul &&
+        stage_written>0u && staging_used<=expected_bytes &&
+        actual_stage_hl==(uint16_t)(0xC600u+staging_used) &&
+        actual_stage_de==0xD602u &&
+        cpu.sp==stage_sp &&
+        cpu.b==0u && cpu.c==2u &&
+        bus->mapped_bank[2]==stage_bank &&
+        runtime.recognized_irqs==stage_irq &&
+        runtime.clock.vblank_events==stage_vblank &&
+        vdp->vram_writes==stage_vram &&
+        sound->psg_write_count==stage_psg;
+    for(unsigned i=0u;i<STAGING_CAPACITY;++i)
+        stage_ok=stage_ok &&
+            ys_sms_bus_read(bus,(uint16_t)(0xD600u+i))==
+                expected_staging[i];
+    if(!stage_ok) {
+        int result=fail("M42 source decompressed tile/resource staging mismatch",
+                        &runtime);
+        fprintf(stderr,"  steps=%lu source_used=%zu writes=%zu"
+                " HL=$%04X DE=$%04X SP=$%04X IRQ=%llu\n",
+                stage_steps,staging_used,staging_written,
+                actual_stage_hl,actual_stage_de,cpu.sp,
+                (unsigned long long)runtime.recognized_irqs);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS authentic Ys two-row staged resource to $0C72:"
+           " source_used=%zu staged_writes=%zu"
+           " steps=%llu T-states=%llu IRQ=%llu VBlank=%llu\n",
+           staging_used,staging_written,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events);
+    puts("Stop at $0C72 before uploading staged video data to VDP.");
+
 
 
 
@@ -1100,7 +1222,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0C67: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0C72: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);
