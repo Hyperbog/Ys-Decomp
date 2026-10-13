@@ -1,0 +1,23 @@
+# Ys: The Vanished Omens (USA/Europe) — SMS/GG Recomp bring-up config.
+# Never commit ROMs, regenerated cartridge binaries, or generated C.
+# Physical ROM: 256 KiB / 16 x 16 KiB; SHA-256 checked by adapter.
+# CRC-32 from Ys/manifest.json: B33E2827.
+[game]
+output_prefix = "ys_sms"
+platform = "sms"
+rom = "Ys.sms"
+crc32 = 0xB33E2827
+
+[mapper]
+kind = "sega"
+
+# No speculative routine seeds, RAM addresses or jump tables.
+# Add only bank-qualified targets verified against this exact ROM.
+[functions]
+extra = []
+blacklist = []
+
+[jump_tables]
+addr = []
+bank = []
+count = []
