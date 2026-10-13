@@ -289,7 +289,7 @@ bank13-rle-tests:
 # Opt-in static native C generation via an EXTERNAL SMS/GG Recomp installation.
 # This is separate from the checked source cartridge and native C11 runtime.
 SMS_RECOMP ?=
-.PHONY: recomp-preflight recomp-generate recomp-tests
+.PHONY: recomp-preflight recomp-generate recomp-verify recomp-tests
 recomp-preflight:
 	@test -n "$(ROM)" || (echo 'Set ROM=/path/to/owned/Ys.sms' >&2; exit 2)
 	$(PYTHON) ../shared_decomp/smsgg_recomp.py --rom "$(ROM)" --manifest manifest.json --config recomp/game.toml --preflight
@@ -297,5 +297,9 @@ recomp-generate:
 	@test -n "$(ROM)" || (echo 'Set ROM=/path/to/owned/Ys.sms' >&2; exit 2)
 	@test -n "$(SMS_RECOMP)" || (echo 'Set SMS_RECOMP=/path/to/SmsRecomp' >&2; exit 2)
 	$(PYTHON) ../shared_decomp/smsgg_recomp.py --rom "$(ROM)" --manifest manifest.json --config recomp/game.toml --tool "$(SMS_RECOMP)"
+recomp-verify:
+	@test -n "$(ROM)" || (echo 'Set ROM=/path/to/owned/Ys.sms' >&2; exit 2)
+	@test -n "$(SMS_RECOMP)" || (echo 'Set SMS_RECOMP=/path/to/SmsRecomp' >&2; exit 2)
+	$(PYTHON) ../shared_decomp/smsgg_recomp.py --rom "$(ROM)" --manifest manifest.json --config recomp/game.toml --tool "$(SMS_RECOMP)" --verify-generated
 recomp-tests:
 	$(PYTHON) -m unittest discover -s ../shared_decomp/tests -p test_smsgg_recomp.py -v

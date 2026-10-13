@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import tomllib
+import zlib
 
 
 class RecompError(Exception):
@@ -23,6 +24,26 @@ def digest(path):
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def parse_crc(value, label):
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise RecompError(f"{label} must be an unsigned CRC-32")
+    if isinstance(value, int) and 0 <= value <= 0xFFFFFFFF:
+        return value
+    if isinstance(value, str) and re.fullmatch(r"(?:0[xX])?[0-9a-fA-F]{1,8}", value):
+        return int(value[2:] if value[:2].lower() == "0x" else value, 16)
+    raise RecompError(f"{label} must be an unsigned CRC-32")
+
+
+def crc32_file(path):
+    result = 0
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            result = zlib.crc32(chunk, result)
+    return result & 0xFFFFFFFF
 
 
 def verify_rom(rom, manifest):
@@ -41,7 +62,12 @@ def verify_rom(rom, manifest):
             f"ROM identity mismatch: size={size}, sha256={sha}; "
             f"expected size={expected_size}, sha256={expected_hash.lower()}"
         )
-    return size, sha
+    crc = crc32_file(rom)
+    manifest_crc = parse_crc(identity.get("crc32", data.get("crc32")),
+                             "manifest crc32")
+    if manifest_crc is not None and crc != manifest_crc:
+        raise RecompError(f"ROM CRC-32 mismatch: {crc:08X} != manifest {manifest_crc:08X}")
+    return size, sha, crc
 
 
 def read_config(config):
@@ -54,18 +80,60 @@ def read_config(config):
         raise RecompError("this adapter accepts SMS projects only")
     if not isinstance(game.get("rom"), str) or not game["rom"]:
         raise RecompError("game.toml requires [game].rom (ROM remains external)")
-    return prefix
+    config_crc = parse_crc(game.get("crc32"), "game.toml crc32")
+    mapper_kind = data.get("mapper", {}).get("kind")
+    if not isinstance(mapper_kind, str) or mapper_kind not in ("sega", "codemasters"):
+        raise RecompError("game.toml requires a supported [mapper].kind")
+    return prefix, config_crc
+
+
+def verify_generated(output, names, size, sha, crc, config, tool):
+    report_path = output / "report.json"
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise RecompError(f"generated report is missing or invalid: {error}") from error
+    expected = {
+        "schema": "smsgg-recomp-codegen-v1",
+        "stage": "generated-c-only",
+        "runtime_verified": False,
+        "rom_size": size,
+        "rom_sha256": sha,
+        "rom_crc32": f"{crc:08X}",
+        "config_sha256": digest(config),
+        "tool_sha256": digest(tool),
+    }
+    for key, value in expected.items():
+        if report.get(key) != value:
+            raise RecompError(f"generated report {key} does not match verified inputs")
+    outputs = report.get("outputs")
+    if not isinstance(outputs, dict) or set(outputs) != set(names):
+        raise RecompError("generated report output file list does not match game config")
+    for name in names:
+        path = output / name
+        entry = outputs[name]
+        if not isinstance(entry, dict) or not path.is_file() or path.is_symlink():
+            raise RecompError(f"generated output missing or unsafe: {name}")
+        if path.stat().st_size != entry.get("bytes") or digest(path) != entry.get("sha256"):
+            raise RecompError(f"generated output integrity mismatch: {name}")
+    print(f"Verified {len(names)} generated C files; runtime execution NOT VERIFIED")
 
 
 def execute(args):
     config = args.config.resolve(strict=True)
     manifest = args.manifest.resolve(strict=True)
     rom = args.rom.resolve(strict=True)
-    size, sha = verify_rom(rom, manifest)
-    prefix = read_config(config)
+    size, sha, crc = verify_rom(rom, manifest)
+    prefix, config_crc = read_config(config)
+    # Upstream only WARNS when TOML's CRC differs; fail closed instead.
+    if config_crc is not None and config_crc != crc:
+        raise RecompError(
+            f"game.toml CRC-32 mismatch: configured {config_crc:08X}, actual {crc:08X}"
+        )
 
     if args.preflight:
-        print(json.dumps({"preflight": "passed", "rom_size": size, "rom_sha256": sha}))
+        print(json.dumps({"preflight": "passed", "rom_size": size,
+                          "rom_sha256": sha, "rom_crc32": f"{crc:08X}"}))
         return
 
     if args.tool is None:
@@ -77,6 +145,9 @@ def execute(args):
     if output.name != "generated":
         raise RecompError("output directory must be named 'generated' (ROM-derived code)")
     names = [f"{prefix}_{suffix}.c" for suffix in ("full", "dispatch", "layout")]
+    if args.verify_generated:
+        verify_generated(output, names, size, sha, crc, config, tool)
+        return
 
     # The upstream tool writes beside game.toml. Stage off-tree to prevent
     # obsolete generated files from being mistaken for successful output.
@@ -115,6 +186,7 @@ def execute(args):
             "runtime_verified": False,
             "rom_size": size,
             "rom_sha256": sha,
+            "rom_crc32": f"{crc:08X}",
             "config_sha256": digest(config),
             "tool_sha256": digest(tool),
             "outputs": evidence,
@@ -123,6 +195,7 @@ def execute(args):
         pending = output / "report.json.tmp"
         pending.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         os.replace(pending, report_target)
+        verify_generated(output, names, size, sha, crc, config, tool)
         print(f"Generated {len(names)} C files in {output}")
         print("Native compilation, execution and gameplay equivalence: NOT VERIFIED")
 
@@ -134,7 +207,10 @@ def main(argv=None):
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--tool", type=Path, help="external SmsRecomp executable")
     parser.add_argument("--output", type=Path, help="directory named generated")
-    parser.add_argument("--preflight", action="store_true", help="verify inputs only")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--preflight", action="store_true", help="verify inputs only")
+    modes.add_argument("--verify-generated", action="store_true",
+                       help="hash-check existing generated C against ROM/config/tool")
     args = parser.parse_args(argv)
     try:
         execute(args)

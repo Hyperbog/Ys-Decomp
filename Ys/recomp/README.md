@@ -32,7 +32,18 @@ Or from the Ys directory:
 
     make recomp-preflight ROM=/path/to/owned/Ys.sms
     make recomp-generate ROM=/path/to/owned/Ys.sms SMS_RECOMP=/path/to/SmsRecomp
+    make recomp-verify ROM=/path/to/owned/Ys.sms SMS_RECOMP=/path/to/SmsRecomp
     make recomp-tests
+
+Preflight validates ROM size and SHA-256, and independently checks CRC-32
+if supplied by the manifest and/or game.toml. The upstream tool only
+**warns** about configured CRC mismatches; the adapter **rejects** them.
+
+After code generation, `recomp-verify` re-hashes all three output files
+and checks the evidence report against the exact ROM, config and external
+tool binary. This catches tampered files and obsolete generated C even
+when the filenames are unchanged. Successful verification proves only
+**generated-file provenance**, not that the output compiles or runs.
 
 The adapter first verifies exact SHA-256 and ROM size, stages upstream
 generation in a temporary directory, then writes three files to the ignored
