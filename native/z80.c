@@ -385,6 +385,18 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             if(sub==0x45) cpu->iff1=cpu->iff2; /* RETN */
             break;
         }
+        if (sub==0x6F) { /* RLD: A low nibble <- (HL) high nibble,
+                            (HL) <- old (HL) low nibble : A low nibble. */
+            uint16_t hl=pair(cpu->h,cpu->l);
+            uint8_t mem=ys_sms_bus_read(cpu->bus,hl);
+            uint8_t next=(uint8_t)((mem<<4)|(cpu->a&0x0Fu));
+            uint8_t next_a=(uint8_t)((cpu->a&0xF0u)|(mem>>4));
+            if(!store(cpu,hl,next)) goto fail;
+            cpu->a=next_a;
+            cpu->f=(uint8_t)((cpu->f&Z80_F_C)|sz53(cpu->a)|
+                              (parity(cpu->a)?Z80_F_PV:0));
+            break;
+        }
         if (sub==0xA0) { /* LDI: preserve S,Z,C; update PV and 3/5. */
             uint16_t hl=pair(cpu->h,cpu->l),de=pair(cpu->d,cpu->e);
             uint8_t value=ys_sms_bus_read(cpu->bus,hl);

@@ -176,7 +176,63 @@ static void test_bank2_audio_io_and_block_transfer(void) {
     assert(sound.fm_address_count==1 && sound.fm_data_count==1 &&
            sound.fm_touched[0x20] && sound.fm_registers[0x20]==0x55);
 }
+static void test_first_boot_dispatch_and_palette_copy(void) {
+    setup();
+    /* Actual bank-0 startup dispatcher $00C4, RST $08 at $0008,
+       state table $00D4, handlers $00FC/$0C4A and $0A5B/$0A80/$0AE8.
+       Source-encoded $0B10 copies 32 bytes before calling $0B22. */
+    LOAD(0x0008,0x87,0x85,0x6F,0x30,0x01,0x24,
+         0x7E,0x23,0x66,0x6F,0xE9);
+    LOAD(0x00C4,0x3A,0x18,0xC0,0x32,0x31,0xC0,0x3A,0x1F,0xC0,
+         0x21,0xD4,0x00,0xCF,0xC3,0xC4,0x00);
+    LOAD(0x00D4,0xFC,0x00,0x4A,0x0C);
+    LOAD(0x00FC,0x3E,0x01,0x32,0x1F,0xC0,0xC9);
+    LOAD(0x0C4A,0xCD,0x5B,0x0A);
+    LOAD(0x0A5B,0xCD,0x80,0x0A);
+    LOAD(0x0A80,0xCD,0xE8,0x0A);
+    LOAD(0x0AE8,0xCD,0x10,0x0B,0xAF,0xCD,0x22,0x0B);
+    LOAD(0x0B10,0x21,0x60,0xC1,0x11,0x30,0xC5,0x01,0x20,0x00,
+         0xF5,0xED,0xA0,0x78,0xB1,0x20,0xFA,0xF1,0xC9);
+    cpu.pc=0x00C4;
+    cpu.sp=0xDFF0;
+    assert(ys_sms_bus_write(&bus,0xC018,0x49));
+    for(unsigned i=0;i<32;i++)
+        assert(ys_sms_bus_write(&bus,(uint16_t)(0xC160u+i),
+                                (uint8_t)(0x90u+i)));
+    run(0x0B22,300);
+    assert(ys_sms_bus_read(&bus,0xC031)==0x49);
+    assert(ys_sms_bus_read(&bus,0xC01F)==1);
+    for(unsigned i=0;i<32;i++)
+        assert(ys_sms_bus_read(&bus,(uint16_t)(0xC530u+i))==(uint8_t)(0x90u+i));
+    assert(cpu.a==0 && cpu.b==0 && cpu.c==0);
+    assert(cpu.h==0xC1 && cpu.l==0x80 && cpu.d==0xC5 && cpu.e==0x50);
+    assert(cpu.sp==0xDFE6);
+    assert(ys_sms_bus_read(&bus,0xDFE6)==0xEF);
+    assert(ys_sms_bus_read(&bus,0xDFE7)==0x0A);
+    assert(ys_sms_bus_read(&bus,0xDFEE)==0xD1);
+    assert(ys_sms_bus_read(&bus,0xDFEF)==0);
+}
+static void test_rld_nibble_rotation_and_rom_guard(void) {
+    setup();
+    /* SCF is not part of this bounded interpreter; set carry explicitly. */
+    LOAD(0,0x21,0x00,0xC0,0x3E,0xA3,0xED,0x6F);
+    assert(ys_sms_bus_write(&bus,0xC000,0x6C));
+    run(5,2);
+    cpu.f=Z80_F_C;
+    run(7,1);
+    assert(cpu.a==0xA6 && ys_sms_bus_read(&bus,0xC000)==0xC3);
+    assert((cpu.f&Z80_F_C) && (cpu.f&Z80_F_S) &&
+           !(cpu.f&Z80_F_H) && !(cpu.f&Z80_F_N) &&
+           (cpu.f&Z80_F_PV));
+    setup();
+    LOAD(0,0x21,0x00,0x00,0x3E,0xA3,0xED,0x6F);
+    run(5,2);
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.fault_pc==5 && cpu.pc==5);
+}
 int main(void) {
+    test_first_boot_dispatch_and_palette_copy();
+    test_rld_nibble_rotation_and_rom_guard();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
