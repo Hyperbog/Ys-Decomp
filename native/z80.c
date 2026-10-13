@@ -170,7 +170,8 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         return timed_condition(opcode,f_before) ? 17u : 10u; /* CALL cc */
     if ((opcode&0xC7u)==0xC2u) return 10u; /* JP cc */
     switch(opcode) {
-    case 0x00: case 0x08: case 0x2F: case 0xD9:
+    case 0x00: case 0x07: case 0x08: case 0x0F:
+    case 0x2F: case 0xD9:
     case 0xF3: case 0xFB: return 4u;
     case 0xCB: return (sub&7u)==6u ? 12u : 8u; /* BIT b,r */
     case 0xDD: case 0xFD:
@@ -244,6 +245,12 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     } else if (opcode>=0xB8u && opcode<=0xBFu) {
         uint8_t rhs=r8(cpu,opcode&7u);
         cpu->f=sub_flags(cpu->a,rhs,(uint8_t)(cpu->a-rhs));
+    } else if (opcode>=0x90u && opcode<=0x97u) {
+        /* SUB r (including (HL)): full Z80 S/Z/H/PV/N/C and F3/F5. */
+        uint8_t rhs=r8(cpu,opcode&7u);
+        uint8_t old=cpu->a;
+        cpu->a=(uint8_t)(old-rhs);
+        cpu->f=sub_flags(old,rhs,cpu->a);
     } else if (opcode>=0xA0u && opcode<=0xA7u) {
         cpu->a=(uint8_t)(cpu->a & r8(cpu,opcode&7u));
         cpu->f=(uint8_t)(sz53(cpu->a)|Z80_F_H|
@@ -281,6 +288,20 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             (sum>0xFFFFu? Z80_F_C:0));
     } else switch (opcode) {
     case 0x00: break; /* NOP */
+    case 0x07: { /* RLCA: S/Z/PV unchanged; carry = old bit 7. */
+        uint8_t prior=cpu->a;
+        cpu->a=(uint8_t)((prior<<1)|(prior>>7));
+        cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
+                           (cpu->a&(Z80_F_3|Z80_F_5)) | (prior>>7));
+        break;
+    }
+    case 0x0F: { /* RRCA: S/Z/PV unchanged; carry = old bit 0. */
+        uint8_t prior=cpu->a;
+        cpu->a=(uint8_t)((prior>>1)|(prior<<7));
+        cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
+                           (cpu->a&(Z80_F_3|Z80_F_5)) | (prior&1u));
+        break;
+    }
     case 0xCB: {
         uint8_t operation=fetch(cpu);
         if ((operation & 0xC0u)!=0x40u) {

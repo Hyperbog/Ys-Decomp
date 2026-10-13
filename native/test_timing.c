@@ -268,7 +268,66 @@ static void test_source_busy_wait_wakes_with_natural_irq(void) {
     assert(cpu.total_tstates>=192u*228u);
 }
 
+static void test_m34_palette_z80_rotates_and_subtract(void) {
+    setup();
+    CODE(0,0x3E,0x00,0x0E,0x03,0x91,0x07,0x0F);
+    measured(7u,2u); /* LD A,0 */
+    measured(7u,4u); /* LD C,3 */
+    measured(4u,5u); /* SUB C; A becomes $FD with borrow. */
+    assert(cpu.a==0xFDu && cpu.f==0xBBu);
+    measured(4u,6u); /* RLCA $FD -> $FB; F3/F5 set, SZPV kept. */
+    assert(cpu.a==0xFBu && cpu.f==0xA9u);
+    measured(4u,7u); /* RRCA $FB -> $FD; carry from bit 0. */
+    assert(cpu.a==0xFDu && cpu.f==0xA9u);
+    setup();
+    CODE(0,0x3E,0x80,0x0E,0x01,0x91,0x07,0x0F);
+    measured(7u,2u); measured(7u,4u); measured(4u,5u);
+    assert(cpu.a==0x7Fu && cpu.f==0x3Eu); /* overflow, no borrow */
+    measured(4u,6u); /* RLCA of $7F -> $FE, no carry */
+    assert(cpu.a==0xFEu && cpu.f==0x2Cu);
+    measured(4u,7u); /* RRCA of $FE -> $7F, no carry */
+    assert(cpu.a==0x7Fu && cpu.f==0x2Cu);
+}
+
+static void test_m34_original_palette_nibble_loop(void) {
+    setup();
+    /* Byte-identical bank-0 source $0B22-$0B4D copied into ROM-free
+       fixture; 32 iterations of real RLD/SUB C/RRCA/RLCA.
+       All actual Ys ROM bytes are verified separately in gated CI. */
+    CODE(0x0B22,
+         0x21,0x60,0xC1,0xF5,0x4F,0x06,0x20,
+         0xED,0x6F,0xE6,0x03,0x91,0x30,0x01,0xAF,
+         0xED,0x6F,0x5F,0x0F,0x0F,0xE6,0x03,
+         0x91,0x30,0x01,0xAF,0x07,0x07,0x57,
+         0x7B,0xE6,0x03,0x91,0x30,0x01,0xAF,
+         0xB2,0xED,0x6F,0x23,0x10,0xDD,0xF1,0xC9);
+    cpu.pc=0x0B22u;cpu.sp=0xDFF0u;
+    cpu.a=0u;cpu.f=Z80_F_C; /* AF must be restored by final POP. */
+    assert(ys_sms_bus_write(&bus,0xDFF0u,0xEFu));
+    assert(ys_sms_bus_write(&bus,0xDFF1u,0x0Au));
+    assert(ys_sms_bus_write(&bus,0xC15Fu,0xA5u));
+    assert(ys_sms_bus_write(&bus,0xC180u,0x5Au));
+    for(unsigned i=0;i<32u;++i)
+        assert(ys_sms_bus_write(&bus,(uint16_t)(0xC160u+i),
+                                (uint8_t)(0x53u+i*5u)));
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0;
+    while(cpu.pc!=0x0AEFu && steps<1300u) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+    }
+    assert(cpu.pc==0x0AEFu && steps>450u && steps<1300u);
+    assert(cpu.sp==0xDFF2u && cpu.a==0u && cpu.f==Z80_F_C);
+    assert(cpu.h==0xC1u && cpu.l==0x80u &&
+           cpu.b==0u && cpu.c==0u);
+    assert(ys_sms_bus_read(&bus,0xC15Fu)==0xA5u);
+    assert(ys_sms_bus_read(&bus,0xC180u)==0x5Au);
+    assert(runtime.recognized_irqs==0u && runtime.clock.vblank_events==0u);
+}
+
 int main(void) {
+    test_m34_palette_z80_rotates_and_subtract();
+    test_m34_original_palette_nibble_loop();
     test_source_busy_wait_wakes_with_natural_irq();
     test_source_vdp_init_returns_into_wait_bridge();
     test_pending_vblank_reenters_after_ei_ret();

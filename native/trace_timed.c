@@ -38,7 +38,7 @@ static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
 int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops after the first automatically timed frame-wait ISR at $00C4.\n",
+              "Stops at palette-loop exit $0AF6 (prior frame ISR verified at $00C4).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -352,8 +352,98 @@ int main(int argc,char **argv) {
            (unsigned long long)vdp->vram_writes,
            (unsigned long long)sound->psg_write_count,
            wait_iterations,wait_irq_pc);
-    puts("Stop at original startup dispatcher $00C4; no title/gameplay yet.");
-    puts("M32 checkpoint $0046 retained; M33 frame-wait completion reached.");
+    puts("M33 original frame-wait complete; continue to M34 dispatcher.");
+
+    /* M34: run the authentic reset dispatcher through state zero and into
+       state one, then through the early $0C4A -> $0A5B -> $0A80
+       -> $0AE8 palette staging path. Execute the 32-byte, source-backed
+       $0B22 RLD nibble processing loop and stop at the first
+       $0AF6 timed frame-wait CALL, before initiating a new wait.
+       No host-injected IRQ, patched RAM, forced PC or palette bytes. */
+    unsigned long dispatch_steps=0;
+    while(cpu.pc!=0x0C4Au && dispatch_steps<96u) {
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M34 source reset dispatch stopped",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++dispatch_steps;
+    }
+    if(cpu.pc!=0x0C4Au || dispatch_steps<6u ||
+       ys_sms_bus_read(bus,0xC01Fu)!=1u ||
+       cpu.sp!=0xDFEEu ||
+       bus->mapped_bank[2]!=2u ||
+       runtime.recognized_irqs!=3u) {
+        int result=fail("M34 source dispatcher selects state 1 $0C4A",&runtime);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS timed Ys state 0 -> 1 dispatch: PC=$0C4A"
+           " steps=%llu SP=$%04X C01F=%02X IRQ=%llu\n",
+           (unsigned long long)cpu.steps,cpu.sp,
+           ys_sms_bus_read(bus,0xC01Fu),
+           (unsigned long long)runtime.recognized_irqs);
+
+    uint8_t initial_palette[32];
+    for(unsigned i=0;i<32u;++i)
+        initial_palette[i]=ys_sms_bus_read(bus,(uint16_t)(0xC160u+i));
+    unsigned long staging_steps=0;
+    while(cpu.pc!=0x0B22u && staging_steps<2000u) {
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M34 source palette staging stopped",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++staging_steps;
+    }
+    bool staged=cpu.pc==0x0B22u && staging_steps>10u &&
+        cpu.sp==0xDFE6u && cpu.a==0u &&
+        cpu.h==0xC1u && cpu.l==0x80u &&
+        cpu.b==0u && cpu.c==0u &&
+        bus->mapped_bank[2]==2u &&
+        runtime.recognized_irqs==3u;
+    for(unsigned i=0;i<32u;++i)
+        staged=staged &&
+            ys_sms_bus_read(bus,(uint16_t)(0xC530u+i))==initial_palette[i];
+    if(!staged) {
+        int result=fail("M34 source $0B10 staging to $0B22",&runtime);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS timed Ys palette staging: PC=$0B22"
+           " steps=%llu T-states=%llu SP=$%04X\n",
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,cpu.sp);
+
+    unsigned long palette_steps=0;
+    while(cpu.pc!=0x0AF6u && palette_steps<2500u) {
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M34 authentic 32-byte RLD palette transform stopped",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++palette_steps;
+    }
+    if(cpu.pc!=0x0AF6u || palette_steps<450u ||
+       cpu.a!=0u || cpu.b!=3u ||
+       cpu.h!=0xC0u || cpu.l!=0x2Cu ||
+       ys_sms_bus_read(bus,0xC02Cu)!=1u ||
+       ys_sms_bus_read(bus,0xC021u)!=0u ||
+       runtime.recognized_irqs!=3u ||
+       runtime.clock.vblank_events!=7u) {
+        int result=fail("M34 palette nibble loop/first delay checkpoint $0AF6",&runtime);
+        fprintf(stderr,"  palette_steps=%lu HL=%02X%02X BC=%02X%02X"
+                " C02C=%02X\n",palette_steps,cpu.h,cpu.l,
+                cpu.b,cpu.c,ys_sms_bus_read(bus,0xC02Cu));
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS timed Ys first palette nibble transform:"
+           " PC=$0AF6 steps=%llu T-states=%llu"
+           " palette_steps=%lu IRQ=%llu VBlank=%llu\n",
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,palette_steps,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events);
+    puts("Stop BEFORE $0AF6 CALL $0BC5 palette delay; no title/gameplay.");
+
     if (argc==4) {
         uint8_t *rgb=malloc(YS_SMS_RGB_BYTES);
         if (!rgb) {
@@ -371,7 +461,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$00C4: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0AF6: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);
