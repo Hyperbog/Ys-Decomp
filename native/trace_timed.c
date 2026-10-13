@@ -827,7 +827,62 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events,
            (unsigned long long)vdp->vram_writes);
-    puts("Stop at $0C4D before second state graphics loading; not playable.");
+    puts("M38 graphics table clear verified; enter bank-2 sound handoff.");
+
+    /* M39: the original bank-0 $0C4D LD A,2 / $0C4F
+       LD (MapperSlot2),A / $0C52 CALL $8803 must select
+       physical bank 2 and push authentic $0C55 return PC.
+       Stop BEFORE executing a bank-2 sound opcode. This verifies
+       actual inter-bank call setup, not recompiled sound gameplay. */
+    const uint16_t bank2_pre_sp=cpu.sp;
+    const uint64_t bank2_pre_steps=cpu.steps;
+    const uint64_t bank2_pre_tstates=cpu.total_tstates;
+    const uint64_t bank2_pre_irq=runtime.recognized_irqs;
+    const uint64_t bank2_pre_vblank=runtime.clock.vblank_events;
+    const uint64_t bank2_pre_vram=vdp->vram_writes;
+    const uint64_t bank2_pre_cram=vdp->cram_writes;
+    const uint64_t bank2_pre_psg=sound->psg_write_count;
+    unsigned bank2_steps=0;
+    while(cpu.pc!=0x8803u && bank2_steps<4u) {
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M39 source bank-2 sound entry stopped",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++bank2_steps;
+    }
+    const uint16_t bank2_return=(uint16_t)(
+        (uint16_t)ys_sms_bus_read(bus,cpu.sp) |
+        ((uint16_t)ys_sms_bus_read(bus,(uint16_t)(cpu.sp+1u))<<8));
+    const uint8_t entry_opcode=ys_sms_bus_read(bus,0x8803u);
+    if(cpu.pc!=0x8803u || bank2_steps!=3u ||
+       cpu.sp!=(uint16_t)(bank2_pre_sp-2u) ||
+       bank2_return!=0x0C55u ||
+       cpu.a!=2u ||
+       bus->mapped_bank[2]!=2u || bus->bank_select[2]!=2u ||
+       cpu.steps!=bank2_pre_steps+3u ||
+       cpu.total_tstates!=bank2_pre_tstates+37u ||
+       entry_opcode!=rom[2u*YS_ROM_BANK_BYTES+0x0803u] ||
+       runtime.recognized_irqs!=bank2_pre_irq ||
+       runtime.clock.vblank_events!=bank2_pre_vblank ||
+       vdp->vram_writes!=bank2_pre_vram ||
+       vdp->cram_writes!=bank2_pre_cram ||
+       sound->psg_write_count!=bank2_pre_psg) {
+        int result=fail("M39 original source bank-2 $8803 call handoff",&runtime);
+        fprintf(stderr,"  steps=%u bank2=%u return=$%04X opcode=$%02X\n",
+                bank2_steps,bus->mapped_bank[2],bank2_return,entry_opcode);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS Ys source bank-2 sound handoff:"
+           " PC=$8803 savedPC=$%04X bank2=%u opcode=$%02X"
+           " steps=%llu T-states=%llu IRQ=%llu VBlank=%llu\n",
+           bank2_return,bus->mapped_bank[2],entry_opcode,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events);
+    puts("Stop BEFORE bank-2 $8803 sound-init execution; not playable.");
+
 
 
 
@@ -850,7 +905,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0C4D: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$8803: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);

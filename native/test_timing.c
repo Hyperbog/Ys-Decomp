@@ -483,7 +483,35 @@ static void test_m38_source_name_table_clear_tail_return(void) {
     assert(runtime.recognized_irqs==0u);
 }
 
+static void test_m39_source_bank2_sound_call_handoff(void) {
+    setup();
+    /* Exact original Ys bank-0 opcodes $0C4D-$0C54:
+       LD A,$02; LD (MapperSlot2),A; CALL $8803.
+       ROM-free fixture verifies actual bank-2 mapper and CALL stack. */
+    CODE(0x0C4D,0x3E,0x02,0x32,0xFF,0xFF,0xCD,0x03,0x88);
+    cpu.pc=0x0C4Du;cpu.sp=0xDFF0u;
+    rom[2u*YS_ROM_BANK_BYTES+0x0803u]=0xC9u;
+    rom[7u*YS_ROM_BANK_BYTES+0x0803u]=0x76u;
+    assert(ys_sms_bus_write(&bus,0xFFFFu,0x07u));
+    assert(bus.mapped_bank[2]==7u);
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    measured(7u,0x0C4Fu);
+    measured(13u,0x0C52u);
+    assert(bus.mapped_bank[2]==2u && bus.bank_select[2]==2u);
+    measured(17u,0x8803u);
+    assert(cpu.sp==0xDFEEu && cpu.a==2u);
+    assert(ys_sms_bus_read(&bus,cpu.sp)==0x55u);
+    assert(ys_sms_bus_read(&bus,(uint16_t)(cpu.sp+1u))==0x0Cu);
+    assert(ys_sms_bus_read(&bus,0x8803u)==0xC9u);
+    assert(cpu.steps==3u && cpu.total_tstates==37u);
+    assert(runtime.recognized_irqs==0u &&
+           runtime.clock.vblank_events==0u);
+    measured(10u,0x0C55u);
+    assert(cpu.sp==0xDFF0u && cpu.total_tstates==47u);
+}
+
 int main(void) {
+    test_m39_source_bank2_sound_call_handoff();
     test_m38_source_name_table_clear_tail_return();
     test_m37_original_vram_word_clear();
     test_m36_original_bank7_rom_transfer();
