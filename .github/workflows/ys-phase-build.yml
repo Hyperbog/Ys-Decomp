@@ -59,7 +59,7 @@ jobs:
           $pe = [System.BitConverter]::ToInt32($bytes, 0x3C)
           $subsystem = [System.BitConverter]::ToUInt16($bytes, $pe + 24 + 68)
           if ($subsystem -ne 2) { throw "Expected Windows GUI PE subsystem 2, got $subsystem" }
-          $zip = Get-ChildItem 'dist/ys-m31-dev-windows-*.zip' | Select-Object -First 1
+          $zip = Get-ChildItem 'dist/ys-*-dev-windows-*.zip' | Select-Object -First 1
           if (-not $zip) { throw 'Expected a versioned Windows diagnostic package' }
           Write-Host "PASS: persistent Windows GUI-subsystem binary, self-test and versioned ZIP"
       - name: Publish downloadable build for this commit
