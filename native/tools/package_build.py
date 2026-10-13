@@ -99,43 +99,53 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         raw = binary.read_bytes()
         contents[archive_name] = raw
         hashes[archive_name] = hashlib.sha256(raw).hexdigest()
-    readme = (
-        ("WINDOWS: EXTRACT THE ENTIRE ZIP first, then double-click\n"
-         "START_HERE.cmd, or bin\\\\ys-native-window.exe to open the GUI.\n"
-         "The GUI is a ROM-free synthetic SMS VIDEO DIAGNOSTIC, not Ys.\n"
-         "The other .exe tools are command-line utilities; double-clicking\n"
-         "them may briefly open a console and close. Run START_HERE.cmd.\n\n"
-         if platform.startswith("windows-") else "")
-        +        "Ys native C11 " + checkpoint + " - " + channel.upper() + "\n"
-        "Commit: " + revision + "\n"
-        "Platform: " + platform + "\n\n"
-        "This bundle does NOT contain any game ROM or proprietary assets.\n"
-        + ("DEVELOPMENT DIAGNOSTICS ONLY: NOT A PLAYABLE PC GAME.\n"
-           if channel == "dev" else
-           "Playable native game: bin/ys-native-game (check release notes).\n")
-        + "\nIn a terminal run bin/ys-native-info --help.\n"
+    readme_lines = [
+        f"Ys native C11 {checkpoint} - {channel.upper()}",
+        f"Commit: {revision}",
+        f"Platform: {platform}",
+        "",
+        "This bundle does NOT contain any game ROM or proprietary assets.",
+        ("DEVELOPMENT DIAGNOSTICS ONLY: NOT A PLAYABLE PC GAME."
+         if channel == "dev" else
+         "Playable native game: bin/ys-native-game (check release notes)."),
+        "",
+        "In a terminal run bin/ys-native-info --help.",
         "Diagnostics (requires a user-supplied, legally obtained 256 KiB "
-        "Ys Master System ROM image):\n"
-        "    bin/ys-native-probe PATH_TO_YOUR.sms\n"
-        "    bin/ys-native-trace PATH_TO_YOUR.sms\n"
-        "The tracer stops at a bounded decompilation checkpoint.\n"
-        "Synthetic video preview (no ROM necessary):\n"
-        "    bin/ys-native-preview synthetic.ppm\n"
-        "Snapshot actual VDP state at the bounded checkpoint:\n"
-        "    bin/ys-native-trace PATH_TO_YOUR.sms --frame checkpoint.ppm\n"
-        "Export ROM-independent synthetic VDP frames:\n"
-        "    bin/ys-native-frames demo 12 ntsc\n"
-        "Auto-timed synthetic Z80/IM1 VBlank check:\n"
-        "    bin/ys-native-timing --check\n"
-        "Use your own ROM to trace natural Ys VBlank ISR re-entry and return:\n"
-        "    bin/ys-native-timed-rom PATH_TO_YOUR.sms\n"
-        ("Optional bin/ys-native-display is an SDL2 diagnostic window;\n"
-         "it requires a separately installed SDL2 runtime (not bundled).\n"
-         if not platform.startswith("windows-") else "")
-        "These are PPM files readable by image editors and viewers.\n"
-        "Use a compatible SMS emulator to play the original cartridge; "
-        "these binaries are a native reconstruction workbench.\n"
-    ).encode("utf-8")
+        "Ys Master System ROM image):",
+        "    bin/ys-native-probe PATH_TO_YOUR.sms",
+        "    bin/ys-native-trace PATH_TO_YOUR.sms",
+        "The tracer stops at a bounded decompilation checkpoint.",
+        "Synthetic video preview (no ROM necessary):",
+        "    bin/ys-native-preview synthetic.ppm",
+        "Snapshot actual VDP state at the bounded checkpoint:",
+        "    bin/ys-native-trace PATH_TO_YOUR.sms --frame checkpoint.ppm",
+        "Export ROM-independent synthetic VDP frames:",
+        "    bin/ys-native-frames demo 12 ntsc",
+        "Auto-timed synthetic Z80/IM1 VBlank check:",
+        "    bin/ys-native-timing --check",
+        "Use your own ROM to trace natural Ys VBlank ISR re-entry and return:",
+        "    bin/ys-native-timed-rom PATH_TO_YOUR.sms",
+    ]
+    if platform.startswith("windows-"):
+        readme_lines[:0] = [
+            "WINDOWS: EXTRACT THE ENTIRE ZIP first, then double-click",
+            r"START_HERE.cmd, or bin\ys-native-window.exe to open the GUI.",
+            "The GUI is a ROM-free synthetic SMS VIDEO DIAGNOSTIC, not Ys.",
+            "The other .exe tools are command-line utilities; double-clicking",
+            "them may briefly open a console and close. Run START_HERE.cmd.",
+            "",
+        ]
+    else:
+        readme_lines += [
+            "Optional bin/ys-native-display is an SDL2 diagnostic window;",
+            "it requires a separately installed SDL2 runtime (not bundled).",
+        ]
+    readme_lines += [
+        "These are PPM files readable by image editors and viewers.",
+        "Use a compatible SMS emulator to play the original cartridge;",
+        "these binaries are a native reconstruction workbench.",
+    ]
+    readme = ("\n".join(readme_lines) + "\n").encode("utf-8")
     if platform.startswith("windows-"):
         launcher = (Path(__file__).resolve().parents[1] /
                     "release" / "START_HERE.cmd").read_bytes()
