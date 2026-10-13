@@ -193,9 +193,11 @@ static bool reference_staged_columns(const uint8_t *source,size_t size,
 }
 
 int main(int argc,char **argv) {
-    if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
-        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops after four-column resource staging at $0C92 (not gameplay).\n",
+    const bool m46_prefix=(argc==3 && strcmp(argv[2],"--m46-prefix")==0);
+    if (!(argc==2 || m46_prefix ||
+          (argc==4 && strcmp(argv[2],"--frame")==0))) {
+        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm | --m46-prefix]\n"
+              "Default M45 stop $0C92; opt-in M46 prefix stop $0C9C (not gameplay).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1554,7 +1556,78 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
-    puts("Stop before source $0C92 video setup, not playable.");
+
+    if(m46_prefix) {
+        /* M46a executes only the original $0C92-$0C9B prefix.
+           This deliberately stops before $0C9C CALL $0AA7. */
+        const uint8_t prefix[]={0x3Eu,0x20u,0x32u,0x19u,0xC0u,
+                                0x3Eu,0x81u,0x32u,0x64u,0xDEu};
+        const uint16_t next_pc[]={0x0C94u,0x0C97u,0x0C99u,0x0C9Cu};
+        const uint8_t cycles[]={7u,13u,7u,13u};
+        uint8_t original_wram[YS_WRAM_BYTES];
+        uint8_t banks_before[3];
+        memcpy(original_wram,bus->wram,sizeof(original_wram));
+        memcpy(banks_before,bus->mapped_bank,sizeof(banks_before));
+        const uint8_t flags_before=cpu.f;
+        const uint16_t sp_before=cpu.sp;
+        const uint64_t steps_before=cpu.steps;
+        const uint64_t t_before=cpu.total_tstates;
+        const uint64_t irq_before=runtime.recognized_irqs;
+        const uint64_t blank_before=runtime.clock.vblank_events;
+        const uint64_t vram_before=vdp->vram_writes;
+        const uint64_t psg_before=sound->psg_write_count;
+        bool source_ok=true;
+        for(size_t i=0u;i<sizeof(prefix);++i)
+            if(ys_sms_bus_read(bus,(uint16_t)(0x0C92u+i))!=prefix[i])
+                source_ok=false;
+        if(!source_ok) {
+            int result=fail("M46 source opcode prefix differs",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        for(unsigned i=0u;i<4u;++i) {
+            uint16_t from=cpu.pc;
+            Z80Status status=ys_sms_runtime_step_auto(&runtime);
+            if(status!=Z80_RUNNING || cpu.pc!=next_pc[i] ||
+               cpu.last_tstates!=cycles[i]) {
+                int result=fail("M46 original video-state prefix stopped",
+                                &runtime);
+                fprintf(stderr,"  priorPC=$%04X prefix-step=%u\n",from,i);
+                free(rom);free(bus);free(vdp);free(sound);return result;
+            }
+        }
+        size_t mismatches=0u;
+        uint16_t first_bad=0u;
+        for(unsigned address=0xC000u;address<0xE000u;++address) {
+            uint8_t expected=original_wram[address-0xC000u];
+            if(address==0xC019u) expected=0x20u;
+            if(address==0xDE64u) expected=0x81u;
+            if(ys_sms_bus_read(bus,(uint16_t)address)!=expected) {
+                if(mismatches==0u) first_bad=(uint16_t)address;
+                ++mismatches;
+            }
+        }
+        if(mismatches!=0u || cpu.pc!=0x0C9Cu || cpu.a!=0x81u ||
+           cpu.f!=flags_before || cpu.sp!=sp_before ||
+           cpu.steps!=steps_before+4u || cpu.total_tstates!=t_before+40u ||
+           memcmp(banks_before,bus->mapped_bank,sizeof(banks_before))!=0 ||
+           runtime.recognized_irqs!=irq_before ||
+           runtime.clock.vblank_events!=blank_before ||
+           vdp->vram_writes!=vram_before ||
+           sound->psg_write_count!=psg_before) {
+            int result=fail("M46 video-state WRAM/timing invariant",&runtime);
+            fprintf(stderr,"  WRAM mismatches=%zu first=$%04X\n",
+                    mismatches,first_bad);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        printf("PASS M46 candidate prefix to $0C9C:"
+               " 4 Z80 instructions, 40 T-states, $C019=20 $DE64=81"
+               " IRQ=%llu VBlank=%llu\n",
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+        puts("Stop before source $0C9C CALL $0AA7; not playable.");
+    } else {
+        puts("Stop before source $0C92 video setup, not playable.");
+    }
 
 
 
