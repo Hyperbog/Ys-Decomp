@@ -77,6 +77,7 @@ int main(int argc, char **argv) {
     }
     printf("PASS continuous Ys reset through bank-2 sound and VDP: %llu instructions, PC=$%04X\n",
            (unsigned long long)cpu.steps,cpu.pc);
+    const YsZ80 initial_context=cpu; /* Registers before CALL $0BC5. */
     puts("PASS source-matched PSG=11 bytes, FM=6 register/data pairs, VDP=11 registers + 1 CRAM byte");
     /* Phase 5: execute the actual $0BC5 context-saving bridge and the
        $0042 VBlank wait until its EI has executed. There is no synthetic
@@ -195,8 +196,69 @@ int main(int argc, char **argv) {
     }
     printf("PASS first VBlank sprite and input processing: %llu instructions, PC=$%04X SP=$%04X\n",
            (unsigned long long)cpu.steps,cpu.pc,cpu.sp);
-    puts("Stop before bank-2 $8000 update: no ISR exit, main-loop resume or frame clock claim.");
-    puts("VBlank was explicitly injected; graphics rendering and audio synthesis remain absent.");
+    /* M24: continue actual bank-2 first-frame sound update, including the
+       zero-state branch through $8803 and the six inactive IX channels.
+       No PSG/FM response or video tick is fabricated. */
+    result=ys_z80_run_until(&cpu,0x0138,2000);
+    if (result!=Z80_RUNNING || cpu.pc!=0x0138 ||
+        cpu.sp!=0xDFD2 || bus->mapped_bank[2]!=2 ||
+        sound->psg_write_count!=22 ||
+        sound->fm_address_count!=12 || sound->fm_data_count!=12 ||
+        ys_sms_bus_read(bus,0xDE63)!=0 ||
+        ys_sms_bus_read(bus,0xDE68)!=0xE4) {
+        int code=fail("first-frame bank-2 $8000 sound update",&cpu);
+        fprintf(stderr,"  PSG=%llu FM=%llu/%llu bank2=%u DE63=%02X DE68=%02X\n",
+                (unsigned long long)sound->psg_write_count,
+                (unsigned long long)sound->fm_address_count,
+                (unsigned long long)sound->fm_data_count,
+                (unsigned)bus->mapped_bank[2],
+                ys_sms_bus_read(bus,0xDE63),ys_sms_bus_read(bus,0xDE68));
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    printf("PASS first-frame bank-2 sound update: %llu instructions, PC=$%04X; PSG=22 FM=12 pairs\n",
+           (unsigned long long)cpu.steps,cpu.pc);
+
+    /* The original interrupt handler samples $DD. Idle $FF input bit4 is
+       high, so the warm-reset branch at $013C must not be taken. */
+    result=ys_z80_run_until(&cpu,0x0049,16);
+    if (result!=Z80_RUNNING || cpu.pc!=0x0049 ||
+        cpu.sp!=0xDFD6 || input.reads_dd!=1 ||
+        ys_sms_bus_read(bus,0xC021)!=0 ||
+        ys_sms_bus_read(bus,0xC10F)!=0 ||
+        cpu.a!=1) {
+        int code=fail("first VBlank handler IRQ return and wait release",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    result=ys_z80_run_until(&cpu,0x00C4,128);
+    bool restored=result==Z80_RUNNING && cpu.pc==0x00C4 &&
+        cpu.sp==initial_context.sp && cpu.iff1 && cpu.iff2 &&
+        cpu.ei_delay==0 && bus->mapper_control==0x80 &&
+        bus->mapped_bank[2]==2 &&
+        cpu.a==initial_context.a && cpu.f==initial_context.f &&
+        cpu.b==initial_context.b && cpu.c==initial_context.c &&
+        cpu.d==initial_context.d && cpu.e==initial_context.e &&
+        cpu.h==initial_context.h && cpu.l==initial_context.l &&
+        cpu.a_alt==initial_context.a_alt &&
+        cpu.f_alt==initial_context.f_alt &&
+        cpu.b_alt==initial_context.b_alt &&
+        cpu.c_alt==initial_context.c_alt &&
+        cpu.d_alt==initial_context.d_alt &&
+        cpu.e_alt==initial_context.e_alt &&
+        cpu.h_alt==initial_context.h_alt &&
+        cpu.l_alt==initial_context.l_alt &&
+        cpu.ix==initial_context.ix && cpu.iy==initial_context.iy;
+    if(!restored) {
+        int code=fail("complete first VBlank ISR and restore startup context",&cpu);
+        fprintf(stderr,"  SP=$%04X/$%04X AF=%02X%02X/%02X%02X IX=%04X/%04X IY=%04X/%04X\n",
+                cpu.sp,initial_context.sp,
+                cpu.a,cpu.f,initial_context.a,initial_context.f,
+                cpu.ix,initial_context.ix,cpu.iy,initial_context.iy);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    printf("PASS first VBlank ISR return to original startup: %llu instructions, PC=$%04X SP=$%04X\n",
+           (unsigned long long)cpu.steps,cpu.pc,cpu.sp);
+    puts("Stop before $00C4 startup dispatcher; the VBlank event was injected.");
+    puts("No clock-driven frames, display rendering, sound synthesis or playable game.");
     free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }
