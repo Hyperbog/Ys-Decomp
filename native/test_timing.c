@@ -219,8 +219,8 @@ static void test_source_vdp_init_returns_into_wait_bridge(void) {
     CODE(0x00C1,0xCD,0xC5,0x0B);
     cpu.pc=0x0764u;
     cpu.sp=0xDFEAu;
-    assert(ys_sms_bus_write(&bus,0xDFEAu,0x00u));
-    assert(ys_sms_bus_write(&bus,0xDFEBu,0x40u));
+    assert(ys_sms_bus_write(&bus,0xDFEAu,0x40u));
+    assert(ys_sms_bus_write(&bus,0xDFEBu,0x00u));
     assert(ys_sms_bus_write(&bus,0xDFECu,0xC1u));
     assert(ys_sms_bus_write(&bus,0xDFEDu,0x00u));
     assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
