@@ -868,7 +868,7 @@ static void test_m46b_source_vdp_irq_gate(void) {
         assert(cpu.pc==pc_seq[i] && cpu.last_tstates==cycles[i]);
     }
     assert(cpu.steps==14u && cpu.total_tstates==119u);
-    assert(cpu.sp==0xDFF0u && cpu.f==(Z80_F_Z|Z80_F_C));
+    assert(cpu.sp==0xDFEEu && cpu.f==(Z80_F_Z|Z80_F_C));
     assert(cpu.d==0x81u && cpu.e==0xA0u && cpu.a==0x40u);
     assert(cpu.iff1 && cpu.iff2 && cpu.ei_delay==0u);
     assert(vdp.registers[1]==0xA0u && vdp.status==0u);
