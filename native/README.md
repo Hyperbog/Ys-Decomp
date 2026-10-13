@@ -1,3 +1,37 @@
+# M37 — First source ROM graphics-memory clear verified
+
+The continuous native Z80 implementation has now executed the actual
+Ys Sega Master System cartridge through its VDP scroll-register updates
+and the first **64-byte VRAM clear**. The original game naturally
+reaches **PC=$0A77**, having written zeroes to VRAM `$0000-$003F`
+through the unmodified `$06D4` helper.
+
+[The full source-ROM verification](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38383836571)
+passed: **97,144 source Z80 instructions**, **1,129,966 nominal
+T-states**, **15** accepted interrupts, **19** generated VBlanks,
+**2,561** cumulative VRAM writes, and VDP scroll registers
+`R8=$00/R9=$00`. The authentic VDP write pointer ended at `$0040`.
+All 16 source-only ROM banks rebuilt with the established SHA-256;
+the older M25 manually injected path and previous M29–M36 naturally
+clocked milestones remain passing.
+
+On Windows, **extract both ZIP layers**, then double-click
+`START_HERE.cmd`. Choose **1** for a persistent synthetic graphics
+test window or **3** to trace your own legally obtained 256 KiB
+Ys SMS ROM to `$0A77` and view its **static** VDP-state image.
+
+```sh
+bin/ys-native-timed-rom /path/to/your/Ys.sms --frame checkpoint.ppm
+```
+
+See [M37 graphics-memory source trace](research/M37_FIRST_VRAM.md).
+This initial 64-byte VRAM operation does not constitute a rendered
+Ys title screen or interactive native gameplay. The longer
+`$3800` name-table clear remains the next source-ROM milestone.
+All Alpha/Beta/Final promotion gates remain false.
+
+## Previous milestone — M36
+
 # M36 — Actual bank-7 data copy and original VDP initialization
 
 The C11 source-ROM tracer now runs continuously from cold reset through

@@ -20,9 +20,10 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M36 — the naturally timed source-ROM trace now
-  reaches Z80 `PC=$0A5E` after **96,849** instructions, including
-  the bank-7 ROM→WRAM data copy and authentic VDP setup.
+- **Checkpoint:** M37 — the naturally timed source-ROM trace now
+  reaches Z80 `PC=$0A77` after **97,144** instructions, including
+  the bank-7 ROM→WRAM copy, authentic VDP setup, scroll register
+  updates and the first 64-byte VRAM clear.
   The independent M25 manually injected trace still ends at `$0B22`.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
   `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
@@ -77,7 +78,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m36-dev-linux-x64-<commit>.zip
+dist/ys-m37-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -219,7 +220,7 @@ log capture and explicit pauses. MSVC Release artifacts use the static
 C runtime to avoid a mandatory VC++ Redistributable dependency.
 
 **Extract both layers** if the GitHub Actions artifact itself contains a
-versioned `ys-m36-dev-windows-x64-...zip`. Double-click
+versioned `ys-m37-dev-windows-x64-...zip`. Double-click
 `START_HERE.cmd` from the folder containing `bin`. Choose 1 for a
 ROM-free animated SMS **test pattern**, or choose 3 for the bounded
 source-ROM timed diagnostic (requires a user-supplied Ys SMS ROM).
@@ -309,3 +310,18 @@ register 0/1 writes (`$26/$A0`) and sprite-Y terminator
 **1,127,522** nominal T-states and no newly injected interrupts.
 The optional Windows image remains a **saved initialization
 snapshot**, not a live game, title screen or proof of gameplay.
+
+
+### M37 source graphics-memory initialization
+
+[Gated full-ROM test 38383836571](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38383836571)
+verified the same M36 source-ROM boot through **97,144**
+instructions and **1,129,966** T-states to `PC=$0A77`.
+The real Z80 code wrote scroll registers `R8=R9=0`,
+cleared WRAM `$C018/$C019`, and wrote 64 zero bytes
+to VRAM `$0000–$003F` through the source `$06D4`
+helper. The VDP data write pointer advanced to `$0040`.
+Cumulative VRAM writes reached **2,561**, with no new
+accepted IRQ or VBlank at this boundary. The Windows
+binary still presents static cartridge VDP snapshots,
+not interactive gameplay. Alpha gates remain blocked.

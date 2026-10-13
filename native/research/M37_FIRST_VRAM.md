@@ -61,3 +61,21 @@ That larger initialization and its ISR/VDP addressing must
 be verified as a separate milestone. No native game window,
 live gameplay input or actual title art is established by M37.
 All Alpha/Beta/Final release gates remain unpassed.
+
+## Gated source-ROM result
+
+[GitHub Actions run 38383836571](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38383836571)
+passed 13/13 native tests and the original M10 source-ROM rebuild:
+
+```text
+M10: 16/16 source-only banks, 262144 bytes; ROM fallback=0
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+PASS original Ys bank-7 source transfer: PC=$0A83 bank2=7 LDI=16 bytes_changed=14 steps=96806 T-states=1127171 IRQ=15
+PASS authentic Ys VDP init return: PC=$0A5E R0=$26 R1=$A0 spriteY[0]=$D0 steps=96849 T-states=1127522 IRQ=15 VBlank=19
+PASS original Ys first VRAM clear to $0A77: zero_bytes=64 R8=$00 R9=$00 steps=97144 T-states=1129966 IRQ=15 VBlank=19 VRAMwrites=2561
+PASS authentic timed VDP image: 147471 bytes
+```
+
+The next `$0A77–$0A7D` source code initializes a much
+larger VDP region starting at `$3800`; this was
+**not** executed in M37 and may overlap a real VBlank IRQ.

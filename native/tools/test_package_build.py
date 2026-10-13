@@ -18,7 +18,7 @@ class PackageTests(unittest.TestCase):
         self.build.mkdir()
         self.output = self.base / "dist"
         self.gates = self.base / "gates.json"
-        self.state = {"schema_version": 1, "checkpoint": "M36",
+        self.state = {"schema_version": 1, "checkpoint": "M37",
                       "gates": {name: {"passed": False, "evidence": ""}
                                 for group in release.REQUIRED.values()
                                 for name in group}}
@@ -35,7 +35,7 @@ class PackageTests(unittest.TestCase):
 
     def test_development_bundle_contains_diagnostics_and_hashes(self):
         path = self.archive()
-        self.assertEqual(path.name, "ys-m36-dev-linux-x64-aaaaaaaa.zip")
+        self.assertEqual(path.name, "ys-m37-dev-linux-x64-aaaaaaaa.zip")
         with zipfile.ZipFile(path) as archive:
             names = set(archive.namelist())
             self.assertEqual(names, {"bin/ys-native-info", "bin/ys-native-probe",
@@ -48,7 +48,7 @@ class PackageTests(unittest.TestCase):
             self.assertFalse(manifest["playable"])
             self.assertFalse(manifest["rom_included"])
             self.assertEqual(manifest["channel"], "dev")
-            self.assertEqual(manifest["checkpoint"], "M36")
+            self.assertEqual(manifest["checkpoint"], "M37")
             self.assertEqual(manifest["entrypoint"], "bin/ys-native-info")
             self.assertIsNone(manifest["graphical_diagnostic"])
             self.assertIn(b"NOT A PLAYABLE PC GAME", archive.read("README.txt"))
