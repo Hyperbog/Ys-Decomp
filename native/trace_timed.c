@@ -1169,22 +1169,41 @@ int main(int argc,char **argv) {
         cpu.sp==stage_sp &&
         cpu.b==0u && cpu.c==2u &&
         bus->mapped_bank[2]==stage_bank &&
-        runtime.recognized_irqs==stage_irq &&
-        runtime.clock.vblank_events==stage_vblank &&
-        vdp->vram_writes==stage_vram &&
-        sound->psg_write_count==stage_psg;
-    for(unsigned i=0u;i<STAGING_CAPACITY;++i)
-        stage_ok=stage_ok &&
-            ys_sms_bus_read(bus,(uint16_t)(0xD600u+i))==
-                expected_staging[i];
+        /* This 1536-write source loop spans two *real* VBlanks.
+           Do not mistake legitimate ISR/audio/VDP work for an
+           emulator discontinuity or inject a fake frame to pass. */
+        runtime.recognized_irqs>=stage_irq &&
+        runtime.recognized_irqs<=stage_irq+4u &&
+        runtime.clock.vblank_events>=stage_vblank &&
+        runtime.clock.vblank_events<=stage_vblank+4u &&
+        vdp->vram_writes>=stage_vram &&
+        sound->psg_write_count>=stage_psg;
+    size_t mismatches=0u;
+    unsigned first_mismatch=0u;
+    for(unsigned i=0u;i<STAGING_CAPACITY;++i) {
+        if(ys_sms_bus_read(bus,(uint16_t)(0xD600u+i))!=
+           expected_staging[i]) {
+            if(mismatches==0u) first_mismatch=i;
+            ++mismatches;
+        }
+    }
+    stage_ok=stage_ok && mismatches==0u;
     if(!stage_ok) {
         int result=fail("M42 source decompressed tile/resource staging mismatch",
                         &runtime);
         fprintf(stderr,"  steps=%lu source_used=%zu writes=%zu"
-                " HL=$%04X DE=$%04X SP=$%04X IRQ=%llu\n",
+                " HL=$%04X DE=$%04X SP=$%04X IRQ=%llu->%llu"
+                " VBlank=%llu->%llu mismatches=%zu first=$%04X"
+                " actual=%02X expected=%02X\n",
                 stage_steps,staging_used,staging_written,
                 actual_stage_hl,actual_stage_de,cpu.sp,
-                (unsigned long long)runtime.recognized_irqs);
+                (unsigned long long)stage_irq,
+                (unsigned long long)runtime.recognized_irqs,
+                (unsigned long long)stage_vblank,
+                (unsigned long long)runtime.clock.vblank_events,
+                mismatches,(unsigned)(0xD600u+first_mismatch),
+                ys_sms_bus_read(bus,(uint16_t)(0xD600u+first_mismatch)),
+                expected_staging[first_mismatch]);
         free(rom);free(bus);free(vdp);free(sound);return result;
     }
     printf("PASS authentic Ys two-row staged resource to $0C72:"

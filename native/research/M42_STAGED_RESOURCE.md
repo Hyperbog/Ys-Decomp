@@ -45,8 +45,12 @@ The acceptance gate checks:
   inserted.
 - Source pointer and final DE derived from independent row lengths,
   restored stack pointer, B=0 and unchanged C=2.
-- Slot-2 ROM mapper preserved, with no source-ROM edits or injected
-  IRQs; a bounded instruction budget and an explicit failure path.
+- Slot-2 ROM mapper preserved; allow clock-generated IM1 IRQs to
+  occur during the long routine. The first real gated run reached
+  $0C72 after two additional IRQs and two VBlanks, so IRQ/audio/VDP
+  counts are checked for monotonicity and a bounded window instead
+  of being artificially held constant. No source-ROM edits or
+  injected IRQs; a bounded instruction budget and explicit failure.
 - Existing M25 and M29-M41 source-based CPU/VDP/sound checks remain
   mandatory, including independent M41 bank-5 decompression.
 - Optional `--frame` P6 export remains a static **256×192** image
@@ -87,3 +91,7 @@ VDP/interrupt-backed execution window, a bounded true VRAM write
 ledger and a comparison with the staged WRAM resource.
 Do not promote to playable/title-screen status without visible
 live video and interactive control evidence.
+
+## Initial full-ROM diagnostic
+
+The first gated original-ROM run, [38469588594](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38469588594), reached the target `$0C72` in 122,272 instructions and 1,323,179 nominal T-states. It decoded all 748 bytes from `$C600`, performed 1,536 staged writes and naturally received two new frame interrupts (`IRQ=18`, `VBlank=22`). The original assertion incorrectly expected no IRQ during the 13,191-step routine. The corrected check allows natural interrupts and independently verifies every destination byte. Successful source-ROM validation of the corrected check is required before claiming M42 complete.
