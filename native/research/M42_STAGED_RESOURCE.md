@@ -34,15 +34,19 @@ offsets. This is **resource staging in WRAM**, not video presentation.
 without changing CPU registers, the instruction clock, RAM or hardware
 ports. A separate bounded C decoder models the source commands over
 the already validated $C600 resource and updates an expected copy of
-the pre-existing $D600-$DFFF WRAM workspace.
+the pre-existing non-stack $D600-$DFBF WRAM workspace.
 
 The original Z80 CPU independently runs the source `$0BEF` routine.
 The acceptance gate checks:
 
 - Natural return at **PC=$0C72**, through the source routine.
-- Exact byte-for-byte agreement for all $A00 bytes of destination
-  WRAM, including untouched locations; no synthetic graphics are
-  inserted.
+- Exact byte-for-byte agreement for all $9C0 bytes of non-stack
+  destination WRAM ($D600-$DFBF), including untouched locations;
+  require exactly 1,536 staged writes from all 748 resource bytes.
+  The remaining $DFC0-$DFFF bytes are live Z80/IM1 stack scratch
+  and MUST NOT be compared to their pre-trace contents; doing so
+  falsely rejects authentic interrupt stack pushes.
+  No synthetic graphics or CPU state are inserted.
 - Source pointer and final DE derived from independent row lengths,
   restored stack pointer, B=0 and unchanged C=2.
 - Slot-2 ROM mapper preserved; allow clock-generated IM1 IRQs to
@@ -95,3 +99,7 @@ live video and interactive control evidence.
 ## Initial full-ROM diagnostic
 
 The first gated original-ROM run, [38469588594](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38469588594), reached the target `$0C72` in 122,272 instructions and 1,323,179 nominal T-states. It decoded all 748 bytes from `$C600`, performed 1,536 staged writes and naturally received two new frame interrupts (`IRQ=18`, `VBlank=22`). The original assertion incorrectly expected no IRQ during the 13,191-step routine. The corrected check allows natural interrupts and independently verifies every destination byte. Successful source-ROM validation of the corrected check is required before claiming M42 complete.
+
+## Gated source-data vs. live-stack separation
+
+The second tagged ROM run [38469858302](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38469858302) confirmed the complete 1,536 resource writes and all 748 consumed command bytes, two natural IRQs and normal CPU/mapper return. It found only **31** workspace comparison differences, beginning at `$DFC0`, which is **inside the original Z80 interrupt stack**, not the staged resource. The M42 acceptance scope is now precisely `$D600–$DFBF`, excluding the stack area `$DFC0–$DFFF`; any difference in the non-stack resource region remains a hard failure. No ROM/game-state edits, graphics fabrication or IRQ injection are used. A final gated check is required before declaring M42 verified.

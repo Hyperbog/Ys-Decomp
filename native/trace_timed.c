@@ -1118,12 +1118,16 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
 
-    /* M42: the original decompressed bank-5 resource is *staged*
-       through bank-0 $0BEF's two-row interleaved command stream.
-       Independently decode the $C600 bytes read by the source Z80
-       interpreter, compare the entire $D600-$DFFF destination
-       workspace and preserve the frame/mapper state. */
-    enum { STAGING_CAPACITY=0xA00u };
+    /* M42: original bank-5 resource is *staged* through the $0BEF
+       two-row interleaved source stream. Compare the entire
+       non-stack $D600-$DFBF destination and require 1536 writes.
+       $DFC0-$DFFF is used by the live CPU/IRQ stack, so its
+       mutations are expected and must not be mistaken for data.
+       Preserve the real frame/mapper state; inject nothing. */
+    /* $DFC0-$DFFF is the LIVE Z80 interrupt stack, not part of
+       the resource staging buffer: snapshot-comparing it would
+       misdiagnose legitimate IM1 pushes as corrupt source output. */
+    enum { STAGING_CAPACITY=0x9C0u };
     uint8_t expected_staging[STAGING_CAPACITY];
     uint8_t source_staging[0x1000];
     for(unsigned i=0u;i<STAGING_CAPACITY;++i)
@@ -1163,7 +1167,7 @@ int main(int argc,char **argv) {
     const uint16_t actual_stage_de=(uint16_t)(((uint16_t)cpu.d<<8)|cpu.e);
     bool stage_ok=cpu.pc==0x0C72u && entered_decoder &&
         stage_steps>15ul && stage_steps<60000ul &&
-        staging_written>0u && staging_used<=expected_bytes &&
+        staging_written==1536u && staging_used==expected_bytes &&
         actual_stage_hl==(uint16_t)(0xC600u+staging_used) &&
         actual_stage_de==0xD602u &&
         cpu.sp==stage_sp &&
