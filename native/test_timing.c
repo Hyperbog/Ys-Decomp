@@ -802,7 +802,44 @@ static void test_m45_source_four_column_resource(void) {
            runtime.clock.vblank_events==0u);
 }
 
+
+/* M46a: original bank-0 $0C92-$0C9B, immediately after M45's
+   four-column resource staging. This is a synthetic execution fixture,
+   not a full source-ROM runtime verification or title-screen proof. */
+static void test_m46_video_setup_prefix(void) {
+    setup();
+    CODE(0x0C92,0x3E,0x20,0x32,0x19,0xC0,
+         0x3E,0x81,0x32,0x64,0xDE);
+    cpu.pc=0x0C92u;
+    cpu.f=(uint8_t)(Z80_F_S|Z80_F_C);
+    assert(ys_sms_bus_write(&bus,0xC018u,0x6Bu));
+    assert(ys_sms_bus_write(&bus,0xC019u,0x55u));
+    assert(ys_sms_bus_write(&bus,0xC01Au,0x72u));
+    assert(ys_sms_bus_write(&bus,0xDE63u,0x39u));
+    assert(ys_sms_bus_write(&bus,0xDE64u,0x66u));
+    assert(ys_sms_bus_write(&bus,0xDE65u,0x4Cu));
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    const uint16_t next_pc[]={0x0C94u,0x0C97u,0x0C99u,0x0C9Cu};
+    const uint8_t cycles[]={7u,13u,7u,13u};
+    for(unsigned i=0u;i<4u;++i) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        assert(cpu.pc==next_pc[i] && cpu.last_tstates==cycles[i]);
+    }
+    assert(cpu.steps==4u && cpu.total_tstates==40u);
+    assert(cpu.a==0x81u && cpu.f==(Z80_F_S|Z80_F_C));
+    assert(cpu.sp==0xDFF0u && bus.mapped_bank[2]==2u);
+    assert(ys_sms_bus_read(&bus,0xC018u)==0x6Bu);
+    assert(ys_sms_bus_read(&bus,0xC019u)==0x20u);
+    assert(ys_sms_bus_read(&bus,0xC01Au)==0x72u);
+    assert(ys_sms_bus_read(&bus,0xDE63u)==0x39u);
+    assert(ys_sms_bus_read(&bus,0xDE64u)==0x81u);
+    assert(ys_sms_bus_read(&bus,0xDE65u)==0x4Cu);
+    assert(vdp.vram_writes==0u && runtime.recognized_irqs==0u &&
+           runtime.clock.vblank_events==0u);
+}
+
 int main(void) {
+    test_m46_video_setup_prefix();
     test_m45_source_four_column_resource();
     test_m44_cb_res_flags_and_cycles();
     test_m44_interleaved_pattern_rom_fixture();
