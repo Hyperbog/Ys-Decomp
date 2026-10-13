@@ -3,6 +3,7 @@
 #include "sms_bus.h"
 #include "sms_vdp.h"
 #include "sms_sound.h"
+#include "sms_input.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -17,6 +18,7 @@ typedef struct {
     YsSmsBus *bus;
     YsSmsVdp *vdp; /* Optional $80-$BF VDP device; ports fail closed if detached. */
     YsSmsSound *sound; /* Optional observable PSG/FM write sink. */
+    YsSmsInput *input; /* Optional active-low controller read snapshots. */
     uint16_t pc, sp, fault_pc, ix, iy;
     uint8_t a, f, b, c, d, e, h, l, interrupt_mode;
     uint8_t a_alt, f_alt, b_alt, c_alt, d_alt, e_alt, h_alt, l_alt;
@@ -28,6 +30,7 @@ typedef struct {
 void ys_z80_reset(YsZ80 *cpu, YsSmsBus *bus);
 void ys_z80_attach_vdp(YsZ80 *cpu, YsSmsVdp *vdp);
 void ys_z80_attach_sound(YsZ80 *cpu, YsSmsSound *sound);
+void ys_z80_attach_input(YsZ80 *cpu, YsSmsInput *input);
 Z80Status ys_z80_step(YsZ80 *cpu);
 /* External caller provides the VBlank/IRQ event; no timing is synthesized. */
 bool ys_z80_irq(YsZ80 *cpu);

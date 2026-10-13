@@ -38,6 +38,9 @@ int main(int argc, char **argv) {
     ys_sms_sound_reset(sound);
     ys_z80_attach_vdp(&cpu,vdp);
     ys_z80_attach_sound(&cpu,sound);
+    YsSmsInput input;
+    ys_sms_input_reset(&input);
+    ys_z80_attach_input(&cpu,&input);
     /* Continuous reset, battery-backed SRAM setup, two RAM clear loops,
        bank 2 sound initializer $8803, and VDP initializer $0749. */
     Z80Status result=ys_z80_run_until(&cpu,0x00C1,30000);
@@ -149,8 +152,51 @@ int main(int argc, char **argv) {
     }
     printf("PASS Ys first VBlank VDP update and RST $08 dispatch: %llu instructions, PC=$%04X SP=$%04X\n",
            (unsigned long long)cpu.steps,cpu.pc,cpu.sp);
-    puts("Stop before $01B4 handler; no ISR exit, resumed main loop, or frame clock claim.");
-    puts("Video event was explicitly injected; rendering and gameplay remain unimplemented.");
+    /* M23: continue through $01B4->$0427 unrolled sprite-table output
+       ($04BF:64 bytes, $043F:128 bytes), then $03E8 RET Z and the
+       $0773 idle-controller sample. Stop at bank-2 $8000 before sound update. */
+    result=ys_z80_run_until(&cpu,0x0125,256);
+    bool sprites_ok=result==Z80_RUNNING && cpu.pc==0x0125 &&
+        cpu.sp==0xDFD2 && vdp->control_writes==36 &&
+        vdp->register_writes==15 && vdp->vram_writes==192 &&
+        vdp->address==0 && vdp->code==1 &&
+        ys_sms_bus_read(bus,0xC02C)==0;
+    for (unsigned i=0;i<64;++i)
+        sprites_ok=sprites_ok &&
+            vdp->vram[0x3F00u+i]==ys_sms_bus_read(bus,(uint16_t)(0xDD00u+i));
+    for (unsigned i=0;i<128;++i)
+        sprites_ok=sprites_ok &&
+            vdp->vram[0x3F80u+i]==ys_sms_bus_read(bus,(uint16_t)(0xDD40u+i));
+    if (!sprites_ok) {
+        int code=fail("real first-frame sprite-table transfer and RST return",&cpu);
+        fprintf(stderr,"  VDP VRAM writes=%llu control writes=%llu addr=$%04X\n",
+                (unsigned long long)vdp->vram_writes,
+                (unsigned long long)vdp->control_writes,vdp->address);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    printf("PASS source sprite-table uploads: 64 Y + 128 X/tile bytes, PC=$%04X\n",cpu.pc);
+
+    result=ys_z80_run_until(&cpu,0x0130,20);
+    if (result!=Z80_RUNNING || cpu.pc!=0x0130 ||
+        input.reads_dc!=1 || input.reads_dd!=0 ||
+        ys_sms_bus_read(bus,0xC01B)!=0 ||
+        ys_sms_bus_read(bus,0xC01C)!=0 ||
+        !cpu.iff1 || cpu.ei_delay!=0 || cpu.sp!=0xDFD2) {
+        int code=fail("real idle-controller sample and interrupt re-enable",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    result=ys_z80_run_until(&cpu,0x8000,3);
+    if (result!=Z80_RUNNING || cpu.pc!=0x8000 ||
+        cpu.sp!=0xDFD0 || bus->mapped_bank[2]!=2 ||
+        ys_sms_bus_read(bus,0xDFD0)!=0x38 ||
+        ys_sms_bus_read(bus,0xDFD1)!=0x01) {
+        int code=fail("first VBlank dispatch into bank-2 sound frame update",&cpu);
+        free(rom);free(bus);free(vdp);free(sound);return code;
+    }
+    printf("PASS first VBlank sprite and input processing: %llu instructions, PC=$%04X SP=$%04X\n",
+           (unsigned long long)cpu.steps,cpu.pc,cpu.sp);
+    puts("Stop before bank-2 $8000 update: no ISR exit, main-loop resume or frame clock claim.");
+    puts("VBlank was explicitly injected; graphics rendering and audio synthesis remain absent.");
     free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }

@@ -1,3 +1,65 @@
+# Ys native C11 — M23: first-frame sprite upload and controller sample
+
+The bounded CPU/VDP runtime now extends the *first manually triggered*
+VBlank service sequence from bank 0's `$01B4` through its `$0427` sprite
+attribute-table upload, `$03E8` conditional return, EI, bank 0's `$0773`
+controller sampler, and dispatch into the `$8000` sound-frame update.
+Execution stops **before the first instruction at `$8000`**.
+
+## Native CI and reconstruction policy
+
+```sh
+cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Debug
+cmake --build build-native --parallel
+ctest --test-dir build-native --output-on-failure
+```
+
+Fast default CI executes all native unit suites without reconstructing ROM
+banks. Run the ROM-dependent trace **only** when it advances a meaningful
+source-backed checkpoint, by an explicit `workflow_dispatch` with input
+`rom_trace=true` or a commit containing `[rom-check]`.
+For a manual source-verified test:
+
+```sh
+python3 Ys/tools/build_system_m10.py --check --out /tmp/ys-source-built.sms
+./build-native/ys-native-trace /tmp/ys-source-built.sms
+```
+
+The source reconstruction asserts the original 256 KiB cartridge SHA-256
+`02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9`.
+No commercial ROM or image/assets are committed.
+
+## VBlank sprite transfer
+
+Recovered bank-0 ROM source shows `$0427` setting VDP VRAM write addresses
+`$3F00` and `$3F80`, then executing 64 and 128 literal `OUTI` instructions.
+These copy the byte ranges `$DD00-$DD3F` (sprite Y coordinates) and
+`$DD40-$DDBF` (sprite X/tile values) to the corresponding VDP sprite
+attribute table. The model validates the 192 bytes and total write count,
+including address wrapping at `$3FFF`, without drawing actual sprites.
+
+The source-backed `$03E8` handler sees `$C02C=0` following reset and
+returns to `$0125`. The code re-enables interrupts with EI and calls the
+controller sampler at `$0773`. `sms_input.[ch]` supplies explicit active-low
+snapshots at ports `$DC/$DD`, initially `$FF` for no input. It does **not**
+automatically poll a keyboard/controller or implement other SMS I/O ports.
+
+Additional bounded Z80 opcodes: conditional `RET` family, register
+`AND/XOR/OR` forms, and `CPL`; invalid/unsupported instructions and ports
+still fail closed. `test_irq.c` tests the actual source-backed sprite
+upload sequence with nonzero synthetic data and controller sampling with
+both pressed and unpressed buttons.
+
+## Explicit non-goals
+
+The full first VBlank ISR **has not returned** to the interrupted caller;
+`$8000` is the next unexecuted instruction. No reliable emulated frame
+clock, H/VBlank scheduling, audio synthesis, controller polling, video
+rendering, SDL frontend or playable game loop is present. Existing SMS
+mapper-revision assumptions and incomplete Z80 opcode/flag coverage remain.
+
+## Earlier milestones
+
 # Ys native C11 — M22: first VBlank VDP dispatch checkpoint
 
 ## M22 acceptance boundary

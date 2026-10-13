@@ -103,6 +103,9 @@ void ys_z80_attach_vdp(YsZ80 *cpu, YsSmsVdp *vdp) {
 void ys_z80_attach_sound(YsZ80 *cpu, YsSmsSound *sound) {
     if (cpu) cpu->sound = sound;
 }
+void ys_z80_attach_input(YsZ80 *cpu, YsSmsInput *input) {
+    if (cpu) cpu->input=input;
+}
 static bool out_port(YsZ80 *cpu, uint8_t port, uint8_t value) {
     if ((cpu->vdp && ys_sms_vdp_write(cpu->vdp,port,value)) ||
         (cpu->sound && ys_sms_sound_write(cpu->sound,port,value))) return true;
@@ -149,6 +152,18 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         uint8_t old = r8(cpu, i), result = (uint8_t)(old - 1u);
         if (!w8(cpu, i, result)) goto fail;
         cpu->f = dec_flags(old, result, cpu->f & Z80_F_C);
+    } else if (opcode>=0xA0u && opcode<=0xA7u) {
+        cpu->a=(uint8_t)(cpu->a & r8(cpu,opcode&7u));
+        cpu->f=(uint8_t)(sz53(cpu->a)|Z80_F_H|
+                         (parity(cpu->a)?Z80_F_PV:0));
+    } else if (opcode>=0xA8u && opcode<=0xAFu) {
+        cpu->a=(uint8_t)(cpu->a ^ r8(cpu,opcode&7u));
+        cpu->f=(uint8_t)(sz53(cpu->a)|
+                         (parity(cpu->a)?Z80_F_PV:0));
+    } else if (opcode>=0xB0u && opcode<=0xB7u) {
+        cpu->a=(uint8_t)(cpu->a | r8(cpu,opcode&7u));
+        cpu->f=(uint8_t)(sz53(cpu->a)|
+                         (parity(cpu->a)?Z80_F_PV:0));
     } else if (opcode>=0x80u && opcode<=0x87u) {
         uint8_t rhs=r8(cpu,opcode&7u);
         uint8_t old=cpu->a;
@@ -174,6 +189,11 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             (sum>0xFFFFu? Z80_F_C:0));
     } else switch (opcode) {
     case 0x00: break; /* NOP */
+    case 0x2F: /* CPL: SZPV/C unchanged; set H/N, 3/5 from A. */
+        cpu->a=(uint8_t)~cpu->a;
+        cpu->f=(uint8_t)((cpu->f & (Z80_F_S|Z80_F_Z|Z80_F_PV|Z80_F_C)) |
+            (cpu->a & (Z80_F_3|Z80_F_5)) | Z80_F_H | Z80_F_N);
+        break;
     case 0x08:
         exchange(&cpu->a,&cpu->a_alt);
         exchange(&cpu->f,&cpu->f_alt);
@@ -254,6 +274,15 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         break;
     }
     case 0xC9: cpu->pc=pop16(cpu);break;
+    case 0xC0: case 0xC8: case 0xD0: case 0xD8:
+    case 0xE0: case 0xE8: case 0xF0: case 0xF8: {
+        uint8_t mask=(opcode&0x30u)==0x00u ? Z80_F_Z :
+                     (opcode&0x30u)==0x10u ? Z80_F_C :
+                     (opcode&0x30u)==0x20u ? Z80_F_PV : Z80_F_S;
+        bool expected=(opcode & 0x08u)!=0;
+        if(((cpu->f&mask)!=0)==expected) cpu->pc=pop16(cpu);
+        break;
+    }
     case 0xCD: {
         uint16_t target=fetch16(cpu);
         if (!push16(cpu,cpu->pc)) goto fail;
@@ -362,7 +391,8 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     }
     case 0xDB: {
         uint8_t port=fetch(cpu), value=0;
-        if (!cpu->vdp || !ys_sms_vdp_read(cpu->vdp,port,&value)) {
+        if (!((cpu->vdp && ys_sms_vdp_read(cpu->vdp,port,&value)) ||
+              (cpu->input && ys_sms_input_read(cpu->input,port,&value)))) {
             cpu->status=Z80_UNSUPPORTED_PORT;goto fail;
         }
         cpu->a=value;break; /* IN A,(n) leaves Z80 flags unchanged. */

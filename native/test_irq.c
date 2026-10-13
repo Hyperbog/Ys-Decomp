@@ -153,7 +153,81 @@ static void test_add_a_8bit_flags(void) {
     assert(cpu.a==0 && (cpu.f&Z80_F_C) &&
            (cpu.f&Z80_F_Z) && (cpu.f&Z80_F_PV));
 }
+static void test_ys_sprite_table_transfer_and_return(void) {
+    setup();
+    /* $01B4 -> $0427: 64 Y bytes and 128 X/tile bytes into SAT VRAM.
+       Opcode bytes and $04BF/$053F RET boundaries follow phase16 bank 0. */
+    CODE(0x01B4,0xCD,0x27,0x04,0xC3,0xE8,0x03);
+    CODE(0x0427,0xAF,0xD3,0xBF,0x3E,0x7F,0xD3,0xBF,
+         0x0E,0xBE,0x21,0x00,0xDD,0xCD,0xBF,0x04,
+         0x3C,0xD3,0xBF,0x3D,0xD3,0xBF,0x21,0x40,0xDD);
+    for (unsigned i=0;i<128;++i) {
+        unsigned offset=0x043Fu+i*2u;
+        rom[offset]=0xED; rom[offset+1u]=0xA3;
+    }
+    rom[0x053F]=0xC9;
+    CODE(0x03E8,0x3A,0x2C,0xC0,0xB7,0xC8);
+    assert(ys_sms_bus_write(&bus,0xDFF0,0x25));
+    assert(ys_sms_bus_write(&bus,0xDFF1,0x01));
+    for (unsigned i=0;i<192;++i)
+        assert(ys_sms_bus_write(&bus,(uint16_t)(0xDD00u+i),
+                                (uint8_t)(i*3u+7u)));
+    cpu.pc=0x01B4;
+    until(0x0125,240);
+    assert(cpu.sp==0xDFF2 && cpu.a==0);
+    assert(vdp.control_writes==4 && vdp.register_writes==0);
+    assert(vdp.vram_writes==192 && vdp.address==0 && vdp.code==1);
+    for (unsigned i=0;i<64;++i)
+        assert(vdp.vram[0x3F00u+i]==(uint8_t)(i*3u+7u));
+    for (unsigned i=0;i<128;++i)
+        assert(vdp.vram[0x3F80u+i]==(uint8_t)((i+64u)*3u+7u));
+}
+static void test_ys_controller_sample(void) {
+    setup();
+    YsSmsInput input;
+    ys_sms_input_reset(&input);
+    ys_z80_attach_input(&cpu,&input);
+    CODE(0x0773,0xDB,0xDC,0x21,0x1B,0xC0,0xF6,0xC0,
+         0x2F,0x47,0xAE,0x70,0x23,0xA0,0x77,0xC9);
+    assert(ys_sms_bus_write(&bus,0xC01B,0x03));
+    assert(ys_sms_bus_write(&bus,0xDFF0,0x30));
+    assert(ys_sms_bus_write(&bus,0xDFF1,0x01));
+    cpu.pc=0x0773;
+    input.dc=0xEF; /* active-low button nibble */
+    until(0x0130,15);
+    assert(input.reads_dc==1 && input.reads_dd==0);
+    assert(ys_sms_bus_read(&bus,0xC01B)==0x10);
+    assert(ys_sms_bus_read(&bus,0xC01C)==0x10);
+    assert(cpu.a==0x10 && cpu.b==0x10 && cpu.sp==0xDFF2);
+    setup();
+    ys_sms_input_reset(&input);
+    ys_z80_attach_input(&cpu,&input);
+    cpu.pc=0x0773;
+    CODE(0x0773,0xDB,0xDC,0x21,0x1B,0xC0,0xF6,0xC0,
+         0x2F,0x47,0xAE,0x70,0x23,0xA0,0x77,0xC9);
+    assert(ys_sms_bus_write(&bus,0xDFF0,0x30));
+    assert(ys_sms_bus_write(&bus,0xDFF1,0x01));
+    until(0x0130,15);
+    assert(input.reads_dc==1 && cpu.a==0 && cpu.b==0);
+    assert(ys_sms_bus_read(&bus,0xC01B)==0);
+    assert(ys_sms_bus_read(&bus,0xC01C)==0);
+}
+static void test_conditional_return(void) {
+    setup();
+    CODE(0,0xC8,0x00);
+    assert(ys_sms_bus_write(&bus,0xDFF0,0x34));
+    assert(ys_sms_bus_write(&bus,0xDFF1,0x12));
+    cpu.f=0;
+    until(1,1);
+    assert(cpu.sp==0xDFF0);
+    cpu.pc=0; cpu.f=Z80_F_Z;
+    until(0x1234,1);
+    assert(cpu.sp==0xDFF2);
+}
 int main(void) {
+    test_ys_sprite_table_transfer_and_return();
+    test_ys_controller_sample();
+    test_conditional_return();
     ys_source_vblank_vdp_commands_and_rst08();
     test_add_a_8bit_flags();
     shadow_and_index_registers();
