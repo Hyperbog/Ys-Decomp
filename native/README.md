@@ -1,3 +1,31 @@
+# Ys native C11 — M24: first VBlank interrupt returns to startup
+
+The current source-ROM trace reaches **PC=$00C4 / SP=$DFF0** after
+**17,052 Z80 instructions** from reset and one explicitly injected VBlank.
+All main and alternate general registers, IX/IY, stack and mapper state
+were verified against the pre-interrupt snapshot. The bank-2 $8000
+sound-update path writes 22 cumulative PSG bytes and 12 FM register/data
+pairs (including the repeat initialization at $8803).
+
+New bounded CPU instructions: indexed and nonindexed BIT, LD IX/IY,nn,
+ADD IX/IY,rr, CP r and conditional CALL cc,nn. The source-backed tests
+cover first-frame sound idle-channel scans and zero-bit flags.
+
+All six native CTest suites and the explicitly requested 256 KiB
+source-ROM checkpoint passed in CI:
+https://github.com/Hyperbog/Ys-Decomp/actions/runs/38334911711
+
+See [M24 source tracing](research/M24_SOURCE_TRACE.md) for opcode evidence.
+
+Routine native commits do **not** rebuild the cartridge: use
+workflow_dispatch rom_trace=true or a [rom-check] commit marker.
+The original decompilation is unchanged and no ROM binary is committed.
+
+The opcode at $00C4 has **not** executed yet. Video frame clocks,
+automatic interrupts, native rendering, sound synthesis, controller
+event polling and playable game logic remain unfinished.
+
+## Previous checkpoint — M23
 # Ys native C11 — M23: first-frame sprite upload and controller sample
 
 The bounded CPU/VDP runtime now extends the *first manually triggered*
