@@ -35,6 +35,50 @@ static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
         a->ix==b->ix && a->iy==b->iy;
 }
 
+/* Independent host-side reference for Ys bank-0 $0695-$06C0.
+   Four interleaved VRAM rows, with signed RLE commands:
+   bit7=0 repeats the following byte, bit7=1 copies that many
+   literal bytes; zero terminates each row. This decoder does not
+   call the Z80 interpreter or mutate its bus/VDP, and rejects
+   crossing the mapped 16 KiB cartridge window or VRAM bounds. */
+static bool reference_pattern_rows(const YsSmsBus *bus,
+                                   uint8_t expected[YS_VRAM_BYTES],
+                                   uint8_t touched[YS_VRAM_BYTES],
+                                   size_t *written, uint16_t *end_hl) {
+    uint16_t hl=0x8000u;
+    size_t count=0u;
+    memset(expected,0,YS_VRAM_BYTES);
+    memset(touched,0,YS_VRAM_BYTES);
+    for(unsigned row=0;row<4u;++row) {
+        unsigned offset=row;
+        bool terminated=false;
+        for(unsigned command=0;command<1024u;++command) {
+            if(hl>=0xC000u) return false;
+            uint8_t header=ys_sms_bus_read(bus,hl++);
+            if(header==0u) {terminated=true;break;}
+            unsigned length=header&0x7Fu;
+            if(length==0u) length=256u; /* B=0 / DJNZ wraps. */
+            bool literal=(header&0x80u)!=0u;
+            if((unsigned)hl+ (literal?length:1u)>0xC000u)
+                return false;
+            for(unsigned i=0;i<length;++i) {
+                if(offset>=YS_VRAM_BYTES) return false;
+                uint8_t value=ys_sms_bus_read(
+                    bus,(uint16_t)(hl+(literal?i:0u)));
+                expected[offset]=value;
+                touched[offset]=1u;
+                ++count;
+                offset+=4u;
+            }
+            hl=(uint16_t)(hl+(literal?length:1u));
+        }
+        if(!terminated) return false;
+    }
+    *written=count;
+    *end_hl=hl;
+    return count>0u;
+}
+
 /* Independent, bounded host reference for the original bank-0
    $0C20 RLE/sequence decoder. The Z80 interpreter independently
    executes the source routine and its output is compared bytewise.
@@ -1305,7 +1349,86 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events,
            (unsigned long long)vdp->vram_writes);
-    puts("Stop before source $0C7E pattern transfer; title not yet playable.");
+    /* M44: source $0C7E-$0C86 selects HL=$8000, DE=$4000,
+       CALL $0695. The bank-0 decoder streams four interleaved
+       compressed rows into VRAM using actual RST $28, OUT ($BE),
+       mapper reads and Z80 loop timing. Compare against a separate
+       bounded host decoder, never substitute the decoded bytes
+       into the VDP or modify CPU/interrupt state. */
+    uint8_t pattern_expected[YS_VRAM_BYTES];
+    uint8_t pattern_touched[YS_VRAM_BYTES];
+    size_t pattern_bytes=0u;
+    uint16_t pattern_end_hl=0u;
+    if(!reference_pattern_rows(bus,pattern_expected,pattern_touched,
+                               &pattern_bytes,&pattern_end_hl)) {
+        int result=fail("M44 source cartridge pattern reference invalid",&runtime);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    const uint16_t pattern_sp=cpu.sp;
+    const uint8_t pattern_bank=bus->mapped_bank[2];
+    const uint64_t pattern_vblank=runtime.clock.vblank_events;
+    const uint64_t pattern_irq=runtime.recognized_irqs;
+    const uint64_t pattern_vram=vdp->vram_writes;
+    const uint64_t pattern_cram=vdp->cram_writes;
+    unsigned pattern_steps=0u;
+    unsigned actual_out=0u;
+    unsigned row_terminators=0u;
+    while(cpu.pc!=0x0C87u && pattern_steps<200000u) {
+        uint16_t prior_pc=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M44 original $0695 graphics transfer stopped",&runtime);
+            fprintf(stderr,"  priorPC=$%04X helpersteps=%u outputs=%u\n",
+                    prior_pc,pattern_steps,actual_out);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++pattern_steps;
+        if(prior_pc==0x06A6u) ++actual_out;
+        if(prior_pc==0x06BBu && cpu.pc==0x06BCu)
+            ++row_terminators;
+    }
+    size_t bad_pixels=0u;
+    unsigned first_bad=0u;
+    for(unsigned i=0u;i<YS_VRAM_BYTES;++i)
+        if(pattern_touched[i] && vdp->vram[i]!=pattern_expected[i]) {
+            if(bad_pixels==0u) first_bad=i;
+            ++bad_pixels;
+        }
+    bool pattern_ok=cpu.pc==0x0C87u &&
+        pattern_bytes>0u && actual_out==pattern_bytes &&
+        row_terminators==4u &&
+        pattern_steps>100u && pattern_steps<200000u &&
+        cpu.sp==pattern_sp && cpu.h==(uint8_t)(pattern_end_hl>>8) &&
+        cpu.l==(uint8_t)pattern_end_hl &&
+        cpu.d==0x40u && cpu.e==4u && cpu.b==0u && cpu.c==4u &&
+        bus->mapped_bank[2]==pattern_bank &&
+        vdp->vram_writes>=pattern_vram+pattern_bytes &&
+        vdp->cram_writes==pattern_cram &&
+        runtime.recognized_irqs>=pattern_irq &&
+        runtime.clock.vblank_events>=pattern_vblank &&
+        bad_pixels==0u;
+    if(!pattern_ok) {
+        int result=fail("M44 source four-row graphics mismatch",&runtime);
+        fprintf(stderr,"  rows=%u writes=%u expected=%zu bad=%zu"
+                " first=$%04X actual=%02X expected=%02X"
+                " HL=$%02X%02X expectedHL=$%04X DE=$%02X%02X"
+                " steps=%u\n",
+                row_terminators,actual_out,pattern_bytes,bad_pixels,
+                first_bad,vdp->vram[first_bad],pattern_expected[first_bad],
+                cpu.h,cpu.l,pattern_end_hl,cpu.d,cpu.e,pattern_steps);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS original Ys 4-row pattern decompression to $0C87:"
+           " bytes=%zu OUT=%u sourceHL=$%04X"
+           " Z80steps=%llu T-states=%llu IRQ=%llu VBlank=%llu"
+           " VRAMwrites=%llu\n",
+           pattern_bytes,actual_out,pattern_end_hl,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events,
+           (unsigned long long)vdp->vram_writes);
+    puts("Stop before source $0C87 resource staging; not playable.");
 
 
 
@@ -1333,7 +1456,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0C7E: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0C87: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);

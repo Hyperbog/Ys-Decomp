@@ -173,7 +173,8 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0x00: case 0x07: case 0x08: case 0x0F:
     case 0x2F: case 0xD9:
     case 0xF3: case 0xFB: return 4u;
-    case 0xCB: return (sub&7u)==6u ? 12u : 8u; /* BIT b,r */
+    case 0xCB: return (sub&7u)==6u ?
+        ((sub&0xC0u)==0x40u ? 12u : 15u) : 8u; /* BIT/RES b,r */
     case 0xDD: case 0xFD:
         switch(sub) {
         case 0xE5: return 15u; /* PUSH IX/IY */
@@ -305,11 +306,18 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     }
     case 0xCB: {
         uint8_t operation=fetch(cpu);
-        if ((operation & 0xC0u)!=0x40u) {
+        if ((operation&0xC0u)==0x40u) {
+            uint8_t value=r8(cpu,operation&7u);
+            cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,value);
+        } else if ((operation&0xC0u)==0x80u) {
+            /* RES b,r / RES b,(HL). No flags change. Source $06A0
+               uses CB B8 (RES 7,B) for interleaved VRAM RLE. */
+            uint8_t value=(uint8_t)(r8(cpu,operation&7u) &
+                                   ~(1u<<((operation>>3)&7u)));
+            if(!w8(cpu,operation&7u,value)) goto fail;
+        } else {
             cpu->status=Z80_UNSUPPORTED;goto fail;
         }
-        uint8_t value=r8(cpu,operation&7u);
-        cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,value);
         break;
     }
     case 0x2F: /* CPL: SZPV/C unchanged; set H/N, 3/5 from A. */

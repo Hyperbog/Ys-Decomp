@@ -686,7 +686,70 @@ static void test_m43_source_1536_byte_vdp_outi(void) {
            runtime.clock.vblank_events<=2u);
 }
 
+static void test_m44_cb_res_flags_and_cycles(void) {
+    setup();
+    CODE(0,0x06,0xFF,0xCB,0xB8,0x21,0x00,0xC0,0xCB,0xBE);
+    assert(ys_sms_bus_write(&bus,0xC000u,0xFFu));
+    cpu.f=Z80_F_S|Z80_F_Z|Z80_F_C;
+    uint8_t prior=cpu.f;
+    measured(7u,2u);  /* LD B,$FF */
+    measured(8u,4u);  /* source $06A0: RES 7,B */
+    assert(cpu.b==0x7Fu && cpu.f==prior);
+    measured(10u,7u); /* LD HL,$C000 */
+    measured(15u,9u); /* RES 7,(HL), flags unchanged */
+    assert(ys_sms_bus_read(&bus,0xC000u)==0x7Fu && cpu.f==prior);
+}
+
+static void test_m44_interleaved_pattern_rom_fixture(void) {
+    setup();
+    /* Byte-identical bank-0 $0695-$06C0, and $0C7E-$0C86
+       from the original Ys cartridge, with the real $0028
+       VDP control-port helper. The ROM-free bank-2 fixture
+       exercises repeated and literal RLE plus an empty row. */
+    CODE(0x0C7E,0x21,0x00,0x80,0x11,0x00,0x40,0xCD,0x95,0x06);
+    CODE(0x0695,0x0E,0x04,0x41,0xC5,0xD5,0x7E,0x23,0xB7,
+         0x28,0x1C,0x47,0xCB,0xB8,0x07,0x08,0xEF,0x7E,
+         0xD3,0xBE,0x08,0x30,0x01,0x23,0x08,0x79,0x83,
+         0x5F,0x30,0x01,0x14,0x10,0xEF,0x08,0x38,0xE2,
+         0x23,0x18,0xDF,0xD1,0x13,0xC1,0x10,0xD8,0xC9);
+    CODE(0x0028,0xF3,0x7B,0xD3,0xBF,0x7A,
+         0xD3,0xBF,0xFB,0xC9);
+    const uint8_t packed[]={
+        0x03,0x11,0x00,       /* row 0: repeat 3 at VRAM 0,4,8 */
+        0x82,0x22,0x33,0x00,  /* row 1: literal 2 at 1,5 */
+        0x01,0x44,0x00,       /* row 2: repeat 1 at 2 */
+        0x00};                /* row 3: empty */
+    memcpy(rom+2u*YS_ROM_BANK_BYTES,packed,sizeof(packed));
+    for(unsigned i=0;i<16u;++i) vdp.vram[i]=0xA5u;
+    cpu.pc=0x0C7Eu;cpu.sp=0xDFF0u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0u,outputs=0u;
+    while(cpu.pc!=0x0C87u && steps<1200u) {
+        uint16_t prior=cpu.pc;
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        if(prior==0x06A6u) ++outputs;
+        ++steps;
+    }
+    assert(cpu.pc==0x0C87u && steps>80u && steps<1200u);
+    assert(outputs==6u && vdp.vram_writes==6u &&
+           vdp.cram_writes==0u && vdp.control_writes==12u);
+    assert(cpu.sp==0xDFF0u && cpu.b==0u && cpu.c==4u &&
+           cpu.h==0x80u && cpu.l==0x0Bu &&
+           cpu.d==0x40u && cpu.e==4u);
+    assert(vdp.vram[0]==0x11u && vdp.vram[4]==0x11u &&
+           vdp.vram[8]==0x11u &&
+           vdp.vram[1]==0x22u && vdp.vram[5]==0x33u &&
+           vdp.vram[2]==0x44u);
+    for(unsigned i=0;i<16u;++i)
+        if(i!=0u && i!=1u && i!=2u && i!=4u && i!=5u && i!=8u)
+            assert(vdp.vram[i]==0xA5u);
+    assert(runtime.recognized_irqs==0u &&
+           runtime.clock.vblank_events==0u);
+}
+
 int main(void) {
+    test_m44_cb_res_flags_and_cycles();
+    test_m44_interleaved_pattern_rom_fixture();
     test_m43_source_1536_byte_vdp_outi();
     test_m42_source_two_row_staging();
     test_m41_bank5_rle_and_ed73_stack_save();
