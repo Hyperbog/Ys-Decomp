@@ -25,6 +25,13 @@ live title or playable game, and may still lack tile graphics.
 See [M34 source-backed palette trace](research/M34_TIMED_PALETTE.md).
 Alpha/Beta/Final promotion gates remain false.
 
+**M34 verified:** [ROM check 38348967643](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38348967643)
+executed **24,468 source-ROM Z80 instructions** and **416,854 nominal
+T-states** to original `PC=$0AF6`, after a 713-step palette nibble
+transformation. The earlier dispatcher, 32-byte staging copy,
+three naturally accepted IRQs and 192 VRAM writes remain verified.
+M34 Release tests passed on Windows/Linux/macOS.
+
 ## Previous milestone — M33
 
 # M33 — First original frame wait completed under automatic VBlank

@@ -67,3 +67,34 @@ viewer and real-ROM static PPM option. All gameplay promotion
 gates stay false: the next significant work is to run the
 source's `$0AF6` palette-delay waits and actual title-graphics
 loading with input and video connected to live frame presentation.
+
+## Verified continuous ROM execution
+
+Commit [af5ab13b120d](https://github.com/Hyperbog/Ys-Decomp/commit/af5ab13b120dcb9226e890e4af74c80aa78d2fa9)
+passed the gated full-source reconstruction in
+[GitHub Actions run 38348967643](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38348967643).
+The original 256 KiB ROM remained source-only, with no fallback and
+the established SHA-256:
+
+```text
+M10: 16/16 source-only banks, 262144 bytes; ROM fallback=0
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+PASS original Ys frame-wait completed to $00C4: steps=23583 T-states=409651 IRQ=3 VBlank=7 VRAMwrites=192 PSGwrites=44
+PASS timed Ys state 0 -> 1 dispatch: PC=$0C4A steps=23615 SP=$DFEE C01F=01 IRQ=3
+PASS timed Ys palette staging: PC=$0B22 steps=23755 T-states=411212 SP=$DFE6
+PASS timed Ys first palette nibble transform: PC=$0AF6 steps=24468 T-states=416854 palette_steps=713 IRQ=3 VBlank=7
+Stop BEFORE $0AF6 CALL $0BC5 palette delay; no title/gameplay.
+PASS authentic timed VDP image: 147471 bytes
+```
+
+The native C11 suite passed 13/13 tests. The Windows Release
+build passed 14/14 native tests and 8/8 Python packaging tests;
+the Linux and macOS Development archives also passed 13/13
+native tests and 8/8 packaging tests. Full cross-platform builds:
+[run 38348967882](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38348967882).
+
+**Next target:** advance actual `$0AF6 CALL $0BC5` and
+its subsequent palette-init wait iterations, then reach the
+source VRAM/title pattern transfer, and finally drive the
+Windows surface with a continuous true game frame sequence.
+Until then, all Alpha promotion gates remain blocked.

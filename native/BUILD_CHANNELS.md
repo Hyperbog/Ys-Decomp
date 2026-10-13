@@ -270,3 +270,13 @@ palette-nibble transform before `$0AF6 CALL $0BC5`.
 The saved VDP image is not a finished title or a live game.
 A ROM-free fixture validates the Z80 arithmetic/rotation flags
 and 32 source palette iterations. Alpha gates remain blocked.
+
+
+**Verified M34 execution:** [ROM CI 38348967643](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38348967643)
+confirmed `$0C4A` state dispatch at 23,615 instructions,
+`$0B22` palette staging at 23,755, and `$0AF6` after
+713 authentic palette transformation steps, totaling
+**24,468 instructions** and **416,854 nominal T-states**.
+No extra VBlank was injected, and the full source-ROM checksum
+was unchanged. [M34 Development build artifacts](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38348967882)
+include the Windows GDI diagnostic and `START_HERE.cmd`.
