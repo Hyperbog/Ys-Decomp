@@ -39,14 +39,16 @@ class PackageTests(unittest.TestCase):
         with zipfile.ZipFile(path) as archive:
             names = set(archive.namelist())
             self.assertEqual(names, {"bin/ys-native-info", "bin/ys-native-probe",
-                                     "bin/ys-native-trace", "README.txt",
-                                     "manifest.json", "SHA256SUMS.txt"})
+                                     "bin/ys-native-trace", "bin/ys-native-preview",
+                                     "README.txt", "manifest.json",
+                                     "SHA256SUMS.txt"})
             manifest = json.loads(archive.read("manifest.json"))
             self.assertFalse(manifest["playable"])
             self.assertFalse(manifest["rom_included"])
             self.assertEqual(manifest["channel"], "dev")
             self.assertEqual(manifest["checkpoint"], "M25")
             self.assertIn(b"NOT A PLAYABLE PC GAME", archive.read("README.txt"))
+            self.assertIn(b"ys-native-preview synthetic.ppm",archive.read("README.txt"))
             for name, digest in manifest["sha256"].items():
                 self.assertEqual(hashlib.sha256(archive.read(name)).hexdigest(),
                                  digest)

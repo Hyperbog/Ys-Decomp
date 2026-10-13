@@ -20,13 +20,16 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M25. The last validated continuous native trace reached
+- **Checkpoint:** M26 (video-snapshot milestone; Z80 execution still ends at M25). The last validated continuous native trace reached
   Z80 PC `$0B22` after 17,224 instructions, with one explicitly injected
   VBlank interrupt.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
-  `ys-native-trace`. These are CLI **diagnostic tools**, not a PC game.
-- **Not available:** Automatic video/IRQ scheduler, rendered frames,
+  `ys-native-trace`, `ys-native-preview`. These are CLI **diagnostic tools**,
+  including a stateless video preview, not a PC game.
+- **Not available:** Automatic video/IRQ scheduler, game display window,
   live input, native audio output, playable native game executable.
+  A 256×192 mode-4 PPM **snapshot renderer** is available, but does not
+  yet establish the Alpha video-renderer gate.
 - **Promotion record:** `native/release/gates.json`. Each gate starts
   `passed: false` with empty `evidence`. A promotion requires
   `passed: true` plus a nonempty link or path to evidence (test log,
@@ -70,10 +73,11 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m25-dev-linux-x64-<commit>.zip
+dist/ys-m26-dev-linux-x64-<commit>.zip
 ```
 
-The archive contains `bin/` tools, `README.txt`, `manifest.json`,
+The archive contains `bin/` tools (including `ys-native-preview`),
+`README.txt`, `manifest.json`,
 and `SHA256SUMS.txt`. It embeds the Git revision, release channel,
 milestone and file checksums. No cartridge image, proprietary game ROM,
 original binary art or music assets are bundled. You supply your own
@@ -83,9 +87,15 @@ legally obtained 256 KiB Ys SMS image to the diagnostic executables:
 ./bin/ys-native-info --help
 ./bin/ys-native-probe /path/to/your/Ys.sms
 ./bin/ys-native-trace /path/to/your/Ys.sms
+./bin/ys-native-preview synthetic.ppm
+./bin/ys-native-trace /path/to/your/Ys.sms --frame checkpoint.ppm
 ```
 
-On Windows, executable filenames have the `.exe` suffix.
+The synthetic preview writes a demonstrative tile/sprite fixture, not
+original Ys graphics. The source-ROM snapshot captures VRAM at the bounded
+checkpoint `$0B22`; scene setup is unfinished, so it may be mostly blank.
+Both outputs are portable PPM (P6) images. On Windows, executables have
+`.exe` suffixes.
 
 **Testing previous phases:** Choose a particular `Ys` branch commit
 in a separate worktree, then run `build_phase.py` there. The artifact

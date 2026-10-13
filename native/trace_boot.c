@@ -1,4 +1,5 @@
 #include "z80.h"
+#include "sms_video.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,8 +11,8 @@ static int fail(const char *what, const YsZ80 *cpu) {
     return EXIT_FAILURE;
 }
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        fprintf(stderr,"usage: ys-native-trace /path/to/source-built.sms\n");
+    if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
+        fprintf(stderr,"usage: ys-native-trace /path/to/source-built.sms [--frame output.ppm]\n");
         return EXIT_FAILURE;
     }
     FILE *in=fopen(argv[1],"rb");
@@ -311,7 +312,30 @@ int main(int argc, char **argv) {
     printf("PASS main dispatcher state 0->$00FC, state 1->$0C4A: %llu instructions\n",
            (unsigned long long)cpu.steps);
     puts("PASS second-state $0B10 32-byte WRAM staging copy; PC=$0B22, SP=$DFE6");
-    puts("Stop before RLD palette nibble loop $0B22; no frame scheduler or native rendering.");
+    puts("Stop before RLD palette nibble loop $0B22; no frame scheduler.");
+    if(argc==4) {
+        uint8_t *pixels=malloc(YS_SMS_RGB_BYTES);
+        if(!pixels) {
+            fputs("could not allocate native VDP frame\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        YsSmsFrameStats stats;
+        bool rendered=ys_sms_video_render(vdp,pixels,YS_SMS_RGB_BYTES,&stats);
+        FILE *snapshot=rendered?fopen(argv[3],"wb"):NULL;
+        if(!snapshot) rendered=false;
+        if(rendered && !ys_sms_video_write_ppm(snapshot,pixels,YS_SMS_RGB_BYTES))
+            rendered=false;
+        if(snapshot && fclose(snapshot)!=0) rendered=false;
+        free(pixels);
+        if(!rendered) {
+            fputs("could not write source-ROM VDP snapshot\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        printf("Wrote real state snapshot at PC=$0B22: %s (PPM 256x192; not a completed title screen)\n",
+               argv[3]);
+        printf("Snapshot sprite-overflow lines=%u collision pixels=%u (render-only diagnostics)\n",
+               stats.sprite_overflow_lines,stats.sprite_collision_pixels);
+    }
     free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }

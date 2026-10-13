@@ -21,7 +21,8 @@ REQUIRED = {
              "content_parity", "no_blocking_bugs"),
     "final": ("cross_platform", "fidelity_validation", "release_audit"),
 }
-EXE_NAMES = ("ys-native-info", "ys-native-probe", "ys-native-trace")
+EXE_NAMES = ("ys-native-info", "ys-native-probe", "ys-native-trace",
+             "ys-native-preview")
 IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,47}$")
 
 
@@ -100,6 +101,11 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         "    bin/ys-native-probe PATH_TO_YOUR.sms\n"
         "    bin/ys-native-trace PATH_TO_YOUR.sms\n"
         "The tracer stops at a bounded decompilation checkpoint.\n"
+        "Synthetic video preview (no ROM necessary):\n"
+        "    bin/ys-native-preview synthetic.ppm\n"
+        "Snapshot actual VDP state at the bounded checkpoint:\n"
+        "    bin/ys-native-trace PATH_TO_YOUR.sms --frame checkpoint.ppm\n"
+        "These are PPM files readable by image editors and viewers.\n"
         "Use a compatible SMS emulator to play the original cartridge; "
         "these binaries are a native reconstruction workbench.\n"
     ).encode("utf-8")

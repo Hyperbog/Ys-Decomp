@@ -19,6 +19,8 @@ int main(int argc, char **argv) {
         puts("Development builds contain diagnostic utilities, not a playable game.");
         puts("ys-native-probe <user-supplied 256 KiB SMS image>");
         puts("ys-native-trace <user-supplied 256 KiB SMS image>");
+        puts("ys-native-preview output.ppm (synthetic mode-4 scene)");
+        puts("ys-native-trace ROM.sms --frame checkpoint.ppm (snapshot)");
         puts("The trace ends at a bounded reconstruction checkpoint.");
     }
     return 0;

@@ -1,3 +1,46 @@
+# M26 — Native SMS video snapshots (Development build)
+
+The Development artifacts now contain **ys-native-preview**, a standalone
+256×192 Sega Master System mode-4 video diagnostic that writes a portable
+PPM image. It uses an entirely synthetic tile/sprite scene; it is **not**
+a screenshot of Ys, and it does not require or bundle game assets.
+
+From a released Development ZIP (or locally built binaries):
+
+```sh
+bin/ys-native-preview synthetic.ppm
+bin/ys-native-preview --check
+bin/ys-native-trace /path/to/your/Ys.sms --frame checkpoint.ppm
+```
+
+The third command renders the current VRAM, CRAM and register state from the
+**actual user-supplied cartridge** at the already-verified M25 execution
+boundary (PC=$0B22). The scene is not yet fully initialized and may appear
+mostly blank. The standalone preview is the recommended way to test the
+renderer itself. Both PPM files can be opened in many graphics editors or
+converted to PNG with image tools.
+
+`native/sms_video.c` implements stateless 256×192 mode-4 background tile
+decoding, CRAM RGB222→RGB888, horizontal/vertical scroll, tile flips,
+palette selection and priority, the left 8-pixel mask, sprite-pattern and
+attribute lookup, sprite order, transparency, 8-per-scanline limit, size
+8×16 and zoom. Tests cover the individual behaviors and PPM format.
+It does **not** emulate 224/240-line modes, scanline timing, collisions as
+CPU-visible status or a screen window. It does not draw a completed game
+frame without the game's ROM code having first initialized its VRAM.
+
+**Build and packaging:** `native/release/gates.json` names checkpoint M26;
+the `dev` archive includes the preview executable and unchanged diagnostic
+probe/trace utilities. Alpha's `video_renderer` gate stays **false**
+because an interactive video window, actual frame pacing and complete title
+screen are not proven.
+
+**No new ROM reconstruction** is required: this change does not advance Z80
+execution beyond the already source-verified M25 $0B22 boundary. Native
+builds and video test fixtures run with no game ROM.
+
+## Earlier milestones
+
 # Ys native C11 — M25: state-table dispatch enters scene preparation
 
 The continuous source-ROM trace now follows the first two startup states
