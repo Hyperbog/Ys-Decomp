@@ -747,7 +747,63 @@ static void test_m44_interleaved_pattern_rom_fixture(void) {
            runtime.clock.vblank_events==0u);
 }
 
+static void test_m45_source_four_column_resource(void) {
+    setup();
+    /* Byte-identical source bank-0 $0C87-$0C91 and $0BEF-$0C1F.
+       Synthetic ROM data exercises four columns, literals, repeats,
+       an empty column and sentinel preservation. */
+    CODE(0x0C87,0x21,0xD1,0xA4,0x11,0x00,0xC6,
+         0x0E,0x04,0xCD,0xEF,0x0B);
+    CODE(0x0BEF,
+         0x41,0xD5,0xC5,0x7E,0xB7,0x28,0x23,
+         0xF2,0x0A,0x0C,0xE6,0x7F,0x47,0x23,
+         0x7E,0x12,0x79,0x83,0x5F,0x30,0x01,
+         0x14,0x10,0xF5,0x23,0x18,0xE8,
+         0x47,0x23,0x7E,0x12,0x79,0x83,0x5F,
+         0x30,0x01,0x14,0x10,0xF6,0x23,0x18,0xD9,
+         0xC1,0xD1,0x13,0x23,0x10,0xD1,0xC9);
+    const uint8_t encoded[]={
+        0x03,0x11,0x00,             /* column 0: positions 0,4,8 */
+        0x82,0x22,0x33,0x00,        /* column 1: positions 1,5 */
+        0x01,0x44,0x00,             /* column 2: position 2 */
+        0x00                        /* column 3: empty */
+    };
+    memcpy(rom+2u*YS_ROM_BANK_BYTES+0x24D1u,encoded,sizeof(encoded));
+    cpu.pc=0x0C87u;cpu.sp=0xDFF0u;
+    for(unsigned i=0u;i<16u;++i)
+        assert(ys_sms_bus_write(&bus,(uint16_t)(0xC600u+i),0xA5u));
+    assert(ys_sms_bus_write(&bus,0xC5FFu,0x6Bu));
+    assert(ys_sms_bus_write(&bus,0xC610u,0x4Cu));
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0u;
+    while(cpu.pc!=0x0C92u && steps<1000u) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+    }
+    assert(cpu.pc==0x0C92u && steps>60u && steps<1000u);
+    assert(cpu.sp==0xDFF0u &&
+           cpu.h==0xA4u && cpu.l==0xDCu &&
+           cpu.d==0xC6u && cpu.e==4u &&
+           cpu.b==0u && cpu.c==4u);
+    assert(bus.mapped_bank[2]==2u && vdp.vram_writes==0u);
+    assert(ys_sms_bus_read(&bus,0xC600u)==0x11u &&
+           ys_sms_bus_read(&bus,0xC604u)==0x11u &&
+           ys_sms_bus_read(&bus,0xC608u)==0x11u &&
+           ys_sms_bus_read(&bus,0xC601u)==0x22u &&
+           ys_sms_bus_read(&bus,0xC605u)==0x33u &&
+           ys_sms_bus_read(&bus,0xC602u)==0x44u);
+    for(unsigned i=0u;i<16u;++i)
+        if(i!=0u && i!=1u && i!=2u &&
+           i!=4u && i!=5u && i!=8u)
+            assert(ys_sms_bus_read(&bus,(uint16_t)(0xC600u+i))==0xA5u);
+    assert(ys_sms_bus_read(&bus,0xC5FFu)==0x6Bu &&
+           ys_sms_bus_read(&bus,0xC610u)==0x4Cu);
+    assert(runtime.recognized_irqs==0u &&
+           runtime.clock.vblank_events==0u);
+}
+
 int main(void) {
+    test_m45_source_four_column_resource();
     test_m44_cb_res_flags_and_cycles();
     test_m44_interleaved_pattern_rom_fixture();
     test_m43_source_1536_byte_vdp_outi();

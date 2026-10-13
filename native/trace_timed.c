@@ -156,10 +156,46 @@ static bool reference_staged_rows(const uint8_t *source,size_t size,
     return writes>0u;
 }
 
+/* M45 host-only reference: original $0BEF four-column RLE.
+   Keep source and output disjoint from live Z80 bus. A write mask
+   distinguishes untouched WRAM (including stack/IRQ effects) from
+   bytes which must match the decoded stream exactly. */
+static bool reference_staged_columns(const uint8_t *source,size_t size,
+                                     uint8_t *expected,uint8_t *touched,
+                                     size_t capacity,unsigned columns,
+                                     size_t *consumed,size_t *written) {
+    if(!source || !expected || !touched || !consumed || !written ||
+       columns==0u || columns>8u || capacity<columns) return false;
+    size_t at=0u,count=0u;
+    for(unsigned column=0u;column<columns;++column) {
+        size_t target=column;
+        bool terminated=false;
+        for(unsigned commands=0u;commands<4096u && at<size;++commands) {
+            uint8_t command=source[at++];
+            if(command==0u) {terminated=true;break;}
+            unsigned n=command&0x7Fu;
+            if(n==0u) n=256u; /* B=$00 loops 256 times on DJNZ. */
+            bool literal=(command&0x80u)!=0u;
+            if(at+(literal?n:1u)>size) return false;
+            for(unsigned i=0u;i<n;++i) {
+                if(target>=capacity) return false;
+                expected[target]=source[at+(literal?i:0u)];
+                touched[target]=1u;
+                ++count;
+                target+=columns;
+            }
+            at+=literal?n:1u;
+        }
+        if(!terminated) return false;
+    }
+    *consumed=at;*written=count;
+    return count>0u;
+}
+
 int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops after original staged tile/resource transform $0C72 (no gameplay).\n",
+              "Stops after four-column resource staging at $0C92 (not gameplay).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1428,7 +1464,98 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events,
            (unsigned long long)vdp->vram_writes);
-    puts("Stop before source $0C87 resource staging; not playable.");
+
+    /* M45: original bank-0 $0C87-$0C91 selects HL=$A4D1,
+       DE=$C600, C=4, and calls $0BEF. The real source routine
+       transfers FOUR interleaved compressed resource columns
+       into WRAM. Compare against an independent bounded host
+       decoder and source bank-2 mapper reads; never inject RAM,
+       CPU state, VBlank or synthesized resource contents. */
+    enum { FOUR_COLUMN_CAP=0x1000u, FOUR_SOURCE_AT=0xA4D1u };
+    uint8_t four_source[0xC000u-FOUR_SOURCE_AT];
+    uint8_t four_expected[FOUR_COLUMN_CAP];
+    uint8_t four_written[FOUR_COLUMN_CAP];
+    size_t four_consumed=0u, four_count=0u;
+    for(unsigned i=0u;i<sizeof(four_source);++i)
+        four_source[i]=ys_sms_bus_read(bus,(uint16_t)(FOUR_SOURCE_AT+i));
+    for(unsigned i=0u;i<FOUR_COLUMN_CAP;++i)
+        four_expected[i]=ys_sms_bus_read(bus,(uint16_t)(0xC600u+i));
+    memset(four_written,0,sizeof(four_written));
+    if(!reference_staged_columns(four_source,sizeof(four_source),
+                                 four_expected,four_written,
+                                 FOUR_COLUMN_CAP,4u,
+                                 &four_consumed,&four_count)) {
+        int result=fail("M45 invalid source four-column compressed stream",
+                        &runtime);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    const uint16_t four_stack_before=cpu.sp;
+    const uint8_t four_bank_before=bus->mapped_bank[2];
+    const uint64_t four_irq_before=runtime.recognized_irqs;
+    const uint64_t four_blank_before=runtime.clock.vblank_events;
+    const uint64_t four_vram_before=vdp->vram_writes;
+    const uint64_t four_psg_before=sound->psg_write_count;
+    unsigned long four_steps=0ul;
+    bool four_entered=false;
+    while(cpu.pc!=0x0C92u && four_steps<400000ul) {
+        const uint16_t previous=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M45 original four-column resource decode stopped",
+                            &runtime);
+            fprintf(stderr,"  priorPC=$%04X foursteps=%lu\n",
+                    previous,four_steps);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++four_steps;
+        if(previous==0x0C8Fu && cpu.pc==0x0BEFu) four_entered=true;
+    }
+    size_t four_bad=0u, four_first_bad=0u, four_touched=0u;
+    for(unsigned i=0u;i<FOUR_COLUMN_CAP;++i)
+        if(four_written[i]) {
+            ++four_touched;
+            if(ys_sms_bus_read(bus,(uint16_t)(0xC600u+i))!=four_expected[i]) {
+                if(four_bad==0u) four_first_bad=i;
+                ++four_bad;
+            }
+        }
+    bool four_ok=cpu.pc==0x0C92u && four_entered &&
+        four_steps>30ul && four_steps<400000ul &&
+        four_consumed>4u && four_count>0u &&
+        four_count==four_touched && four_bad==0u &&
+        cpu.sp==four_stack_before &&
+        (((uint16_t)cpu.h<<8)|cpu.l)==(uint16_t)(FOUR_SOURCE_AT+four_consumed) &&
+        cpu.d==0xC6u && cpu.e==4u &&
+        cpu.b==0u && cpu.c==4u &&
+        bus->mapped_bank[2]==four_bank_before &&
+        runtime.recognized_irqs>=four_irq_before &&
+        runtime.clock.vblank_events>=four_blank_before &&
+        vdp->vram_writes>=four_vram_before &&
+        sound->psg_write_count>=four_psg_before;
+    if(!four_ok) {
+        int result=fail("M45 source four-column WRAM resource mismatch",
+                        &runtime);
+        fprintf(stderr,"  columns=4 decoded=%zu consumed=%zu"
+                " touched=%zu bad=%zu firstWRAM=$%04X"
+                " HL=$%02X%02X DE=$%02X%02X steps=%lu"
+                " IRQ=%llu->%llu\n",
+                four_count,four_consumed,four_touched,four_bad,
+                0xC600u+(unsigned)four_first_bad,
+                cpu.h,cpu.l,cpu.d,cpu.e,four_steps,
+                (unsigned long long)four_irq_before,
+                (unsigned long long)runtime.recognized_irqs);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS original Ys 4-column resource staging to $0C92:"
+           " bytes=%zu source_used=%zu steps=%llu"
+           " T-states=%llu IRQ=%llu VBlank=%llu\n",
+           four_count,four_consumed,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events);
+    puts("Stop before source $0C92 video setup, not playable.");
+
 
 
 
@@ -1456,7 +1583,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0C87: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0C92: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);
