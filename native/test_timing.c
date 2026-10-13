@@ -187,7 +187,32 @@ static void test_source_zero_state_isr_branch_and_mapper_save(void) {
     assert(cpu.ix==0x1234u && cpu.iy==0x5678u);
 }
 
+static void test_pending_vblank_reenters_after_ei_ret(void) {
+    setup();
+    /* Original bank-0 $01AA EI / $01AB RET behavior: a VBlank that
+       arrives during the ISR is pending at the RET boundary. */
+    CODE(0x01AA,0xFB,0xC9);
+    cpu.pc=0x01AAu;
+    cpu.interrupt_mode=1;
+    cpu.sp=0xDFF0u;
+    assert(ys_sms_bus_write(&bus,0xDFF0u,0x64u));
+    assert(ys_sms_bus_write(&bus,0xDFF1u,0x07u));
+    vdp.registers[1]=0x20u;
+    vdp.status=0x80u; /* The prior frame left a pending VBlank. */
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(cpu.pc==0x01ABu && cpu.ei_delay==1u &&
+           runtime.recognized_irqs==0u);
+    assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(cpu.pc==0x0038u && cpu.sp==0xDFF0u &&
+           cpu.ei_delay==0u && !cpu.iff1 && cpu.iff2 &&
+           runtime.recognized_irqs==1u &&
+           cpu.total_tstates==27u); /* EI 4 + RET 10 + IM1 13. */
+    assert(ys_sms_bus_read(&bus,cpu.sp)==0x64u);
+    assert(ys_sms_bus_read(&bus,(uint16_t)(cpu.sp+1u))==0x07u);
+}
 int main(void) {
+    test_pending_vblank_reenters_after_ei_ret();
     test_source_zero_state_isr_branch_and_mapper_save();
     test_bank0_source_isr_first_natural_vblank();
     test_reset_prefixes_memory_and_nibbles();

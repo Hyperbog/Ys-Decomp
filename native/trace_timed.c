@@ -22,6 +22,18 @@ static int fail(const char *message, const YsSmsRuntime *rt) {
     return EXIT_FAILURE;
 }
 
+/* Compare architectural registers, not PC, IRQ state or step counters. */
+static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
+    return a->a==b->a && a->f==b->f &&
+        a->b==b->b && a->c==b->c && a->d==b->d && a->e==b->e &&
+        a->h==b->h && a->l==b->l &&
+        a->a_alt==b->a_alt && a->f_alt==b->f_alt &&
+        a->b_alt==b->b_alt && a->c_alt==b->c_alt &&
+        a->d_alt==b->d_alt && a->e_alt==b->e_alt &&
+        a->h_alt==b->h_alt && a->l_alt==b->l_alt &&
+        a->ix==b->ix && a->iy==b->iy;
+}
+
 int main(int argc,char **argv) {
     if (argc!=2) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms\n"
@@ -116,31 +128,66 @@ int main(int argc,char **argv) {
           runtime.recognized_irqs==1u) {
         Z80Status status=ys_sms_runtime_step_auto(&runtime);
         if(status!=Z80_RUNNING) {
-            int result=fail("zero-state timed ISR stopped before returning",&runtime);
+            int result=fail("first zero-state ISR stopped before return",&runtime);
             free(rom);free(bus);free(vdp);free(sound);return result;
         }
         ++handler_steps;
     }
-    bool registers_restored=
-        cpu.a==interrupted.a && cpu.f==interrupted.f &&
-        cpu.b==interrupted.b && cpu.c==interrupted.c &&
-        cpu.d==interrupted.d && cpu.e==interrupted.e &&
-        cpu.h==interrupted.h && cpu.l==interrupted.l &&
-        cpu.a_alt==interrupted.a_alt && cpu.f_alt==interrupted.f_alt &&
-        cpu.b_alt==interrupted.b_alt && cpu.c_alt==interrupted.c_alt &&
-        cpu.d_alt==interrupted.d_alt && cpu.e_alt==interrupted.e_alt &&
-        cpu.h_alt==interrupted.h_alt && cpu.l_alt==interrupted.l_alt &&
-        cpu.ix==interrupted.ix && cpu.iy==interrupted.iy;
-    bool returned=registers_restored && saved==0x0764u &&
-        cpu.pc==saved && handler_steps>20u &&
+    /* At this phase of cold boot, a sixth VBlank becomes pending *during*
+       the first sound update.  The original $01AA EI / $01AB RET
+       restores the interrupted $0764 context; the pending IM1 is then
+       recognized immediately at the RET boundary.  Do not suppress it. */
+    bool bounced=saved==0x0764u && cpu.pc==0x0038u &&
+        handler_steps>20u && runtime.recognized_irqs==2u &&
+        runtime.clock.vblank_events==6u &&
+        cpu.sp==interrupted.sp && !cpu.iff1 &&
+        cpu.iff2 && (vdp->status&0x80u)!=0u &&
+        same_registers(&cpu,&interrupted) &&
+        bus->mapper_control==control_before &&
+        bus->mapped_bank[2]==slot2_before &&
+        ys_sms_bus_read(bus,0xC021u)==0u &&
+        ys_sms_bus_read(bus,0xC10Fu)==1u &&
+        (uint16_t)((uint16_t)ys_sms_bus_read(bus,cpu.sp) |
+           ((uint16_t)ys_sms_bus_read(bus,(uint16_t)(cpu.sp+1u))<<8))==saved;
+    if(!bounced) {
+        int result=fail("first ISR return and legitimate second VBlank re-entry",&runtime);
+        fprintf(stderr,"  expected return=$%04X IRQ=2 VBlank=6"
+                       " regs=%s mapper=%02X/%02X bank2=%u/%u C10F=%02X\n",
+                saved,same_registers(&cpu,&interrupted)?"restored":"different",
+                bus->mapper_control,control_before,bus->mapped_bank[2],
+                slot2_before,ys_sms_bus_read(bus,0xC10Fu));
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS natural second VBlank re-entry after $01AB RET:"
+           " PC=$0038 savedPC=$%04X VBlank=%llu IRQ=%llu"
+           " handler_steps=%lu\n",saved,
+           (unsigned long long)runtime.clock.vblank_events,
+           (unsigned long long)runtime.recognized_irqs,handler_steps);
+
+    /* The sixth VBlank is cleared by the next genuine ISR read. With
+       no seventh VBlank pending, the second ISR can fully RET to $0764.
+       This is the first stable original startup resume in the timed path. */
+    unsigned long second_handler_steps=0;
+    while(cpu.pc!=saved && second_handler_steps<4000ul &&
+          runtime.recognized_irqs==2u) {
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("second timed ISR stopped before stable return",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++second_handler_steps;
+    }
+    bool registers_restored=same_registers(&cpu,&interrupted);
+    bool returned=bounced && registers_restored &&
+        cpu.pc==saved && second_handler_steps>20u &&
         cpu.sp==(uint16_t)(interrupted.sp+2u) &&
         cpu.iff1 && cpu.iff2 && cpu.ei_delay==0u &&
         bus->mapper_control==control_before &&
         bus->mapped_bank[2]==slot2_before &&
         ys_sms_bus_read(bus,0xC021u)==0u &&
         ys_sms_bus_read(bus,0xC10Fu)==1u &&
-        vdp->status==0u && runtime.recognized_irqs==1u &&
-        runtime.clock.vblank_events==5u;
+        vdp->status==0u && runtime.recognized_irqs==2u &&
+        runtime.clock.vblank_events==6u;
     if(!returned) {
         int result=fail("source zero-state ISR context/mapper restoration",&runtime);
         fprintf(stderr,"  expected PC=$%04X SP=$%04X mapper=%02X bank2=%u"
@@ -152,10 +199,12 @@ int main(int argc,char **argv) {
                 registers_restored?"restored":"different",handler_steps);
         free(rom);free(bus);free(vdp);free(sound);return result;
     }
-    printf("PASS timed Ys zero-state ISR to $%04X: handler_steps=%lu"
+    printf("PASS timed Ys second zero-state ISR stable return to $%04X:"
+           " first_steps=%lu second_steps=%lu"
            " total_steps=%llu T-states=%llu SP=$%04X"
            " mapper=%02X bank2=%u IRQ=%llu\n",
-           saved,handler_steps,(unsigned long long)cpu.steps,
+           saved,handler_steps,second_handler_steps,
+           (unsigned long long)cpu.steps,
            (unsigned long long)cpu.total_tstates,cpu.sp,
            bus->mapper_control,bus->mapped_bank[2],
            (unsigned long long)runtime.recognized_irqs);
