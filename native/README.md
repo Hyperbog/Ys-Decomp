@@ -1,3 +1,27 @@
+# M29 — Actual source-ROM reset to first timed VBlank
+
+The Development build now includes `ys-native-timed-rom`, a
+**user-supplied ROM diagnostic** which executes the original Ys startup
+with automatically generated scanline VBlank instead of injected IRQ
+status. It stops after the source ISR `$0038 PUSH AF` /
+`$0039 IN A,($BF)` clears VBlank, with program counter `$003B`.
+It prints actual CPU instructions, nominal T-states, scanline, IRQ
+count and interrupted return PC.
+
+```sh
+bin/ys-native-timed-rom /path/to/your/Ys.sms
+```
+
+It never bundles a ROM; existing `ys-native-trace` still exercises
+the separate M25 checkpoint at `$0B22` with its explicit VBlank event.
+The M29 diagnostic **does not complete the ISR, display a title or
+provide gameplay**. See [M29 source-timed trace](research/M29_TIMED_SOURCE_TRACE.md).
+
+Alpha/Beta/Final promotion gates remain unpassed. Real instruction T-state
+counts are nominal, with VDP contention and line interrupts deferred.
+
+## Previous milestone — M28
+
 # M28 — CPU-timed VBlank runtime (Development build)
 
 The native Z80 core now records per-instruction T-state counts and a

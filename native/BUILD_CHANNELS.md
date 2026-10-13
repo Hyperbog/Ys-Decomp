@@ -20,11 +20,11 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M28 (per-instruction Z80 timing and automatic VBlank recognition; source-ROM trace still ends at M25). The last validated continuous native trace reached
+- **Checkpoint:** M29 (source-ROM first natural VBlank ISR entry, in addition to the existing M25 full startup trace). The last validated continuous native trace reached
   Z80 PC `$0B22` after 17,224 instructions, with one explicitly injected
   VBlank interrupt.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
-  `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`. These are CLI **diagnostic tools**,
+  `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
   including a stateless video preview, not a PC game.
 - **Not available:** Automatic video/IRQ scheduler, game display window,
   live input, native audio output, playable native game executable.
@@ -73,10 +73,10 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m28-dev-linux-x64-<commit>.zip
+dist/ys-m29-dev-linux-x64-<commit>.zip
 ```
 
-The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`),
+The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
 `README.txt`, `manifest.json`,
 and `SHA256SUMS.txt`. It embeds the Git revision, release channel,
 milestone and file checksums. No cartridge image, proprietary game ROM,
@@ -90,6 +90,7 @@ legally obtained 256 KiB Ys SMS image to the diagnostic executables:
 ./bin/ys-native-preview synthetic.ppm
 ./bin/ys-native-frames demo 12 ntsc
 ./bin/ys-native-timing --check
+./bin/ys-native-timed-rom /path/to/your/Ys.sms
 ./bin/ys-native-trace /path/to/your/Ys.sms --frame checkpoint.ppm
 ```
 
@@ -171,3 +172,14 @@ for the current bounded Z80 subset; a new opcode without timing is not
 accepted by the timed runtime. Nominal T-state timing does **not** prove
 real-game fidelity. The source-built Ys trace still stops at $0B22 after
 one deliberately injected VBlank, and Alpha remains blocked.
+
+
+### M29 first naturally generated source-ROM VBlank
+
+`ys-native-timed-rom` runs the original startup under CPU-derived
+NTSC scanline timing to its first accepted IM1 interrupt and original
+VDP status acknowledgment at `$003B`. It requires a user-supplied
+256 KiB SMS ROM. This is a different, earlier endpoint than the existing
+M25 trace ending at `$0B22`, which injected its first VBlank explicitly.
+Neither path establishes a playable desktop game or original-hardware
+cycle-accurate timing. See `native/research/M29_TIMED_SOURCE_TRACE.md`.

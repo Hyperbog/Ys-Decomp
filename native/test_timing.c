@@ -129,7 +129,32 @@ static void test_halt_waits_for_vblank(void) {
            cpu.total_tstates==29u);
     assert(ys_sms_bus_read(&bus,0xDFEE)==1u);
 }
+static void test_bank0_source_isr_first_natural_vblank(void) {
+    setup();
+    /* Bank 0 $0038: PUSH AF / IN A,($BF) / OR A.
+       The idle loop below is synthetic; only the ISR prologue matches Ys. */
+    CODE(0,0xFB,0x18,0xFE); /* EI; JR $0001 */
+    CODE(0x38,0xF5,0xDB,0xBF,0xB7);
+    cpu.interrupt_mode=1;
+    vdp.registers[1]=0x20u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    for(unsigned i=0;i<5000u && !runtime.recognized_irqs;++i)
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(runtime.recognized_irqs==1u &&
+           runtime.clock.vblank_events==1u &&
+           cpu.pc==0x38u && cpu.iff1==false &&
+           (vdp.status&0x80u)!=0u &&
+           ys_sms_bus_read(&bus,cpu.sp)==0x01u);
+    uint16_t sp=cpu.sp;
+    assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(cpu.pc==0x39u && cpu.sp==(uint16_t)(sp-2u));
+    assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(cpu.pc==0x3Bu && (cpu.a&0x80u)!=0u &&
+           vdp.status==0u && runtime.recognized_irqs==1u);
+}
+
 int main(void) {
+    test_bank0_source_isr_first_natural_vblank();
     test_reset_prefixes_memory_and_nibbles();
     test_conditional_branches();
     test_unsupported_and_halt();
