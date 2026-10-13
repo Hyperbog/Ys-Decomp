@@ -20,7 +20,7 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M30 (source-ROM two natural VBlank IRQs, complete ISR re-entry and return to `$0764`; separate M25 manual-VBlank trace). The last validated continuous native trace reached
+- **Checkpoint:** M31 (Windows graphical diagnostic/launcher fix; the verified original-ROM execution boundary remains M30 `$0764`). The last validated continuous native trace reached
   Z80 PC `$0B22` after 17,224 instructions, with one explicitly injected
   VBlank interrupt.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
@@ -73,7 +73,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m30-dev-linux-x64-<commit>.zip
+dist/ys-m31-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -203,3 +203,24 @@ All main/alternate general-purpose registers, IX/IY and ROM mapper
 state were restored. The original cartridge SHA-256 remained unchanged.
 These bounded source-ROM diagnostics still do **not** show actual
 Ys title-screen rendering or interactive Alpha gameplay.
+
+### M31 Windows click-to-run Development archive
+
+Earlier diagnostic ZIPs were *not* Windows GUI applications: the console
+executables generally exit when double-clicked without arguments, and the
+SDL2 optional viewer could require a missing DLL. The Windows M31 archive
+now **requires** the dependency-free `ys-native-window.exe` graphical
+video diagnostic, and includes root-level `START_HERE.cmd` with a menu,
+log capture and explicit pauses. MSVC Release artifacts use the static
+C runtime to avoid a mandatory VC++ Redistributable dependency.
+
+**Extract both layers** if the GitHub Actions artifact itself contains a
+versioned `ys-m31-dev-windows-x64-...zip`. Double-click
+`START_HERE.cmd` from the folder containing `bin`. Choose 1 for a
+ROM-free animated SMS **test pattern**, or choose 3 for the bounded
+source-ROM timed diagnostic (requires a user-supplied Ys SMS ROM).
+Double-clicking the other CLI `.exe` files is not the intended interface.
+
+The graphical output is synthetic, **not playable Ys**. Alpha/Beta/Final
+release gates still remain false; M30 CPU startup and ROM reconstruction
+checks have not advanced.

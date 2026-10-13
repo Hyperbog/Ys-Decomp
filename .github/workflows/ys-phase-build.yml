@@ -40,6 +40,22 @@ jobs:
         run: python -m unittest discover -s native/tools -p "test_*.py" -v
       - name: Compile, test and package native phase
         run: python native/tools/build_phase.py --channel "${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'dev' }}"
+      - name: Verify self-contained Windows graphical entry point
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = Join-Path (Get-Location) 'build-native-phase/Release/ys-native-window.exe'
+          if (-not (Test-Path $exe)) { throw "Windows graphical EXE is missing: $exe" }
+          & $exe --self-test
+          if ($LASTEXITCODE -ne 0) { throw "Windows graphical EXE self-test failed: $LASTEXITCODE" }
+          $bytes = [System.IO.File]::ReadAllBytes($exe)
+          if ($bytes.Length -lt 512) { throw 'Graphical EXE is unexpectedly small' }
+          $pe = [System.BitConverter]::ToInt32($bytes, 0x3C)
+          $subsystem = [System.BitConverter]::ToUInt16($bytes, $pe + 24 + 68)
+          if ($subsystem -ne 2) { throw "Expected Windows GUI PE subsystem 2, got $subsystem" }
+          $zip = Get-ChildItem 'dist/ys-m31-dev-windows-*.zip' | Select-Object -First 1
+          if (-not $zip) { throw 'Expected a versioned Windows diagnostic package' }
+          Write-Host "PASS: persistent Windows GUI-subsystem binary, self-test and versioned ZIP"
       - name: Publish downloadable build for this commit
         uses: actions/upload-artifact@v4
         with:

@@ -1,3 +1,64 @@
+# M31 — First usable Windows Development diagnostic
+
+Previous Development ZIPs shipped mostly **command-line tools** and an
+optional SDL2 viewer. Double-clicking a console executable in Explorer
+typically launched it briefly and exited; the SDL2 viewer could be absent
+or require an unbundled DLL. Those packages were *not* suitable as
+click-to-run Windows tests.
+
+M31 fixes the **user-facing Development test experience**, not gameplay:
+
+- Guaranteed `bin/ys-native-window.exe`: a persistent Windows-native
+  window built with GDI and the Win32 API, using no SDL2 or third-party
+  dynamic library. Its native C11 renderer displays moving synthetic SMS
+  tiles/sprites, a frame counter, and a clear "NOT YS GAMEPLAY" message.
+  Arrow keys move a test sprite, Space pauses, F1 shows help and Escape
+  closes the window.
+- Mandatory `START_HERE.cmd` in the **root of the extracted Windows
+  build ZIP**. Double-click it for a persistent selection menu; options
+  open the graphics window, check timed CPU/VBlank execution, run the
+  bounded real-ROM startup tracer, export an image or show build info.
+  Console results are copied to `last-diagnostic.txt`; the menu remains
+  open when errors occur.
+- Windows Release builds use MSVC's **static C runtime (/MT)** instead
+  of relying on a separately installed VC++ Redistributable. The native
+  Windows GUI always ships in the ZIP; packaging fails if the compiled
+  `ys-native-window.exe` is absent.
+- CTest runs `ys-native-window.exe --self-test` using the Windows
+  GUI-subsystem executable without requiring a graphical desktop.
+  Packaging tests require a launcher and graphical binary in every
+  Windows Development ZIP and confirm its correct manifest.
+- Source-ROM behavior remains independently verified by the existing
+  M30 timed trace to `$0764`. No ROM recompilation or game-frame claims
+  are added by M31.
+
+## How to run on Windows
+
+1. Open the **Ys native phase builds** workflow for M31 and download
+   the **windows-2022** artifact.
+2. GitHub's artifact download might itself be a ZIP containing the
+   versioned `ys-m31-dev-windows-x64-...`.zip. **Extract both ZIPs**,
+   leaving `START_HERE.cmd` and a `bin` folder together.
+3. Double-click `START_HERE.cmd`, choose **1**. Or double-click
+   `bin/ys-native-window.exe`. A window should remain open even
+   without a ROM, showing a **synthetic** tile-and-sprite animation.
+4. For native cartridge startup, choose **3** in the menu and enter
+   the full path to *your* legally obtained **Ys SMS 256 KiB ROM**.
+   The program displays output and writes `last-diagnostic.txt`.
+
+If Windows blocks the downloaded archive or refuses to open it, consult
+Windows Security/Properties for the exact reported reason; do not disable
+security protections simply to run an unfamiliar binary. If the program
+still fails, provide the Windows version, exact error or screenshot and,
+for diagnostics, the contents of `last-diagnostic.txt`.
+
+**What M31 is NOT:** This test window does not execute the Ys game,
+display real Ys title graphics, or provide native gameplay. Only the
+CLI `ys-native-timed-rom` uses a user-supplied ROM and still stops at a
+bounded startup checkpoint. The **Alpha** gate remains blocked.
+
+## Previous checkpoint — M30
+
 # M30 — Timed zero-state ISR return to original startup
 
 The full source-ROM trace now executes from cold reset through **two

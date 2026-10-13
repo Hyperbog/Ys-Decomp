@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
+# Ensure that Release Windows binaries use the static MSVC C runtime.
+# This avoids requiring a separately installed VC++ Redistributable.
+if(POLICY CMP0091)
+    cmake_policy(SET CMP0091 NEW)
+endif()
 project(ys_sms_native C)
+if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+endif()
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
@@ -34,7 +42,7 @@ else()
         target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Werror)
     endforeach()
 endif()
-set(YS_CHECKPOINT "M30" CACHE STRING "Source-backed native checkpoint")
+set(YS_CHECKPOINT "M31" CACHE STRING "Source-backed native checkpoint")
 set(YS_BUILD_CHANNEL "dev" CACHE STRING "Native build channel")
 add_executable(ys-native-info build_info.c)
 target_compile_definitions(ys-native-info PRIVATE
@@ -42,6 +50,19 @@ target_compile_definitions(ys-native-info PRIVATE
     "YS_BUILD_CHANNEL=\"${YS_BUILD_CHANNEL}\"")
 add_executable(ys-native-preview video_preview.c)
 target_link_libraries(ys-native-preview PRIVATE ys_sms_video ys_video_fixture)
+# The primary Windows entry point is a persistent, self-contained GDI GUI.
+# It displays synthetic hardware-test tiles (not a playable Ys game).
+if(WIN32)
+    add_executable(ys-native-window WIN32 window_win32.c)
+    target_link_libraries(ys-native-window PRIVATE
+        ys_sms_clock ys_sms_video ys_video_fixture user32 gdi32)
+    if(MSVC)
+        target_compile_options(ys-native-window PRIVATE /W4)
+    else()
+        target_compile_options(ys-native-window PRIVATE
+            -Wall -Wextra -Wpedantic -Werror)
+    endif()
+endif()
 add_executable(ys-native-frames video_frames.c)
 target_link_libraries(ys-native-frames PRIVATE
     ys_sms_clock ys_sms_video ys_video_fixture)
@@ -65,6 +86,10 @@ add_executable(ys-native-probe probe.c)
 target_link_libraries(ys-native-probe PRIVATE ys_sms_bus)
 enable_testing()
 add_test(NAME build_info COMMAND ys-native-info --version)
+if(WIN32)
+    # Test the actual GUI-subsystem PE executable without a desktop session.
+    add_test(NAME windows_gui_selftest COMMAND ys-native-window --self-test)
+endif()
 add_test(NAME video_preview COMMAND ys-native-preview --check)
 add_test(NAME video_frames COMMAND ys-native-frames --check)
 add_test(NAME timed_vblank COMMAND ys-native-timing --check)

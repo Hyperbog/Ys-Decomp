@@ -1,6 +1,6 @@
 ## Ys PC builds: Development / Alpha / Beta / Final
 
-The native C11 Ys branch now has a [versioned, cross-platform development-build process](native/BUILD_CHANNELS.md), now including M30 verified source-ROM natural VBlank/ISR diagnostics, including downloadable Windows/Linux/macOS diagnostics tied to exact commits, local packaging commands, automated checks and gated promotion requirements. **The current Development binaries are not a playable PC game.** Alpha requires interactive native gameplay; Beta requires an end-to-end game; Final requires cross-platform fidelity/release sign-off. No ROM image is bundled.
+The native C11 Ys branch now has a [versioned, cross-platform development-build process](native/BUILD_CHANNELS.md), now including M31 Windows click-to-run diagnostics and the M30 verified source-ROM VBlank path, including downloadable Windows/Linux/macOS diagnostics tied to exact commits, local packaging commands, automated checks and gated promotion requirements. **The current Development binaries are not a playable PC game.** Alpha requires interactive native gameplay; Beta requires an end-to-end game; Final requires cross-platform fidelity/release sign-off. No ROM image is bundled.
 
 ---
 

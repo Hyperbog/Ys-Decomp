@@ -18,7 +18,7 @@ class PackageTests(unittest.TestCase):
         self.build.mkdir()
         self.output = self.base / "dist"
         self.gates = self.base / "gates.json"
-        self.state = {"schema_version": 1, "checkpoint": "M30",
+        self.state = {"schema_version": 1, "checkpoint": "M31",
                       "gates": {name: {"passed": False, "evidence": ""}
                                 for group in release.REQUIRED.values()
                                 for name in group}}
@@ -35,7 +35,7 @@ class PackageTests(unittest.TestCase):
 
     def test_development_bundle_contains_diagnostics_and_hashes(self):
         path = self.archive()
-        self.assertEqual(path.name, "ys-m30-dev-linux-x64-aaaaaaaa.zip")
+        self.assertEqual(path.name, "ys-m31-dev-linux-x64-aaaaaaaa.zip")
         with zipfile.ZipFile(path) as archive:
             names = set(archive.namelist())
             self.assertEqual(names, {"bin/ys-native-info", "bin/ys-native-probe",
@@ -48,7 +48,9 @@ class PackageTests(unittest.TestCase):
             self.assertFalse(manifest["playable"])
             self.assertFalse(manifest["rom_included"])
             self.assertEqual(manifest["channel"], "dev")
-            self.assertEqual(manifest["checkpoint"], "M30")
+            self.assertEqual(manifest["checkpoint"], "M31")
+            self.assertEqual(manifest["entrypoint"], "bin/ys-native-info")
+            self.assertIsNone(manifest["graphical_diagnostic"])
             self.assertIn(b"NOT A PLAYABLE PC GAME", archive.read("README.txt"))
             self.assertIn(b"ys-native-preview synthetic.ppm",archive.read("README.txt"))
             for name, digest in manifest["sha256"].items():
@@ -119,15 +121,36 @@ class PackageTests(unittest.TestCase):
             self.assertFalse(manifest["playable"])
             self.assertIn("bin/ys-native-display",manifest["sha256"])
 
-    def test_windows_release_bin_layout(self):
+    def test_windows_exe_requires_functioning_gui_target(self):
         for name in release.EXE_NAMES:
             (self.build / "Release").mkdir(exist_ok=True)
             (self.build / "Release" / (name + ".exe")).write_bytes(b"MZ-test")
+        with self.assertRaisesRegex(FileNotFoundError, "ys-native-window"):
+            release.package("dev", "windows-x64", self.build, self.output,
+                            self.gates, "b" * 40)
+
+        (self.build / "Release" / "ys-native-window.exe").write_bytes(b"MZ-gui-test")
         archive = release.package("dev", "windows-x64", self.build, self.output,
                                   self.gates, "b" * 40)
         with zipfile.ZipFile(archive) as z:
-            for name in release.EXE_NAMES:
+            for name in (*release.EXE_NAMES, "ys-native-window"):
                 self.assertIn("bin/" + name + ".exe", z.namelist())
+            self.assertIn("START_HERE.cmd", z.namelist())
+            self.assertIn("README.txt", z.namelist())
+            self.assertIn("manifest.json", z.namelist())
+            self.assertIn("SHA256SUMS.txt", z.namelist())
+            self.assertIn(b"EXTRACT THE ENTIRE ZIP", z.read("README.txt"))
+            self.assertIn(b"choice /C 123456", z.read("START_HERE.cmd"))
+            self.assertIn(b"pause", z.read("START_HERE.cmd"))
+            self.assertIn(b"ys-native-timed-rom.exe", z.read("START_HERE.cmd"))
+            manifest = json.loads(z.read("manifest.json"))
+            self.assertEqual(manifest["entrypoint"], "START_HERE.cmd")
+            self.assertEqual(manifest["graphical_diagnostic"],
+                             "bin/ys-native-window.exe")
+            self.assertFalse(manifest["playable"])
+            self.assertFalse(manifest["rom_included"])
+            self.assertIn("START_HERE.cmd", manifest["sha256"])
+            self.assertIn("bin/ys-native-window.exe", manifest["sha256"])
 
 
 if __name__ == "__main__":

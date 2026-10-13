@@ -25,6 +25,7 @@ EXE_NAMES = ("ys-native-info", "ys-native-probe", "ys-native-trace",
              "ys-native-preview", "ys-native-frames",
              "ys-native-timing", "ys-native-timed-rom")
 OPTIONAL_EXE_NAMES = ("ys-native-display",)
+WINDOWS_REQUIRED_EXE = "ys-native-window"
 IDENTIFIER = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,47}$")
 
 
@@ -75,15 +76,19 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         raise ValueError(channel + " promotion blocked; unmet evidence gates: " +
                          ", ".join(missing))
     names = list(EXE_NAMES)
+    if platform.startswith("windows-"):
+        # The persistent, dependency-free GUI is mandatory in Windows ZIPs.
+        names.append(WINDOWS_REQUIRED_EXE)
     if channel != "dev":
         # A passing checklist does not make a diagnostic trace playable.
         names.append("ys-native-game")
     binaries = {name: locate_binary(build_dir, name, platform) for name in names}
-    for name in OPTIONAL_EXE_NAMES:
-        try:
-            binaries[name] = locate_binary(build_dir, name, platform)
-        except FileNotFoundError:
-            pass  # SDL2 viewer is optional, not a playable game.
+    if not platform.startswith("windows-"):
+        for name in OPTIONAL_EXE_NAMES:
+            try:
+                binaries[name] = locate_binary(build_dir, name, platform)
+            except FileNotFoundError:
+                pass  # Optional SDL2; Windows instead gets guaranteed GDI GUI.
     output_dir.mkdir(parents=True, exist_ok=True)
     stem = "ys-" + checkpoint.lower() + "-" + channel + "-" + platform + "-" + revision[:8]
     archive = output_dir / (stem + ".zip")
@@ -95,7 +100,13 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         contents[archive_name] = raw
         hashes[archive_name] = hashlib.sha256(raw).hexdigest()
     readme = (
-        "Ys native C11 " + checkpoint + " - " + channel.upper() + "\n"
+        ("WINDOWS: EXTRACT THE ENTIRE ZIP first, then double-click\n"
+         "START_HERE.cmd, or bin\\\\ys-native-window.exe to open the GUI.\n"
+         "The GUI is a ROM-free synthetic SMS VIDEO DIAGNOSTIC, not Ys.\n"
+         "The other .exe tools are command-line utilities; double-clicking\n"
+         "them may briefly open a console and close. Run START_HERE.cmd.\n\n"
+         if platform.startswith("windows-") else "")
+        +        "Ys native C11 " + checkpoint + " - " + channel.upper() + "\n"
         "Commit: " + revision + "\n"
         "Platform: " + platform + "\n\n"
         "This bundle does NOT contain any game ROM or proprietary assets.\n"
@@ -118,17 +129,27 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         "    bin/ys-native-timing --check\n"
         "Use your own ROM to trace natural Ys VBlank ISR re-entry and return:\n"
         "    bin/ys-native-timed-rom PATH_TO_YOUR.sms\n"
-        "Optional bin/ys-native-display is an SDL2 diagnostic window;\n"
-        "it requires a separately installed SDL2 runtime (not bundled).\n"
+        ("Optional bin/ys-native-display is an SDL2 diagnostic window;\n"
+         "it requires a separately installed SDL2 runtime (not bundled).\n"
+         if not platform.startswith("windows-") else "")
         "These are PPM files readable by image editors and viewers.\n"
         "Use a compatible SMS emulator to play the original cartridge; "
         "these binaries are a native reconstruction workbench.\n"
     ).encode("utf-8")
+    if platform.startswith("windows-"):
+        launcher = (Path(__file__).resolve().parents[1] /
+                    "release" / "START_HERE.cmd").read_bytes()
+        contents["START_HERE.cmd"] = launcher
+        hashes["START_HERE.cmd"] = hashlib.sha256(launcher).hexdigest()
     contents["README.txt"] = readme
     hashes["README.txt"] = hashlib.sha256(readme).hexdigest()
     manifest = {
         "schema_version": 1,
         "project": "Ys Sega Master System native C11",
+        "entrypoint": ("START_HERE.cmd" if platform.startswith("windows-")
+                       else "bin/ys-native-info"),
+        "graphical_diagnostic": ("bin/ys-native-window.exe"
+                                 if platform.startswith("windows-") else None),
         "channel": channel,
         "checkpoint": checkpoint,
         "platform": platform,
