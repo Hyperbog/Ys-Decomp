@@ -35,5 +35,6 @@ jobs:
         run: |
           python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-native-boot.sms"
           ./build-native/ys-native-trace "$RUNNER_TEMP/ys-native-boot.sms"
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-native-boot.sms"
       - name: Ensure no tracked source changed
         run: git diff --exit-code
