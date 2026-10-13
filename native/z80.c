@@ -315,6 +315,12 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             uint8_t value=(uint8_t)(r8(cpu,operation&7u) &
                                    ~(1u<<((operation>>3)&7u)));
             if(!w8(cpu,operation&7u,value)) goto fail;
+        } else if ((operation&0xC0u)==0xC0u) {
+            /* SET b,r and SET b,(HL) do not modify flags.
+               Original Ys $0AAD uses CB EB (SET 5,E). */
+            uint8_t value=(uint8_t)(r8(cpu,operation&7u) |
+                                   (1u<<((operation>>3)&7u)));
+            if(!w8(cpu,operation&7u,value)) goto fail;
         } else {
             cpu->status=Z80_UNSUPPORTED;goto fail;
         }
