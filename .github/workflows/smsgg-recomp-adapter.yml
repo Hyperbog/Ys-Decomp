@@ -1,0 +1,21 @@
+name: SMS/GG Recomp adapter checks
+
+on:
+  pull_request:
+    paths:
+      - 'shared_decomp/smsgg_recomp.py'
+      - 'shared_decomp/tests/test_smsgg_recomp.py'
+      - 'Ys/recomp/**'
+      - '.github/workflows/smsgg-recomp-adapter.yml'
+  workflow_dispatch:
+
+jobs:
+  adapter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Hash-gate and generated-C smoke tests
+        run: python -m unittest discover -s shared_decomp/tests -p test_smsgg_recomp.py -v
