@@ -38,7 +38,7 @@ static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
 int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops at palette fade exit $0B00 (no live title/gameplay).\n",
+              "Stops at graphics init $0A5E after bank-7 copy (no gameplay).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -546,7 +546,131 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.clock.vblank_events,
            (unsigned long long)vdp->vram_writes,
            (unsigned long long)sound->psg_write_count);
-    puts("Stop BEFORE $0B00 bank-7 transfer; not yet a title screen.");
+    puts("M35 palette delay complete; M36 now executes bank-7 data and VDP setup.");
+    /* M36: source $0B00 loads MapperSlot2=7 and copies 16 bytes from
+       bank 7 $B9C3 to WRAM $C170 through LDI ($0B19-$0B21).
+       The return at $0A83 resumes initial VDP register setup,
+       tail-calling $0762 to write sprite Y terminator before
+       returning to caller $0A5E. No memory, PC or IRQ injection. */
+    const uint16_t transfer_initial_sp=cpu.sp;
+    const uint64_t before_transfer_irqs=runtime.recognized_irqs;
+    const uint64_t before_transfer_vblanks=runtime.clock.vblank_events;
+    const uint64_t before_transfer_vram=vdp->vram_writes;
+    const uint64_t before_transfer_cram=vdp->cram_writes;
+    const uint64_t before_transfer_registers=vdp->register_writes;
+    uint8_t bank7_expected[16];
+    uint8_t staged_before[16];
+    for (unsigned i=0;i<16u;++i) {
+        bank7_expected[i]=rom[7u*YS_ROM_BANK_BYTES+0x39C3u+i];
+        staged_before[i]=ys_sms_bus_read(bus,(uint16_t)(0xC170u+i));
+    }
+    unsigned transfer_steps=0;
+    bool mapped_bank7=false;
+    unsigned ldi_count=0;
+    while(cpu.pc!=0x0A83u && transfer_steps<160u) {
+        const uint16_t prior_pc=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M36 authentic bank-7 data copy unsupported",&runtime);
+            fprintf(stderr,"  priorPC=$%04X transfer_steps=%u\n",
+                    prior_pc,transfer_steps);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++transfer_steps;
+        if (prior_pc==0x0B02u && cpu.pc==0x0B05u)
+            mapped_bank7=bus->mapped_bank[2]==7u &&
+                         bus->bank_select[2]==7u;
+        if (prior_pc==0x0B1Au && cpu.pc==0x0B1Cu)
+            ++ldi_count;
+        if (runtime.recognized_irqs!=before_transfer_irqs)
+            break;
+    }
+    bool transfer_ok=cpu.pc==0x0A83u &&
+        transfer_steps>60u && transfer_steps<160u &&
+        mapped_bank7 && ldi_count==16u &&
+        cpu.sp==(uint16_t)(transfer_initial_sp+2u) &&
+        cpu.h==0xB9u && cpu.l==0xD3u &&
+        cpu.d==0xC1u && cpu.e==0x80u &&
+        cpu.b==0u && cpu.c==0u && cpu.a==7u &&
+        bus->mapped_bank[2]==7u &&
+        runtime.recognized_irqs==before_transfer_irqs &&
+        runtime.clock.vblank_events==before_transfer_vblanks &&
+        vdp->vram_writes==before_transfer_vram &&
+        vdp->cram_writes==before_transfer_cram;
+    unsigned bytes_changed=0;
+    for (unsigned i=0;i<16u;++i) {
+        const uint8_t actual=ys_sms_bus_read(bus,(uint16_t)(0xC170u+i));
+        transfer_ok=transfer_ok && actual==bank7_expected[i];
+        if (actual!=staged_before[i]) ++bytes_changed;
+    }
+    if(!transfer_ok || bytes_changed==0u) {
+        int result=fail("M36 bank-7 source LDI bytes or mapper mismatch",&runtime);
+        fprintf(stderr,"  transfer=%u ldi=%u changed=%u"
+                " mapper=%02X bank2=%u HL=%02X%02X DE=%02X%02X\n",
+                transfer_steps,ldi_count,bytes_changed,
+                bus->mapper_control,bus->mapped_bank[2],
+                cpu.h,cpu.l,cpu.d,cpu.e);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS original Ys bank-7 source transfer: PC=$0A83"
+           " bank2=%u LDI=%u bytes_changed=%u"
+           " steps=%llu T-states=%llu IRQ=%llu\n",
+           bus->mapped_bank[2],ldi_count,bytes_changed,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs);
+
+    /* Bank-0 $0A83-$0AA4 programs registers 0/1 using source RST $28,
+       writes $D0 to the sprite Y terminator through $0762, and
+       returns to the unfinished graphics init at $0A5E. */
+    unsigned vdp_setup_steps=0;
+    while(cpu.pc!=0x0A5Eu && vdp_setup_steps<110u &&
+          runtime.recognized_irqs==before_transfer_irqs) {
+        const uint16_t prior_pc=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M36 source VDP register setup unsupported",&runtime);
+            fprintf(stderr,"  priorPC=$%04X setup_steps=%u\n",
+                    prior_pc,vdp_setup_steps);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++vdp_setup_steps;
+    }
+    bool vdp_setup_ok=cpu.pc==0x0A5Eu &&
+        cpu.sp==(uint16_t)(transfer_initial_sp+4u) &&
+        vdp_setup_steps>20u && vdp_setup_steps<110u &&
+        vdp->register_writes>=before_transfer_registers+2u &&
+        vdp->registers[0]==ys_sms_bus_read(bus,0xC010u) &&
+        vdp->registers[1]==ys_sms_bus_read(bus,0xC011u) &&
+        vdp->vram[0x3F00u]==0xD0u &&
+        vdp->vram_writes==before_transfer_vram+1u &&
+        vdp->cram_writes==before_transfer_cram &&
+        bus->mapped_bank[2]==7u &&
+        runtime.recognized_irqs==before_transfer_irqs &&
+        runtime.clock.vblank_events==before_transfer_vblanks;
+    if(!vdp_setup_ok) {
+        int result=fail("M36 source VDP registers / sprite Y terminator",&runtime);
+        fprintf(stderr,"  VDPsteps=%u SP=$%04X R0=%02X/%02X"
+                " R1=%02X/%02X Y=%02X writes=%llu->%llu\n",
+                vdp_setup_steps,cpu.sp,
+                vdp->registers[0],ys_sms_bus_read(bus,0xC010u),
+                vdp->registers[1],ys_sms_bus_read(bus,0xC011u),
+                vdp->vram[0x3F00u],
+                (unsigned long long)before_transfer_vram,
+                (unsigned long long)vdp->vram_writes);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS authentic Ys VDP init return: PC=$0A5E"
+           " R0=$%02X R1=$%02X spriteY[0]=$%02X"
+           " steps=%llu T-states=%llu IRQ=%llu VBlank=%llu\n",
+           vdp->registers[0],vdp->registers[1],
+           vdp->vram[0x3F00u],
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events);
+    puts("Stop at $0A5E before graphics clear / title transfer; not playable.");
+
 
 
     if (argc==4) {
@@ -566,7 +690,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0B00: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0A5E: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);

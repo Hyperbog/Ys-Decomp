@@ -358,7 +358,50 @@ static void test_m35_three_natural_palette_waits(void) {
            cpu.total_tstates>163000u);
 }
 
+static void test_m36_original_bank7_rom_transfer(void) {
+    setup();
+    /* ROM-free fixture using byte-identical source bank-0 instructions
+       $0B00-$0B0F and $0B19-$0B21. Source bank 7 at $B9C3 supplies
+       16 deterministic bytes through the *real* Sega ROM mapper. */
+    CODE(0x0B00,
+         0x3E,0x07,0x32,0xFF,0xFF,0x21,0xC3,0xB9,
+         0x11,0x70,0xC1,0x01,0x10,0x00,0x18,0x09);
+    CODE(0x0B19,0xF5,0xED,0xA0,0x78,0xB1,0x20,0xFA,0xF1,0xC9);
+    cpu.pc=0x0B00u;cpu.sp=0xDFF0u;cpu.a=4u;cpu.f=Z80_F_C;
+    assert(ys_sms_bus_write(&bus,0xFFFCu,0x80u));
+    assert(ys_sms_bus_write(&bus,0xDFF0u,0x83u));
+    assert(ys_sms_bus_write(&bus,0xDFF1u,0x0Au));
+    for(unsigned i=0;i<16u;++i) {
+        const uint8_t expected=(uint8_t)(i*11u+0x29u);
+        rom[7u*YS_ROM_BANK_BYTES+0x39C3u+i]=expected;
+        assert(ys_sms_bus_write(&bus,(uint16_t)(0xC170u+i),0xFFu));
+    }
+    assert(ys_sms_bus_write(&bus,0xC16Fu,0xA5u));
+    assert(ys_sms_bus_write(&bus,0xC180u,0x5Au));
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0,ldi=0;
+    while(cpu.pc!=0x0A83u && steps<160u) {
+        const uint16_t prior=cpu.pc;
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+        if(prior==0x0B1Au && cpu.pc==0x0B1Cu) ++ldi;
+    }
+    assert(cpu.pc==0x0A83u && steps>60u && steps<160u && ldi==16u);
+    assert(cpu.sp==0xDFF2u && cpu.a==7u && cpu.f==Z80_F_C);
+    assert(cpu.h==0xB9u && cpu.l==0xD3u &&
+           cpu.d==0xC1u && cpu.e==0x80u &&
+           cpu.b==0u && cpu.c==0u);
+    assert(bus.mapper_control==0x80u && bus.mapped_bank[2]==7u);
+    assert(ys_sms_bus_read(&bus,0xC16Fu)==0xA5u);
+    assert(ys_sms_bus_read(&bus,0xC180u)==0x5Au);
+    for(unsigned i=0;i<16u;++i)
+        assert(ys_sms_bus_read(&bus,(uint16_t)(0xC170u+i))==
+               rom[7u*YS_ROM_BANK_BYTES+0x39C3u+i]);
+    assert(runtime.recognized_irqs==0u && runtime.clock.vblank_events==0u);
+}
+
 int main(void) {
+    test_m36_original_bank7_rom_transfer();
     test_m35_three_natural_palette_waits();
     test_m34_palette_z80_rotates_and_subtract();
     test_m34_original_palette_nibble_loop();
