@@ -74,3 +74,13 @@ The next game-execution milestone should continue from
 `$0046` through the first natural wait-loop completion, followed
 by the state dispatcher at `$00C4`, not claim title/gameplay
 until full VDP state and interactive controls are validated.
+
+## Reproduction contract
+
+The source-ROM verification workflow calls `ys-native-timed-rom`
+with `--frame`, rejects any unexpected instruction/port failure,
+checks the original frame-wait address and wait flag, and requires
+an exact 147471-byte `P6\\n256 192\\n255\\n` export. The Windows
+Development workflow separately tests opening a generated PPM in the
+self-contained GUI, without needing ROM assets or a desktop session.
+These checks deliberately do not certify a live, playable screen.
