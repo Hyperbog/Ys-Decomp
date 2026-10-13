@@ -1,3 +1,34 @@
+# M36 — Actual bank-7 data copy and original VDP initialization
+
+The C11 source-ROM tracer now runs continuously from cold reset through
+M35's **twelve real frame waits**, then switches slot 2 to original
+ROM bank 7 and copies 16 source palette bytes from `$B9C3` into
+WRAM `$C170-$C17F` using the unmodified `LDI` loop.
+
+[Full gated source-ROM verification](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38382817751)
+passed at **PC=`$0A5E`**: 96,849 original Z80 instructions,
+1,127,522 nominal T-states, exactly 16 bank-7 LDI operations,
+15 accepted interrupts and 19 generated VBlanks. Original VDP
+registers 0/1 are `$26/$A0`; the source wrote `$D0` to
+sprite Y-table VRAM `$3F00`. The 16-bank 256 KiB ROM digest matched
+the established source reconstruction, and 13 native tests passed.
+
+The Windows Development launcher `START_HERE.cmd` still provides
+option **1** for its standalone, ROM-free hardware-test window and
+option **3** for a user-supplied Ys SMS ROM's **saved** real-cartridge
+VDP image at the later `$0A5E` checkpoint:
+
+```sh
+bin/ys-native-timed-rom /path/to/your/Ys.sms --frame checkpoint.ppm
+```
+
+The real screen can remain blank at this early graphics-initialization
+point. **This does not yet run Ys graphics or gameplay live**, and
+Alpha/Beta/Final promotion evidence remains blocked.
+See [M36 source-backed bank-7 and VDP trace](research/M36_BANK7_VDP.md).
+
+## Previous milestone — M35
+
 # M35 — Twelve original Ys palette waits, four fade levels
 
 The original Sega Master System cartridge now runs continuously from

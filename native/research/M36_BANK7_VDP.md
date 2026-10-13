@@ -53,3 +53,23 @@ This is still a Development diagnostic, not live game graphics,
 an interactive title screen, sound playback, or playable Ys.
 The Windows GUI remains a synthetic test and static PPM viewer.
 All Alpha/Beta/Final promotion gates remain false.
+
+## Verified source-ROM result
+
+[Gated GitHub Actions run 38382817751](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38382817751)
+passed full 16-bank source-only reconstruction and M25–M36
+source-backed tests:
+
+```text
+M10: 16/16 source-only banks, 262144 bytes; ROM fallback=0
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+PASS original Ys bank-7 source transfer: PC=$0A83 bank2=7 LDI=16 bytes_changed=14 steps=96806 T-states=1127171 IRQ=15
+PASS authentic Ys VDP init return: PC=$0A5E R0=$26 R1=$A0 spriteY[0]=$D0 steps=96849 T-states=1127522 IRQ=15 VBlank=19
+PASS saved original Ys ROM VDP state at PC=$0A5E (256x192 PPM)
+PASS authentic timed VDP image: 147471 bytes
+```
+
+All 13 strict native tests passed. The next source boundary
+is `$0A5E` graphics initialisation and VDP clearing; it has
+**not** run in this version, and no title screen/playability
+claim is made.
