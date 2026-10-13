@@ -1471,7 +1471,7 @@ int main(int argc,char **argv) {
        into WRAM. Compare against an independent bounded host
        decoder and source bank-2 mapper reads; never inject RAM,
        CPU state, VBlank or synthesized resource contents. */
-    enum { FOUR_COLUMN_CAP=0x1000u, FOUR_SOURCE_AT=0xA4D1u };
+    enum { FOUR_COLUMN_CAP=0x1600u, FOUR_SOURCE_AT=0xA4D1u };
     uint8_t four_source[0xC000u-FOUR_SOURCE_AT];
     uint8_t four_expected[FOUR_COLUMN_CAP];
     uint8_t four_written[FOUR_COLUMN_CAP];
@@ -1521,7 +1521,7 @@ int main(int argc,char **argv) {
         }
     bool four_ok=cpu.pc==0x0C92u && four_entered &&
         four_steps>30ul && four_steps<400000ul &&
-        four_consumed>4u && four_count>0u &&
+        four_consumed==4425u && four_count==5344u &&
         four_count==four_touched && four_bad==0u &&
         cpu.sp==four_stack_before &&
         (((uint16_t)cpu.h<<8)|cpu.l)==(uint16_t)(FOUR_SOURCE_AT+four_consumed) &&

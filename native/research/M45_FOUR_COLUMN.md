@@ -31,7 +31,7 @@ The native timed trace now:
    the currently mapped Sega slot-2 bank, before original execution.
 3. Uses an independent bounded host decoder that computes four
    interleaved WRAM columns and their write mask in a separate buffer
-   (up to `$C600–$D5FF`); it does **not** write to the CPU or bus.
+   (up to `$C600–$DBFF`); it does **not** write to the CPU or bus.
 4. Executes the original `CALL $0BEF` and Z80 opcodes under automatic
    VBlank/IRQ/VDP/PSG timing until exact `PC=$0C92`.
 5. Verifies *each* touched WRAM address, the source HL cursor,
@@ -65,3 +65,18 @@ No generated C, original ROM, or source assets may be committed.
 Alpha/Beta/Final evidence remains false until genuine interactive
 native Ys gameplay is verified. The following program at `$0C92`
 and live title rendering remain outside this test.
+
+## Independent source-data bounds correction
+
+The initial gated CI run rejected the independent reference **before**
+executing the M45 source routine because its 4,096-byte destination
+buffer was too small. The repository's original bank-5 source data
+(`Ys/wholebank05/source.json`, ROM-mapped `$A4D1`) decodes to
+**exactly 5,344 WRAM writes**, four columns of 1,336 bytes,
+consuming **4,425 source bytes** and finishing at
+`HL=$B61A`. The final touched destination is `$DADF`.
+The host reference now bounds output at `$C600–$DBFF`, verifies
+**5,344 writes and 4,425 consumed bytes**, and still compares
+every touched byte against independent cartridge-source decoding.
+Neither the original game program nor any runtime state is
+modified to accommodate the source stream.
