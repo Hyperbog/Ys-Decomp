@@ -548,7 +548,53 @@ static void test_m40_bank2_sound_workspace_cascade(void) {
     assert(runtime.clock.vblank_events==0u);
 }
 
+static void test_m41_bank5_rle_and_ed73_stack_save(void) {
+    setup();
+    /* Exact bank-0 startup opcodes $0C55-$0C66, including ED 73
+       LD ($C02E),SP. Then the source $0C20 RLE/incrementing
+       routine with independent bank-5 synthetic compressed data. */
+    CODE(0x0C55,0xED,0x73,0x2E,0xC0,0x3E,0x05,
+         0x32,0xFF,0xFF,0x21,0x1A,0xB6,
+         0x11,0x00,0xC6,0xCD,0x20,0x0C);
+    CODE(0x0C20,0x7E,0x23,0xB7,0xC8,0xF2,0x33,0x0C,
+         0xE6,0x7F,0x47,0x7E,0x12,0x13,0x23,
+         0x10,0xFA,0xC3,0x20,0x0C,
+         0x47,0x7E,0x12,0x13,0x3C,0x10,0xFB,
+         0x23,0xC3,0x20,0x0C);
+    const uint8_t stream[]={0x83u,0x10u,0x20u,0x30u,
+                            0x04u,0x40u,0x00u};
+    memcpy(rom+5u*YS_ROM_BANK_BYTES+0x361Au,stream,sizeof(stream));
+    cpu.pc=0x0C55u;
+    cpu.sp=0xDFE8u;
+    cpu.f=Z80_F_C;
+    assert(ys_sms_bus_write(&bus,0xFFFCu,0x80u));
+    measured(20u,0x0C59u);
+    assert(ys_sms_bus_read(&bus,0xC02Eu)==0xE8u);
+    assert(ys_sms_bus_read(&bus,0xC02Fu)==0xDFu);
+    assert(cpu.f==Z80_F_C && cpu.sp==0xDFE8u);
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0u;
+    while(cpu.pc!=0x0C67u && steps<150u) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+    }
+    assert(cpu.pc==0x0C67u && steps<150u);
+    assert(bus.mapped_bank[2]==5u &&
+           cpu.sp==0xDFE8u &&
+           cpu.h==0xB6u && cpu.l==0x21u &&
+           cpu.d==0xC6u && cpu.e==0x07u);
+    const uint8_t decoded[]={0x10u,0x20u,0x30u,
+                              0x40u,0x41u,0x42u,0x43u};
+    for(unsigned i=0;i<sizeof(decoded);++i)
+        assert(ys_sms_bus_read(&bus,(uint16_t)(0xC600u+i))==decoded[i]);
+    assert(ys_sms_bus_read(&bus,0xC02Eu)==0xE8u &&
+           ys_sms_bus_read(&bus,0xC02Fu)==0xDFu);
+    assert(runtime.recognized_irqs==0u &&
+           runtime.clock.vblank_events==0u);
+}
+
 int main(void) {
+    test_m41_bank5_rle_and_ed73_stack_save();
     test_m40_bank2_sound_workspace_cascade();
     test_m39_source_bank2_sound_call_handoff();
     test_m38_source_name_table_clear_tail_return();

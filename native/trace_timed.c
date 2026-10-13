@@ -35,10 +35,44 @@ static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
         a->ix==b->ix && a->iy==b->iy;
 }
 
+/* Independent, bounded host reference for the original bank-0
+   $0C20 RLE/sequence decoder. The Z80 interpreter independently
+   executes the source routine and its output is compared bytewise.
+   Signed opcode: negative = copy N literal bytes; positive = write
+   N incrementing bytes. Zero terminates the stream. */
+static bool reference_bank5_decode(const uint8_t *rom,
+                                   uint8_t *output, size_t capacity,
+                                   size_t *length, size_t *consumed) {
+    const size_t base=5u*YS_ROM_BANK_BYTES+0x361Au;
+    const size_t limit=6u*YS_ROM_BANK_BYTES;
+    size_t at=base, used=0;
+    for(unsigned commands=0; commands<4096u && at<limit; ++commands) {
+        uint8_t opcode=rom[at++];
+        if(opcode==0u) {
+            *length=used;
+            *consumed=at-base;
+            return used!=0u;
+        }
+        unsigned count=(opcode&0x80u) ?
+            (opcode&0x7Fu ? opcode&0x7Fu : 256u) : opcode;
+        if(used+count>capacity) return false;
+        if(opcode&0x80u) {
+            if(at+count>limit) return false;
+            for(unsigned i=0;i<count;++i) output[used++]=rom[at++];
+        } else {
+            if(at>=limit) return false;
+            uint8_t first=rom[at++];
+            for(unsigned i=0;i<count;++i)
+                output[used++]=(uint8_t)(first+i);
+        }
+    }
+    return false;
+}
+
 int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops after sound register initialization $0C55 (no gameplay).\n",
+              "Stops after original bank-5 RLE decompression $0C67 (no gameplay).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -982,7 +1016,66 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
-    puts("Stop at $0C55 after sound I/O ledger setup. No native audio playback.");
+    puts("M40 sound setup validated; continue into bank-5 source RLE.");
+    uint8_t expected_decompressed[0x1000];
+    size_t expected_bytes=0u,compressed_bytes=0u;
+    if(!reference_bank5_decode(rom,expected_decompressed,
+                               sizeof(expected_decompressed),
+                               &expected_bytes,&compressed_bytes)) {
+        fputs("M41 bank-5 source RLE invalid or exceeds bounded WRAM workspace\n",
+              stderr);
+        free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+    }
+    const uint16_t rle_entry_sp=cpu.sp;
+    const uint64_t rle_start_irqs=runtime.recognized_irqs;
+    const uint64_t rle_start_vblank=runtime.clock.vblank_events;
+    unsigned long rle_steps=0ul;
+    bool mapped_bank5=false;
+    while(cpu.pc!=0x0C67u && rle_steps<180000ul) {
+        uint16_t prev_pc=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M41 source bank-5 RLE opcode unsupported",&runtime);
+            fprintf(stderr,"  lastPC=$%04X RLE steps=%lu\n",prev_pc,rle_steps);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++rle_steps;
+        if(prev_pc==0x0C5Bu && cpu.pc==0x0C5Eu)
+            mapped_bank5=bus->mapped_bank[2]==5u;
+    }
+    const uint16_t final_hl=(uint16_t)(((uint16_t)cpu.h<<8)|cpu.l);
+    const uint16_t final_de=(uint16_t)(((uint16_t)cpu.d<<8)|cpu.e);
+    bool rle_ok=cpu.pc==0x0C67u && rle_steps<180000ul &&
+        expected_bytes>0u && compressed_bytes>1u &&
+        mapped_bank5 && bus->mapped_bank[2]==5u &&
+        cpu.sp==rle_entry_sp &&
+        ys_sms_bus_read(bus,0xC02Eu)==(uint8_t)rle_entry_sp &&
+        ys_sms_bus_read(bus,0xC02Fu)==(uint8_t)(rle_entry_sp>>8) &&
+        final_hl==(uint16_t)(0xB61Au+compressed_bytes) &&
+        final_de==(uint16_t)(0xC600u+expected_bytes) &&
+        runtime.recognized_irqs>=rle_start_irqs &&
+        runtime.clock.vblank_events>=rle_start_vblank;
+    for(size_t i=0;i<expected_bytes;++i)
+        rle_ok=rle_ok && ys_sms_bus_read(bus,(uint16_t)(0xC600u+i))==
+                expected_decompressed[i];
+    if(!rle_ok) {
+        int result=fail("M41 source bank-5 decompression mismatch",&runtime);
+        fprintf(stderr,"  steps=%lu output=%zu compressed=%zu"
+                " HL=$%04X DE=$%04X SP=$%04X bank2=%u\n",
+                rle_steps,expected_bytes,compressed_bytes,
+                final_hl,final_de,cpu.sp,bus->mapped_bank[2]);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS original Ys bank-5 compressed resource to $0C67:"
+           " decoded_bytes=%zu source_bytes=%zu"
+           " steps=%llu T-states=%llu IRQ=%llu VBlank=%llu\n",
+           expected_bytes,compressed_bytes,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events);
+    puts("Stop at $0C67 before staging decompressed resource to video.");
+
 
 
 
@@ -1007,7 +1100,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0C55: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0C67: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);

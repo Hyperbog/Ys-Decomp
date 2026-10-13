@@ -207,6 +207,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0xED:
         if (sub==0x56u) return 8u; /* IM 1 */
         if (sub==0x45u || sub==0x4Du) return 14u; /* RETN/RETI */
+        if (sub==0x73u) return 20u; /* LD (nn),SP */
         if (sub==0x6Fu) return 18u; /* RLD */
         if (sub==0xA0u || sub==0xA3u || sub==0xABu) return 16u;
         if (sub==0xB0u) return cpu->pc==start ? 21u : 16u; /* LDIR */
@@ -484,6 +485,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         if (sub==0x45 || sub==0x4D) {
             cpu->pc=pop16(cpu);
             if(sub==0x45) cpu->iff1=cpu->iff2; /* RETN */
+            break;
+        }
+        if (sub==0x73u) { /* LD (nn),SP: little-endian, flags unchanged. */
+            uint16_t dest=fetch16(cpu);
+            if (!store(cpu,dest,(uint8_t)cpu->sp) ||
+                !store(cpu,(uint16_t)(dest+1u),(uint8_t)(cpu->sp>>8)))
+                goto fail;
             break;
         }
         if (sub==0x6F) { /* RLD: A low nibble <- (HL) high nibble,
