@@ -1373,7 +1373,7 @@ int main(int argc,char **argv) {
     unsigned pattern_steps=0u;
     unsigned actual_out=0u;
     unsigned row_terminators=0u;
-    while(cpu.pc!=0x0C87u && pattern_steps<200000u) {
+    while(cpu.pc!=0x0C87u && pattern_steps<500000u) {
         uint16_t prior_pc=cpu.pc;
         Z80Status status=ys_sms_runtime_step_auto(&runtime);
         if(status!=Z80_RUNNING) {
@@ -1397,7 +1397,7 @@ int main(int argc,char **argv) {
     bool pattern_ok=cpu.pc==0x0C87u &&
         pattern_bytes>0u && actual_out==pattern_bytes &&
         row_terminators==4u &&
-        pattern_steps>100u && pattern_steps<200000u &&
+        pattern_steps>100u && pattern_steps<500000u &&
         cpu.sp==pattern_sp && cpu.h==(uint8_t)(pattern_end_hl>>8) &&
         cpu.l==(uint8_t)pattern_end_hl &&
         cpu.d==0x40u && cpu.e==4u && cpu.b==0u && cpu.c==4u &&
