@@ -20,8 +20,8 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M44 — the original-ROM interpreter reaches
-  CPU `PC=$0C87` after **382,973** source Z80 instructions,
+- **Checkpoint:** M45 — original-ROM execution reaches
+  CPU `PC=$0C92` after **430,886** Z80 instructions,
   **50** naturally accepted interrupts and **54** generated VBlanks.
   A separate host reference decoder verifies **12,288** original
   four-row graphics bytes at their actual interleaved VRAM addresses.
@@ -79,7 +79,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m44-dev-linux-x64-<commit>.zip
+dist/ys-m45-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -408,3 +408,17 @@ independent host-side decoder. SMS/GG Recomp remains a
 generated-C execution. Windows `START_HERE.cmd` retains
 the ROM-free visual test and frozen original-ROM VDP image.
 All Alpha/Beta/Final gates remain false.
+
+
+### M45 resource staging and static-recompiler reference
+
+[Source-ROM CI 38478502672](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38478502672)
+verified `PC=$0C92`, 430,886 authentic Z80 instructions,
+3,579,261 nominal T-states, 56 accepted IRQs,
+60 clock VBlanks, and **5,344** exact WRAM resource bytes
+decoded from **4,425** compressed bytes after the prior
+12,288-graphics transfer. The same source-ROM reconstruction
+passed the SMS/GG Recomp Phase-1 SHA-256/CRC-32 preflight.
+The adapter generates source/provenance only; **no static-recompiled
+code has been executed or compared at runtime**. Game-title
+rendering and play remain unverified. Alpha/Beta/Final blocked.

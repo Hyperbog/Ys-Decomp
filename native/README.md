@@ -1,3 +1,40 @@
+# M45 — Original Ys four-column resource staging verified
+
+The original Ys Master System cartridge now executes continuously
+through the M44 12,288-byte VRAM pattern transfer and the subsequent
+**four-column source-data staging routine**, reaching **Z80 PC=$0C92**.
+
+The [gated full-ROM CI run](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38478502672)
+passed **430,886** interpreted Z80 instructions and **3,579,261**
+nominal T-states, across **56** naturally accepted interrupts and
+**60** generated VBlanks. An independent decoder verified all
+**5,344** WRAM destination bytes against **4,425** compressed
+cartridge bytes. The 16 source-only ROM banks rebuilt without
+fallback, with the original 256 KiB ROM SHA-256 unchanged.
+
+The separately checked [SMS/GG Static Recomp adapter](../Ys/recomp/README.md)
+passed its original-ROM SHA-256/CRC-32 preflight in the same
+gated run. That integration is still **Phase-1 code generation and
+provenance**, not compilation, linking, execution or gameplay
+verification of externally recompiled C. M45 provides the WRAM,
+Z80/interrupt and VDP evidence boundary for a future differential
+generated-C runner.
+
+Windows users can extract both ZIP layers, open
+`START_HERE.cmd`, and choose **1** for the ROM-free synthetic
+window or **3** to run their own Ys SMS cartridge through
+`$0C92` and view a saved, authentic but **static** VDP image.
+
+```sh
+bin/ys-native-timed-rom /path/to/your/Ys.sms --frame checkpoint.ppm
+```
+
+See [M45 four-column evidence](research/M45_FOUR_COLUMN.md).
+**This is not a playable native PC game**; all Alpha/Beta/Final
+promotion gates remain false.
+
+## Previous milestone — M44
+
 # M44 — Source Ys 4-row graphics decompression verified
 
 [Full source-ROM CI run 38474627069](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38474627069)

@@ -140,3 +140,17 @@ CPU/mapper/VDP/timing reference evidence for native compilation
 of `SmsRecomp` output. These results remain from the
 **C11 Z80 interpreter**, not statically recompiled execution;
 the external adapter is still Phase-1 only.
+
+## M45 independently verified original execution boundary
+
+[Source-ROM run 38478502672](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38478502672)
+reached `PC=$0C92` after **430,886** original Z80
+instructions, with **56** naturally accepted IM1 IRQs,
+**60** VBlanks and an independently matched **5,344-byte**
+four-column WRAM resource staging result consuming **4,425**
+compressed source bytes. Source-only cartridge reconstruction
+and this adapter's SHA-256/CRC-32 `--preflight` both passed.
+The code and timing records form a future **reference target**
+for executing output from an external SMS/GG Static Recomp tool;
+they are **not** evidence that generated C compiles or runs yet.
+See [M45 WRAM reference](../../native/research/M45_FOUR_COLUMN.md).

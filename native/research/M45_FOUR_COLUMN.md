@@ -80,3 +80,22 @@ The host reference now bounds output at `$C600–$DBFF`, verifies
 every touched byte against independent cartridge-source decoding.
 Neither the original game program nor any runtime state is
 modified to accommodate the source stream.
+
+## Gated original-ROM verification result
+
+[Actions run 38478502672](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38478502672)
+passed:
+
+```text
+M10: 16/16 source-only banks; 262144 bytes; ROM fallback=0
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+SMS/GG adapter ROM preflight passed (CRC32=B33E2827)
+PASS original Ys 4-column resource staging to $0C92: bytes=5344 source_used=4425 steps=430886 T-states=3579261 IRQ=56 VBlank=60
+PASS saved original Ys ROM VDP state at PC=$0C92
+PASS authentic timed VDP image: 147471 bytes
+```
+
+The full ROM-independent native C11 suite (13/13 tests)
+and the M25 legacy verification also passed. A future native
+static-recomp runner must match this source interpreter path
+without injecting IRQs or patching mapper/video/WRAM state.
