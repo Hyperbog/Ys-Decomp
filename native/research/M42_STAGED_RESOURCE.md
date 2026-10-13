@@ -103,3 +103,13 @@ The first gated original-ROM run, [38469588594](https://github.com/Hyperbog/Ys-D
 ## Gated source-data vs. live-stack separation
 
 The second tagged ROM run [38469858302](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38469858302) confirmed the complete 1,536 resource writes and all 748 consumed command bytes, two natural IRQs and normal CPU/mapper return. It found only **31** workspace comparison differences, beginning at `$DFC0`, which is **inside the original Z80 interrupt stack**, not the staged resource. The M42 acceptance scope is now precisely `$D600–$DFBF`, excluding the stack area `$DFC0–$DFFF`; any difference in the non-stack resource region remains a hard failure. No ROM/game-state edits, graphics fabrication or IRQ injection are used. A final gated check is required before declaring M42 verified.
+
+## Passing M42 source-ROM check
+
+[CI 38470163784](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38470163784)
+passed: `PC=$0C72`, 122,272 source-ROM Z80 steps, 1,323,179
+nominal T-states, 18 IRQs, 22 VBlanks, 748 decoded source bytes
+consumed and 1,536 staged WRAM writes; 13/13 native CTest passed.
+Original ROM: 16/16 source banks, SHA256
+`02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9`.
+No bytes from the external static recompiler are executed.

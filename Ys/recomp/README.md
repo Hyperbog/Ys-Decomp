@@ -106,3 +106,14 @@ and its 748-byte independent decompression result at source
 `PC=$0C67`. It does not demonstrate compilation or runtime
 correctness of actual upstream-generated C: that integration
 remains a separate unverified milestone.
+
+## M42 source-ROM versus static recompiler
+
+[Adapter CI 38463864482](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38463864482)
+passed 14/14 synthetic tests and `make -C Ys recomp-tests`.
+This covers preflight identity, generated-file provenance and safe
+artifact staging, **not compiled/generated-C execution**.
+Separately, [source-ROM M42](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38470163784)
+executed original Z80 opcodes to `$0C72` and verified the staged
+resource. These are independent tracks until a real generated-C
+runner and differential CPU/VDP/PSG timing tests exist.

@@ -20,11 +20,10 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M41 — the natural original-ROM trace reaches
-  Z80 `PC=$0C67` after **109,081** instructions and **1,226,741**
-  nominal T-states. Bank-5 source resource expands from 518
-  compressed bytes to **748 byte-exact WRAM bytes**; 16 IRQs
-  and 20 VBlanks remain source-verified. This is not gameplay.
+- **Checkpoint:** M42 — native source-ROM trace reaches **PC=$0C72** after
+  **122,272** instructions and **1,323,179** T-states; **748** source
+  bytes become **1,536** staged writes, checked independently. Natural
+  IRQs=18, VBlanks=22. Gameplay is not available.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
   `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
   including a stateless video preview, not a PC game.
@@ -78,7 +77,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m41-dev-linux-x64-<commit>.zip
+dist/ys-m42-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -372,3 +371,14 @@ executed original Z80 `ED 73` and bank-5 source RLE decode to
 passed 14 tests for ROM identity and safe generated-file provenance.
 The optional static recompiler still lacks a validated generated-code
 native runner. The Windows Development viewer is not a playable game.
+
+
+### M42 verified staging
+
+[ROM check 38470163784](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38470163784)
+confirms exact original Z80 resource staging at `$0C72`. Compare
+non-stack `$D600-$DFBF` against an independent decoder; the
+live IM1 stack `$DFC0-$DFFF` is not source-resource memory.
+The optional [SMS/GG Recomp adapter](../Ys/recomp/README.md)
+passes 14 synthetic tests but has no compiled/generated-code
+runtime integration. All release evidence gates remain false.

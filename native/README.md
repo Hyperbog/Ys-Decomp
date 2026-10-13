@@ -1,3 +1,30 @@
+# M42 — Native source resource staging verified
+
+The original Ys SMS ROM runs through the source bank-5 decompressor and
+the `$0BEF–$0C1F` two-row staging routine, stopping at **PC=$0C72**.
+[Gated source-ROM CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38470163784)
+passed with **122,272 instructions**, **1,323,179 nominal T-states**,
+**18 naturally accepted interrupts** and **22 VBlanks**. The source
+consumed **748** decompressed bytes and performed **1,536 WRAM
+writes**. An independent decoder matched every byte of the non-stack
+`$D600–$DFBF` staging workspace. The genuine IM1 CPU stack
+`$DFC0–$DFFF` was excluded from that comparison.
+
+[SMS/GG Recomp adapter CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38463864482)
+passed 14/14 synthetic tests and Ys Makefile wiring. It is a
+**Phase-1 codegen/provenance integration**: external-generated C
+has not been compiled, linked or executed as a native game.
+
+Windows Development: extract both ZIP layers and run `START_HERE.cmd`.
+Menu **1** shows synthetic SMS graphics; **3** traces your own Ys SMS
+ROM through `$0C72` and views its static VDP snapshot. This is
+**not playable Ys**; graphics upload and live input remain blocked.
+
+See [M42 source and integration evidence](research/M42_STAGED_RESOURCE.md).
+Alpha/Beta/Final release gates remain false.
+
+## Previous milestone — M41
+
 # M41 — Original Ys resource decompression and SMS/GG recomp review
 
 The verified original-cartridge runtime now reaches **Z80 PC=$0C67**
