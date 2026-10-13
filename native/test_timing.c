@@ -211,7 +211,34 @@ static void test_pending_vblank_reenters_after_ei_ret(void) {
     assert(ys_sms_bus_read(&bus,cpu.sp)==0x64u);
     assert(ys_sms_bus_read(&bus,(uint16_t)(cpu.sp+1u))==0x07u);
 }
+static void test_source_vdp_init_returns_into_wait_bridge(void) {
+    setup();
+    /* Exact source $0764 POP AF / OUT ($BE),A / RET and $00C1 CALL $0BC5.
+       A ROM-free fixture verifies the original return/stack edges. */
+    CODE(0x0764,0xF1,0xD3,0xBE,0xC9);
+    CODE(0x00C1,0xCD,0xC5,0x0B);
+    cpu.pc=0x0764u;
+    cpu.sp=0xDFEAu;
+    assert(ys_sms_bus_write(&bus,0xDFEAu,0x00u));
+    assert(ys_sms_bus_write(&bus,0xDFEBu,0x40u));
+    assert(ys_sms_bus_write(&bus,0xDFECu,0xC1u));
+    assert(ys_sms_bus_write(&bus,0xDFEDu,0x00u));
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(cpu.pc==0x0765u && cpu.sp==0xDFECu &&
+           cpu.a==0u && cpu.f==0x40u && cpu.last_tstates==10u);
+    assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(cpu.pc==0x0767u && cpu.last_tstates==11u);
+    assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(cpu.pc==0x00C1u && cpu.sp==0xDFEEu && cpu.last_tstates==10u);
+    assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(cpu.pc==0x0BC5u && cpu.sp==0xDFECu &&
+           cpu.last_tstates==17u && cpu.total_tstates==48u);
+    assert(ys_sms_bus_read(&bus,cpu.sp)==0xC4u &&
+           ys_sms_bus_read(&bus,(uint16_t)(cpu.sp+1u))==0x00u);
+}
 int main(void) {
+    test_source_vdp_init_returns_into_wait_bridge();
     test_pending_vblank_reenters_after_ei_ret();
     test_source_zero_state_isr_branch_and_mapper_save();
     test_bank0_source_isr_first_natural_vblank();

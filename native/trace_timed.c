@@ -208,7 +208,64 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,cpu.sp,
            bus->mapper_control,bus->mapped_bank[2],
            (unsigned long long)runtime.recognized_irqs);
-    puts("Stop BEFORE executing $0764 POP AF; normal startup not yet resumed.");
+    puts("PASS M30 timed two-ISR return; resume original startup at $0764.");
+
+    /* M32: finish original bank-0 VDP initializer $0764/$0765/$0767.
+       This is POP AF, OUT ($BE),A, RET to the cold-boot CALL $0749
+       successor $00C1. No CPU patch, synthetic IRQ or clock reset. */
+    unsigned resumed_steps=0;
+    while(cpu.pc!=0x00C1u && resumed_steps<8u) {
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("VDP initializer continuation unsupported",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++resumed_steps;
+    }
+    if(cpu.pc!=0x00C1u || resumed_steps!=3u ||
+       cpu.sp!=0xDFF0u || cpu.last_tstates!=10u ||
+       runtime.recognized_irqs!=2u ||
+       bus->mapped_bank[2]!=2u) {
+        int result=fail("source $0764 POP AF/OUT/RET to $00C1",&runtime);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS natural Ys VDP initializer completed to $00C1:"
+           " steps=%llu T-states=%llu SP=$%04X VDPwrites=%llu IRQ=%llu\n",
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,cpu.sp,
+           (unsigned long long)vdp->vram_writes,
+           (unsigned long long)runtime.recognized_irqs);
+
+    /* Enter the *original* VBlank wait bridge $0BC5 -> $0042.
+       Stop at the source's $0046 LD A,($C021) after its EI. Later
+       frame dispatch remains a separate source-backed checkpoint. */
+    unsigned wait_steps=0u;
+    while(cpu.pc!=0x0046u && wait_steps<128u &&
+          runtime.recognized_irqs==2u) {
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("original VBlank wait bridge unsupported",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++wait_steps;
+    }
+    if(cpu.pc!=0x0046u || wait_steps<8u ||
+       ys_sms_bus_read(bus,0xC021u)!=1u ||
+       !cpu.iff1 || cpu.ei_delay!=1u ||
+       runtime.recognized_irqs!=2u ||
+       bus->mapped_bank[2]!=2u) {
+        int result=fail("source $0BC5 -> $0042 wait-loop EI checkpoint",&runtime);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS timed Ys first original frame-wait entry:"
+           " PC=$%04X SP=$%04X C021=%02X IRQ=%llu"
+           " VBlank=%llu steps=%llu T-states=%llu\n",
+           cpu.pc,cpu.sp,ys_sms_bus_read(bus,0xC021u),
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates);
+    puts("Stop before source $0046 wait poll; no title or playable frame.");
     free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }
