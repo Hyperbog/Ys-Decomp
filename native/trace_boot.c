@@ -78,9 +78,10 @@ int main(int argc, char **argv) {
     /* Phase 5: execute the actual $0BC5 context-saving bridge and the
        $0042 VBlank wait until its EI has executed. There is no synthetic
        frame clock: the event below is injected deliberately and separately. */
+    /* Continuous CALL $0BC5 also pushes $00C4 before the bridge itself. */
     result=ys_z80_run_until(&cpu,0x0046,128);
     if (result!=Z80_RUNNING || cpu.pc!=0x0046 ||
-        cpu.sp!=0xDFD8 || cpu.ei_delay!=1 ||
+        cpu.sp!=0xDFD6 || cpu.ei_delay!=1 ||
         !cpu.iff1 || ys_sms_bus_read(bus,0xC021)!=1 ||
         bus->mapped_bank[2]!=2) {
         int code=fail("saved register context and VBlank wait entry",&cpu);
@@ -96,22 +97,22 @@ int main(int argc, char **argv) {
         free(rom);free(bus);free(vdp);free(sound);return code;
     }
     vdp->status |= 0x80; /* Explicit test event, NOT emulated scanline timing. */
-    if (!ys_z80_irq(&cpu) || cpu.pc!=0x0038 || cpu.sp!=0xDFD6 ||
-        ys_sms_bus_read(bus,0xDFD6)!=0x49 ||
-        ys_sms_bus_read(bus,0xDFD7)!=0 ||
+    if (!ys_z80_irq(&cpu) || cpu.pc!=0x0038 || cpu.sp!=0xDFD4 ||
+        ys_sms_bus_read(bus,0xDFD4)!=0x49 ||
+        ys_sms_bus_read(bus,0xDFD5)!=0 ||
         cpu.iff1) {
         int code=fail("explicit maskable IM1 interrupt",&cpu);
         free(rom);free(bus);free(vdp);free(sound);return code;
     }
     result=ys_z80_run_until(&cpu,0x0102,5);
     if (result!=Z80_RUNNING || cpu.pc!=0x0102 ||
-        cpu.a!=0x80 || vdp->status!=0 || cpu.sp!=0xDFD4) {
+        cpu.a!=0x80 || vdp->status!=0 || cpu.sp!=0xDFD2) {
         int code=fail("actual Ys IM1 ISR and VDP status read",&cpu);
         free(rom);free(bus);free(vdp);free(sound);return code;
     }
     result=ys_z80_run_until(&cpu,0x0108,3);
     if (result!=Z80_RUNNING || cpu.a!=1 ||
-        ys_sms_bus_read(bus,0xC021)!=1 || cpu.sp!=0xDFD4) {
+        ys_sms_bus_read(bus,0xC021)!=1 || cpu.sp!=0xDFD2) {
         int code=fail("actual Ys VBlank-state dispatch",&cpu);
         free(rom);free(bus);free(vdp);free(sound);return code;
     }
