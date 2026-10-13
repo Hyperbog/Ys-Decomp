@@ -178,21 +178,15 @@ class SmsggAdapterTests(unittest.TestCase):
 
     @unittest.skipIf(os.name == "nt", "mock executable is a POSIX script")
     def test_generator_symlink_source_is_rejected(self):
-        evil = (
-            "#!/usr/bin/env python3\\n"
-            "from pathlib import Path\\n"
-            "import sys\\n"
-            "cfg = Path(sys.argv[sys.argv.index('--game') + 1])\\n"
-            "out = cfg.parent / 'generated'\\n"
-            "out.mkdir()\\n"
-            "for name in ('full', 'dispatch', 'layout'):\\n"
-            "    target = out / ('ystest_' + name + '.c')\\n"
-            "    if name == 'dispatch':\\n"
-            "        target.symlink_to(cfg)\\n"
-            "    else:\\n"
-            "        target.write_text('/* fixture */\\\\n')\\n"
+        # Start from the known-working fake generator, then replace one
+        # completed output with a symlink to the staged game.toml.
+        # This tests adapter rejection, not parsing of a new mock script.
+        self.tool.write_text(
+            self.tool.read_text()
+            + chr(10) + "(out / 'ystest_dispatch.c').unlink()"
+            + chr(10) + "(out / 'ystest_dispatch.c').symlink_to(cfg)"
+            + chr(10)
         )
-        self.tool.write_text(evil)
         result = self.invoke("--tool", str(self.tool))
         self.assertEqual(result.returncode, 2)
         self.assertIn("did not produce ystest_dispatch.c", result.stderr)
