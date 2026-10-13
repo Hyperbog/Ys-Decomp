@@ -194,10 +194,11 @@ static bool reference_staged_columns(const uint8_t *source,size_t size,
 
 int main(int argc,char **argv) {
     const bool m46_prefix=(argc==3 && strcmp(argv[2],"--m46-prefix")==0);
-    if (!(argc==2 || m46_prefix ||
+    const bool m46b=(argc==3 && strcmp(argv[2],"--m46b")==0);
+    if (!(argc==2 || m46_prefix || m46b ||
           (argc==4 && strcmp(argv[2],"--frame")==0))) {
-        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm | --m46-prefix]\n"
-              "Default M45 stop $0C92; opt-in M46 prefix stop $0C9C (not gameplay).\n",
+        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm | --m46-prefix | --m46b]\n"
+              "Default M45 $0C92; M46a $0C9C; M46b $0AB2 (not gameplay).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1557,7 +1558,7 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
 
-    if(m46_prefix) {
+    if(m46_prefix || m46b) {
         /* M46a executes only the original $0C92-$0C9B prefix.
            This deliberately stops before $0C9C CALL $0AA7. */
         const uint8_t prefix[]={0x3Eu,0x20u,0x32u,0x19u,0xC0u,
@@ -1638,6 +1639,113 @@ int main(int argc,char **argv) {
 
 
 
+
+
+    if(m46b) {
+        /* The exact bank-0 source $0C9C CALL $0AA7 executes through
+           the original $0028 VDP-control helper and IN A,($BF).
+           Stop at $0AB2 before CALL $0BC5's timed frame wait. */
+        const uint8_t call_bytes[]={0xCDu,0xA7u,0x0Au};
+        const uint8_t routine_bytes[]={
+            0x3Au,0x11u,0xC0u,0x5Fu,0x16u,0x81u,
+            0xCBu,0xEBu,0xEFu,0xDBu,0xBFu};
+        const uint8_t helper_bytes[]={
+            0xF3u,0x7Bu,0xD3u,0xBFu,0x7Au,
+            0xD3u,0xBFu,0xFBu,0xC9u};
+        const uint16_t bases[]={0x0C9Cu,0x0AA7u,0x0028u};
+        const uint8_t *sources[]={call_bytes,routine_bytes,helper_bytes};
+        const size_t lengths[]={sizeof(call_bytes),
+                                sizeof(routine_bytes),sizeof(helper_bytes)};
+        bool opcode_ok=true;
+        for(unsigned k=0u;k<3u;++k)
+            for(size_t i=0u;i<lengths[k];++i)
+                if(ys_sms_bus_read(bus,(uint16_t)(bases[k]+i))!=sources[k][i])
+                    opcode_ok=false;
+        if(!opcode_ok) {
+            int result=fail("M46b original call/helper opcode mismatch",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        const uint16_t sp_before=cpu.sp;
+        if(sp_before<0xC004u || sp_before>0xE000u) {
+            int result=fail("M46b original stack outside WRAM",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        const uint8_t flags_before=cpu.f;
+        const uint8_t source_r1=ys_sms_bus_read(bus,0xC011u);
+        const uint8_t status_before=vdp->status;
+        const uint64_t steps_before=cpu.steps;
+        const uint64_t ticks_before=cpu.total_tstates;
+        const uint64_t irq_before=runtime.recognized_irqs;
+        const uint64_t blank_before=runtime.clock.vblank_events;
+        const uint64_t register_before=vdp->register_writes;
+        const uint64_t control_before=vdp->control_writes;
+        const uint64_t vram_before=vdp->vram_writes;
+        const uint64_t cram_before=vdp->cram_writes;
+        const uint64_t psg_before=sound->psg_write_count;
+        const uint8_t bank_before=bus->mapped_bank[2];
+        uint8_t expected_wram[YS_WRAM_BYTES];
+        memcpy(expected_wram,bus->wram,sizeof(expected_wram));
+        /* Real stack writes survive CALL/RST returns, unlike SP. */
+        expected_wram[sp_before-0xC002u]=0x9Fu;
+        expected_wram[sp_before-0xC001u]=0x0Cu;
+        expected_wram[sp_before-0xC004u]=0xB0u;
+        expected_wram[sp_before-0xC003u]=0x0Au;
+        const uint16_t pc_seq[]={0x0AA7u,0x0AAAu,0x0AABu,0x0AADu,
+                                 0x0AAFu,0x0028u,0x0029u,0x002Au,
+                                 0x002Cu,0x002Du,0x002Fu,0x0030u,
+                                 0x0AB0u,0x0AB2u};
+        const uint8_t t_seq[]={17u,13u,4u,7u,8u,11u,4u,4u,
+                               11u,4u,11u,4u,10u,11u};
+        for(unsigned i=0u;i<14u;++i) {
+            uint16_t from=cpu.pc;
+            Z80Status status=ys_sms_runtime_step_auto(&runtime);
+            if(status!=Z80_RUNNING || cpu.pc!=pc_seq[i] ||
+               cpu.last_tstates!=t_seq[i]) {
+                int result=fail("M46b source VDP command path diverged",&runtime);
+                fprintf(stderr,"  from=$%04X expected=$%04X step=%u\n",
+                        from,pc_seq[i],i);
+                free(rom);free(bus);free(vdp);free(sound);return result;
+            }
+        }
+        size_t bad=0u;
+        uint16_t first_bad=0u;
+        for(unsigned i=0u;i<YS_WRAM_BYTES;++i)
+            if(bus->wram[i]!=expected_wram[i]) {
+                if(bad==0u) first_bad=(uint16_t)(0xC000u+i);
+                ++bad;
+            }
+        uint8_t expected_r1=(uint8_t)(source_r1|0x20u);
+        if(bad!=0u || cpu.pc!=0x0AB2u || cpu.sp!=sp_before ||
+           cpu.f!=flags_before || cpu.a!=status_before ||
+           cpu.d!=0x81u || cpu.e!=expected_r1 ||
+           cpu.steps!=steps_before+14u ||
+           cpu.total_tstates!=ticks_before+119u ||
+           vdp->registers[1]!=expected_r1 || vdp->status!=0u ||
+           vdp->register_writes!=register_before+1u ||
+           vdp->control_writes!=control_before+2u ||
+           vdp->vram_writes!=vram_before ||
+           vdp->cram_writes!=cram_before ||
+           sound->psg_write_count!=psg_before ||
+           bus->mapped_bank[2]!=bank_before ||
+           runtime.recognized_irqs!=irq_before ||
+           runtime.clock.vblank_events!=blank_before) {
+            int result=fail("M46b original VDP register/status invariant",
+                            &runtime);
+            fprintf(stderr,"  WRAM bad=%zu first=$%04X"
+                    " VDP R1=%02X expected=%02X status=%02X->%02X\n",
+                    bad,first_bad,vdp->registers[1],expected_r1,
+                    status_before,vdp->status);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        printf("PASS M46b original $0AA7 VDP gate to $0AB2:"
+               " instructions=%llu T-states=%llu"
+               " VDP-R1=%02X status-read=%02X IRQ=%llu VBlank=%llu\n",
+               (unsigned long long)cpu.steps,
+               (unsigned long long)cpu.total_tstates,expected_r1,
+               status_before,(unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+        puts("Stop before $0AB2 CALL $0BC5; no title/gameplay claim.");
+    }
 
     if (argc==4) {
         uint8_t *rgb=malloc(YS_SMS_RGB_BYTES);
