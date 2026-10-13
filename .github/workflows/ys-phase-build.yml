@@ -48,6 +48,12 @@ jobs:
           if (-not (Test-Path $exe)) { throw "Windows graphical EXE is missing: $exe" }
           $proc = Start-Process -FilePath $exe -ArgumentList '--self-test' -Wait -PassThru
           if ($proc.ExitCode -ne 0) { throw "Windows graphical EXE self-test failed: $($proc.ExitCode)" }
+          $preview = Join-Path (Get-Location) 'build-native-phase/Release/ys-native-preview.exe'
+          $ppm = Join-Path $env:RUNNER_TEMP 'm32-video-selftest.ppm'
+          & $preview $ppm
+          if ($LASTEXITCODE -ne 0) { throw "Synthetic PPM generation failed" }
+          $imageTest = Start-Process -FilePath $exe -ArgumentList @('--self-test-ppm', $ppm) -Wait -PassThru
+          if ($imageTest.ExitCode -ne 0) { throw "Windows PPM image loader failed: $($imageTest.ExitCode)" }
           $bytes = [System.IO.File]::ReadAllBytes($exe)
           if ($bytes.Length -lt 512) { throw 'Graphical EXE is unexpectedly small' }
           $pe = [System.BitConverter]::ToInt32($bytes, 0x3C)

@@ -20,7 +20,7 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M31 (Windows graphical diagnostic/launcher fix; the verified original-ROM execution boundary remains M30 `$0764`). The last validated continuous native trace reached
+- **Checkpoint:** M32 (real cartridge VDP snapshot exported from a timed source-ROM frame-wait entry; previous M30 ISR verification remains). The last validated continuous native trace reached
   Z80 PC `$0B22` after 17,224 instructions, with one explicitly injected
   VBlank interrupt.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
@@ -73,7 +73,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m31-dev-linux-x64-<commit>.zip
+dist/ys-m32-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -215,7 +215,7 @@ log capture and explicit pauses. MSVC Release artifacts use the static
 C runtime to avoid a mandatory VC++ Redistributable dependency.
 
 **Extract both layers** if the GitHub Actions artifact itself contains a
-versioned `ys-m31-dev-windows-x64-...zip`. Double-click
+versioned `ys-m32-dev-windows-x64-...zip`. Double-click
 `START_HERE.cmd` from the folder containing `bin`. Choose 1 for a
 ROM-free animated SMS **test pattern**, or choose 3 for the bounded
 source-ROM timed diagnostic (requires a user-supplied Ys SMS ROM).
@@ -224,3 +224,17 @@ Double-clicking the other CLI `.exe` files is not the intended interface.
 The graphical output is synthetic, **not playable Ys**. Alpha/Beta/Final
 release gates still remain false; M30 CPU startup and ROM reconstruction
 checks have not advanced.
+
+
+### M32 real-ROM VDP snapshot integration
+
+In the Windows M32 Development package, choose **3** in
+`START_HERE.cmd`, enter the path to your legal Ys SMS ROM, and the
+launcher runs `ys-native-timed-rom ROM --frame checkpoint.ppm` and
+opens that PPM in the guaranteed Win32 viewer. The image is taken from
+the authentic VDP state when the source CPU reaches the first frame
+wait (`$0046`) after two naturally accepted IM1 interrupts. It can
+appear blank until further game VDP setup is verified. The viewer is
+**not yet a game** and the snapshot is not a live frame loop.
+Tests include the ROM-free synthetic PPM loader and gated cartridge
+reconstruction; Alpha gameplay gates remain unpassed.

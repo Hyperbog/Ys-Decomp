@@ -1,3 +1,48 @@
+# M32 — Real Ys startup image linked to Windows Development viewer
+
+The **timed original-cartridge trace** now continues beyond M30's
+completed two-IRQ zero-state handler at `$0764`:
+
+1. Execute source `$0764 POP AF`, `$0765 OUT ($BE),A`,
+   `$0767 RET`, returning to original reset/startup at `$00C1`.
+2. Enter the bank-0 `$00C1 CALL $0BC5` VBlank-wait bridge, which
+   saves registers and jumps to `$0042`.
+3. Verify the bridge sets `$C021=1`, executes `EI`, and reaches
+   **`PC=$0046`**, before the first original wait-loop poll.
+4. Stop, without injecting interrupts or supplying fake input.
+   The existing M30 checkpoints continue to be asserted first.
+
+**New Development command** (requires your own 256 KiB Ys SMS image):
+
+```sh
+bin/ys-native-timed-rom /path/to/your/Ys.sms --frame checkpoint.ppm
+```
+
+This records a portable 256×192 P6 RGB image of the **real Ys VDP
+register/VRAM/CRAM state** at PC=$0046. This very early boot
+checkpoint may render a blank image because display initialization and
+title graphics are incomplete. The exporter does not change the
+game's VDP registers to force a visually convincing image.
+
+On Windows, the existing `START_HERE.cmd` **menu option 3** now
+performs this ROM-backed trace and opens `checkpoint.ppm` in
+`ys-native-window.exe --ppm checkpoint.ppm`. The viewer supports
+read-only screenshot presentation in addition to the independent,
+ROM-free synthetic animation (option 1). The loaded screenshot does
+**not** continue executing ROM code or accept gameplay input.
+
+CI includes a Windows GUI PPM-loading smoke test with a synthetic
+image. A single explicitly marked `[rom-check]` verification also
+checks the authentic 16-bank ROM reconstruction, verifies actual
+source PC/$C021/IRQ conditions, and validates the exported PPM size.
+No source-ROM files were modified.
+
+**Alpha, Beta and Final are still gated.** M32 proves neither title
+rendering nor native gameplay; it is the first visual inspection
+pipeline from actual cartridge execution in the Windows launcher.
+
+## Earlier milestones — M31 and before
+
 # M31 — First usable Windows Development diagnostic
 
 Previous Development ZIPs shipped mostly **command-line tools** and an

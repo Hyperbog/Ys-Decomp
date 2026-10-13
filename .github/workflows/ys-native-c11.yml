@@ -35,6 +35,7 @@ jobs:
         run: |
           python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-native-boot.sms"
           ./build-native/ys-native-trace "$RUNNER_TEMP/ys-native-boot.sms"
-          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-native-boot.sms"
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-native-boot.sms" --frame "$RUNNER_TEMP/ys-m32-timed.ppm"
+          python3 -c 'import pathlib,os; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-m32-timed.ppm"; b=p.read_bytes(); assert b.startswith(b"P6\n256 192\n255\n") and len(b)==147471, (p,len(b)); print("PASS authentic timed VDP image:",len(b),"bytes")'
       - name: Ensure no tracked source changed
         run: git diff --exit-code

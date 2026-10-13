@@ -125,12 +125,15 @@ def package(channel, platform, build_dir, output_dir, state_path, revision):
         "    bin/ys-native-timing --check",
         "Use your own ROM to trace natural Ys VBlank ISR re-entry and return:",
         "    bin/ys-native-timed-rom PATH_TO_YOUR.sms",
+        "    bin/ys-native-timed-rom PATH_TO_YOUR.sms --frame checkpoint.ppm",
     ]
     if platform.startswith("windows-"):
         readme_lines[:0] = [
             "WINDOWS: EXTRACT THE ENTIRE ZIP first, then double-click",
             r"START_HERE.cmd, or bin\ys-native-window.exe to open the GUI.",
-            "The GUI is a ROM-free synthetic SMS VIDEO DIAGNOSTIC, not Ys.",
+            "The GUI opens a ROM-free synthetic SMS VIDEO DIAGNOSTIC by default.",
+            "In START_HERE.cmd choose 3 to load a real ROM's VDP snapshot.",
+            "The snapshot is a bounded initialization state, NOT gameplay.",
             "The other .exe tools are command-line utilities; double-clicking",
             "them may briefly open a console and close. Run START_HERE.cmd.",
             "",

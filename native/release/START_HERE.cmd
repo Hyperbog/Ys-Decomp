@@ -19,7 +19,7 @@ echo ================================================
 echo.
 echo  1  OPEN VISUAL TEST WINDOW  [no game ROM required]
 echo  2  Check native CPU/VBlank timing [no ROM]
-echo  3  Trace your Ys SMS ROM through timed interrupts
+echo  3  Trace your Ys SMS ROM and VIEW its VDP checkpoint
 echo  4  Export a synthetic video image
 echo  5  Show build information
 echo  6  Exit
@@ -62,12 +62,18 @@ if not exist "%ROM%" (
     pause
     goto menu
 )
-"bin\ys-native-timed-rom.exe" "%ROM%" > "last-diagnostic.txt" 2>&1
+if exist "checkpoint.ppm" del /q "checkpoint.ppm"
+"bin\ys-native-timed-rom.exe" "%ROM%" --frame "checkpoint.ppm" > "last-diagnostic.txt" 2>&1
 set "RESULT=%errorlevel%"
 type "last-diagnostic.txt"
 echo.
 echo Exit code: %RESULT%   Log: last-diagnostic.txt
-echo This is a bounded startup trace, NOT the game.
+echo This is the FIRST frame-wait VDP snapshot, not a live Ys game.
+if "%RESULT%"=="0" if exist "checkpoint.ppm" (
+    echo Opening the real cartridge VDP checkpoint in the Windows viewer.
+    echo Its screen may be blank because game graphics are not yet initialized.
+    start "" "bin\ys-native-window.exe" --ppm "checkpoint.ppm"
+)
 pause
 goto menu
 :picture

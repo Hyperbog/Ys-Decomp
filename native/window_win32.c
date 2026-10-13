@@ -4,6 +4,8 @@
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
+#include <shellapi.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,9 +27,37 @@ typedef struct {
     int sprite_y;
     BOOL paused;
     BOOL ready;
+    BOOL loaded_image;
 } Diagnostic;
 
 static Diagnostic state;
+
+/* P6 frame from ys-native-timed-rom --frame.  Fixed format is intentional:
+   reject malformed and oversized snapshots instead of accepting arbitrary
+   image decoders or loading untrusted game code. */
+static BOOL load_ppm(const wchar_t *filename) {
+    static const char header[]="P6\n256 192\n255\n";
+    if (!filename || !filename[0]) return FALSE;
+    FILE *fp=_wfopen(filename,L"rb");
+    if (!fp) return FALSE;
+    char found[sizeof(header)-1];
+    BOOL ok=fread(found,1,sizeof(found),fp)==sizeof(found) &&
+            memcmp(found,header,sizeof(found))==0 &&
+            fread(state.rgb,1,YS_SMS_RGB_BYTES,fp)==YS_SMS_RGB_BYTES &&
+            fgetc(fp)==EOF;
+    if(fclose(fp)!=0) ok=FALSE;
+    if(!ok) return FALSE;
+    for(size_t i=0;i<YS_SMS_RGB_BYTES/3u;++i) {
+        state.bgra[i*4u+0u]=state.rgb[i*3u+2u];
+        state.bgra[i*4u+1u]=state.rgb[i*3u+1u];
+        state.bgra[i*4u+2u]=state.rgb[i*3u+0u];
+        state.bgra[i*4u+3u]=255u;
+    }
+    state.loaded_image=TRUE;
+    state.ready=TRUE;
+    state.paused=TRUE;
+    return TRUE;
+}
 
 static BOOL update_frame(Diagnostic *app) {
     YsSmsFrameStats stats;
@@ -97,17 +127,27 @@ static void paint(HWND hwnd, HDC dc) {
     SetBkMode(dc, TRANSPARENT);
     SetTextColor(dc, RGB(235, 241, 255));
     RECT title = {12, image_height + 5, width - 10, image_height + 33};
-    DrawTextW(dc, L"DEVELOPMENT VIDEO TEST - NOT YS GAMEPLAY",
+    DrawTextW(dc, state.loaded_image ?
+              L"SAVED VDP IMAGE - NOT LIVE YS GAMEPLAY" :
+              L"DEVELOPMENT VIDEO TEST - NOT YS GAMEPLAY",
               -1, &title, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
     SetTextColor(dc, RGB(186, 196, 213));
     RECT keys = {12, image_height + 33, width - 10, image_height + 59};
-    DrawTextW(dc, L"Arrow keys: move test sprite    Space: pause/resume    F1: help    Esc: exit",
+    DrawTextW(dc, state.loaded_image ?
+              L"Saved ROM/fixture screenshot (may be blank). Esc: exit   F1: help" :
+              L"Arrows: test sprite   Space: pause   F1: help   Esc: exit",
               -1, &keys, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
     wchar_t status[200];
-    swprintf(status, sizeof(status) / sizeof(status[0]),
-             L"NTSC frame %u  |  VBlank events %llu  |  Sprite x=%d y=%d  |  %ls",
-             state.frame, (unsigned long long)state.clock.vblank_events,
-             state.sprite_x, state.sprite_y, state.paused ? L"Paused" : L"Running");
+    if (state.loaded_image) {
+        swprintf(status, sizeof(status) / sizeof(status[0]),
+                 L"Loaded 256x192 RGB screenshot, not emulated in real time.");
+    } else {
+        swprintf(status, sizeof(status) / sizeof(status[0]),
+                 L"NTSC frame %u | VBlank=%llu | sprite x=%d y=%d | %ls",
+                 state.frame,(unsigned long long)state.clock.vblank_events,
+                 state.sprite_x,state.sprite_y,
+                 state.paused ? L"Paused" : L"Running");
+    }
     RECT foot = {12, image_height + 60, width - 10, height - 4};
     DrawTextW(dc, status, -1, &foot, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
 }
@@ -133,7 +173,7 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg,
             return -1;
         return 0;
     case WM_TIMER:
-        if (wp == FRAME_TIMER && !state.paused) {
+        if (wp == FRAME_TIMER && !state.paused && !state.loaded_image) {
             if (!update_frame(&state)) {
                 KillTimer(hwnd, FRAME_TIMER);
                 MessageBoxW(hwnd, L"Internal SMS video diagnostic failed.",
@@ -145,6 +185,8 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg,
         }
         return 0;
     case WM_KEYDOWN:
+        if (state.loaded_image && wp!=VK_ESCAPE && wp!=VK_F1)
+            return 0; /* Loaded snapshots are read-only. */
         switch (wp) {
         case VK_ESCAPE: DestroyWindow(hwnd); return 0;
         case VK_SPACE: state.paused = !state.paused; break;
@@ -156,8 +198,9 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg,
             MessageBoxW(hwnd,
                 L"This is a standalone Windows GDI test of the SMS renderer.\n"
                 L"No ROM is required and no Ys gameplay code runs.\n\n"
-                L"Use START_HERE.cmd to test the cartridge CPU diagnostics.\n"
-                L"Those tools require your own valid Ys SMS ROM.\n"
+                L"Choose option 3 in START_HERE.cmd to export and view\n"
+                L"the real ROM's bounded VDP snapshot (possibly blank).\n"
+                L"That trace needs your own valid Ys SMS ROM.\n"
                 L"This diagnostic does not yet qualify as Alpha.",
                 L"About this Development build", MB_OK | MB_ICONINFORMATION);
             break;
@@ -203,6 +246,14 @@ static LRESULT CALLBACK window_proc(HWND hwnd, UINT msg,
 int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous,
                     PWSTR command_line, int show) {
     (void)previous;
+    if (command_line && wcsstr(command_line,L"--self-test-ppm")) {
+        int count=0;
+        wchar_t **argv=CommandLineToArgvW(GetCommandLineW(),&count);
+        BOOL success=argv && count==3 &&
+            wcscmp(argv[1],L"--self-test-ppm")==0 && load_ppm(argv[2]);
+        if(argv) LocalFree(argv);
+        return success ? 0 : 1;
+    }
     if (command_line && wcsstr(command_line, L"--self-test"))
         return self_test();
     WNDCLASSEXW cls;
@@ -232,6 +283,19 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous,
                     L"Ys Development", MB_OK | MB_ICONERROR);
         return 1;
     }
+    /* Optional --ppm file.ppm, usually produced by START_HERE.cmd.
+       It contains RGB pixels, not a ROM and not executable code. */
+    int count=0;
+    wchar_t **argv=CommandLineToArgvW(GetCommandLineW(),&count);
+    if(argv && count==3 && wcscmp(argv[1],L"--ppm")==0) {
+        if (!load_ppm(argv[2])) {
+            MessageBoxW(hwnd,
+                L"Cannot read 256x192 P6 PPM. Re-run START_HERE.cmd and"
+                L" check last-diagnostic.txt.",
+                L"Ys Development snapshot error",MB_OK|MB_ICONERROR);
+        }
+    }
+    if(argv) LocalFree(argv);
     ShowWindow(hwnd, show);
     UpdateWindow(hwnd);
     MSG msg;

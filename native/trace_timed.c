@@ -2,6 +2,7 @@
    including legitimate immediate re-entry and a stable return to $0764.
    This is a bounded diagnostic, never interactive gameplay. No injected IRQ. */
 #include "sms_runtime.h"
+#include "sms_video.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -35,9 +36,9 @@ static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
 }
 
 int main(int argc,char **argv) {
-    if (argc!=2) {
-        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms\n"
-              "Stop after two real timed VBlank ISRs return to source PC $0764.\n",
+    if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
+        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
+              "Stops at the original cold-boot frame-wait entry $0046.\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -266,6 +267,26 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.steps,
            (unsigned long long)cpu.total_tstates);
     puts("Stop before source $0046 wait poll; no title or playable frame.");
+    if (argc==4) {
+        uint8_t *rgb=malloc(YS_SMS_RGB_BYTES);
+        if (!rgb) {
+            fputs("cannot allocate RGB frame\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        bool ok=ys_sms_video_render(vdp,rgb,YS_SMS_RGB_BYTES,NULL);
+        FILE *output=ok?fopen(argv[3],"wb"):NULL;
+        if(!output) ok=false;
+        if(ok && !ys_sms_video_write_ppm(output,rgb,YS_SMS_RGB_BYTES))
+            ok=false;
+        if(output && fclose(output)!=0) ok=false;
+        free(rgb);
+        if(!ok) {
+            fputs("cannot render/write real Ys startup VDP snapshot\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        printf("PASS saved original Ys ROM VDP state at PC=$0046: %s"
+               " (256x192 PPM; may be blank during initialization)\n",argv[3]);
+    }
     free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }
