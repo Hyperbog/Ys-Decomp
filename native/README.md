@@ -1,3 +1,28 @@
+# M43 — Source Ys graphics VRAM upload verified
+
+[Original-ROM CI 38471475804](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38471475804)
+passed 127,325 real Z80 instructions and 1,376,546 T-states
+to **PC=$0C7E**, with 19 naturally accepted IRQs, 23 VBlanks
+and 5,889 cumulative VRAM writes. The original `$06C1` helper
+executed **1,536 OUTI port instructions**, copying the independently
+verified source WRAM `$D600–$DBFF` to VDP VRAM `$3900–$3EFF`
+byte-for-byte. No artificial interrupt or game state edit was used.
+
+[SMS/GG static-recompiler adapter CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38470606026)
+passes 14/14 tests. The integration is **Phase-1 provenance/code
+generation only**; no actual upstream-generated C has been compiled,
+linked or executed in the native runtime. The M43 results above are
+from the **existing C11 interpreter**, not the static recompiler.
+
+Windows: extract both ZIP layers and double-click `START_HERE.cmd`.
+Menu 1 runs ROM-free synthetic video; option 3 executes your
+legally owned Ys SMS ROM and opens a **static** authentic VDP
+snapshot at `$0C7E`. This is not playable Ys.
+See [M43 verification](research/M43_VRAM_UPLOAD.md).
+Alpha/Beta/Final evidence gates remain false.
+
+## Previous milestone — M42
+
 # M42 — Native source resource staging verified
 
 The original Ys SMS ROM runs through the source bank-5 decompressor and

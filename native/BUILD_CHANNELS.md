@@ -20,10 +20,11 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M42 — native source-ROM trace reaches **PC=$0C72** after
-  **122,272** instructions and **1,323,179** T-states; **748** source
-  bytes become **1,536** staged writes, checked independently. Natural
-  IRQs=18, VBlanks=22. Gameplay is not available.
+- **Checkpoint:** M43 — native original-ROM execution reaches
+  **PC=$0C7E**, **127,325** instructions and **1,376,546**
+  nominal T-states. **1,536 real OUTI** port writes upload
+  verified source data to `VRAM[$3900–$3EFF]`, naturally
+  accepting 19 IRQs and 23 VBlank events. No gameplay yet.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
   `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
   including a stateless video preview, not a PC game.
@@ -77,7 +78,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m42-dev-linux-x64-<commit>.zip
+dist/ys-m43-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -382,3 +383,13 @@ live IM1 stack `$DFC0-$DFFF` is not source-resource memory.
 The optional [SMS/GG Recomp adapter](../Ys/recomp/README.md)
 passes 14 synthetic tests but has no compiled/generated-code
 runtime integration. All release evidence gates remain false.
+
+
+### M43 source graphics upload and static recomp boundary
+
+[ROM CI 38471475804](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38471475804)
+verified 1,536 source Z80 OUTI instructions into VRAM
+`$3900–$3EFF`, matched byte-for-byte. The [SMS/GG adapter
+CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38470606026)
+passed 14/14 tests, but external generated C is not built
+or executed. All Alpha gameplay gates remain false.

@@ -42,7 +42,7 @@ else()
         target_compile_options(${target} PRIVATE -Wall -Wextra -Wpedantic -Werror)
     endforeach()
 endif()
-set(YS_CHECKPOINT "M42" CACHE STRING "Source-backed native checkpoint")
+set(YS_CHECKPOINT "M43" CACHE STRING "Source-backed native checkpoint")
 set(YS_BUILD_CHANNEL "dev" CACHE STRING "Native build channel")
 add_executable(ys-native-info build_info.c)
 target_compile_definitions(ys-native-info PRIVATE

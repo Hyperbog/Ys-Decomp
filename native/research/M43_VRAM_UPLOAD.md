@@ -91,3 +91,21 @@ assets or upstream SMS/GG Recomp executable are vendored. The original
 A single tagged `[rom-check]` CI run reconstructs the ROM and checks
 the extended trace. Windows GUI remains a diagnostic/static-PPM viewer,
 not a playable game. Alpha/Beta/Final gates stay blocked.
+
+
+## Passing cartridge-backed M43 verification
+
+[CI 38471475804](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38471475804)
+passed with 16/16 source-only banks (262,144 bytes, no fallback),
+SHA-256 `02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9`
+and 13/13 CTest:
+
+```text
+PASS authentic Ys two-row staged resource to $0C72: source_used=748 staged_writes=1536 steps=122272 T-states=1323179 IRQ=18 VBlank=22
+PASS original Ys staged tile bytes uploaded to VDP at $0C7E: bytes=1536 OUTI=1536 steps=127325 T-states=1376546 IRQ=19 VBlank=23 VRAMwrites=5889
+PASS authentic timed VDP image: 147471 bytes
+```
+
+The original VBlank ISR ran naturally during the byte-matched
+transfer. Actual tile pattern upload and title/gameplay remain
+outside this checkpoint.

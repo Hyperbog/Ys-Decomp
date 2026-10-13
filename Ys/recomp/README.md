@@ -117,3 +117,13 @@ Separately, [source-ROM M42](https://github.com/Hyperbog/Ys-Decomp/actions/runs/
 executed original Z80 opcodes to `$0C72` and verified the staged
 resource. These are independent tracks until a real generated-C
 runner and differential CPU/VDP/PSG timing tests exist.
+
+
+## M43 original-ROM reference for future generated-C execution
+
+The [gated source-ROM run](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38471475804)
+executed 127,325 interpreted Z80 instructions through 1,536
+real `OUTI` writes, ending at `PC=$0C7E`. This establishes
+a reference CPU/VDP/mapper/timing boundary for **future**
+static-recompiled code differential testing; it does **not**
+mean any `SmsRecomp` generated code ran. Phase-1 only.
