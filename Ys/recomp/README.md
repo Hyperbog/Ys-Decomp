@@ -69,3 +69,24 @@ The adapter accepts root-level sha256 + rom_bytes, or binary.sha256
 Phase 1 covers deterministic code generation, not compiling/linking the
 per-game native runner, dispatch-miss profiling, cycle accuracy or gameplay
 verification. Those are separate reviewed milestones.
+
+## Original-cartridge integration check (M39)
+
+The [tagged M39 source-ROM CI run](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38443152403)
+reconstructed the complete 16-bank Ys cartridge **without using
+an owned binary as fallback**, then invoked this adapter's
+`--preflight` mode against that actual 256 KiB image and checked-in
+`Ys/manifest.json` / `Ys/recomp/game.toml`. It passed SHA-256
+`02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9`
+and CRC-32 `B33E2827`. The independent
+[adapter CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38424674348)
+also passed all **9/9 synthetic tests**.
+
+This confirms the Ys configuration and source-ROM identity **only**.
+There is no tested upstream `SmsRecomp` binary invocation or
+generated C build in CI, no verified recompiled CPU/VDP/PSG ABI,
+no branch-dispatch coverage profile, and no executable native Ys
+game derived from static recompilation yet. Set
+`runtime_verified` only after comparing generated-code execution
+with the source-ROM reference traces using the same hardware
+state and frame-clock schedule.

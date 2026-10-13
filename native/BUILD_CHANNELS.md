@@ -20,10 +20,10 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M38 — the source-ROM trace now returns to
-  `PC=$0C4D` after **104,746** instructions and **16** authentic
-  IM1 interrupts. The name-table clear performed 1,792 VDP data
-  writes; the older independent M25 trace remains verified.
+- **Checkpoint:** M39 — source-ROM execution reaches bank 2 at
+  `PC=$8803` after **104,749** instructions and **16** natural
+  IM1 interrupts; the CALL stack holds return `$0C55`. The previous
+  M38 1,792-byte VDP name-table clear remains verified.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
   `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
   including a stateless video preview, not a PC game.
@@ -77,7 +77,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m38-dev-linux-x64-<commit>.zip
+dist/ys-m39-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -219,7 +219,7 @@ log capture and explicit pauses. MSVC Release artifacts use the static
 C runtime to avoid a mandatory VC++ Redistributable dependency.
 
 **Extract both layers** if the GitHub Actions artifact itself contains a
-versioned `ys-m38-dev-windows-x64-...zip`. Double-click
+versioned `ys-m39-dev-windows-x64-...zip`. Double-click
 `START_HERE.cmd` from the folder containing `bin`. Choose 1 for a
 ROM-free animated SMS **test pattern**, or choose 3 for the bounded
 source-ROM timed diagnostic (requires a user-supplied Ys SMS ROM).
@@ -337,3 +337,14 @@ original game source modifications were used.
 merged and CI-tested. It gates external generated-C output by
 ROM SHA-256/CRC-32 and artifact provenance; it **does not**
 yet compile or execute a static-recompiled game runner.
+
+
+### M39 original sound entry and SMS/GG Recomp ROM identity
+
+[Full source-ROM CI 38443152403](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38443152403)
+passed at `PC=$8803`, mapper bank 2, saved return `$0C55`, opcode `$E5`,
+**104,749** Z80 instructions and **1,194,183** nominal T-states.
+The same CI job also verified `shared_decomp/smsgg_recomp.py --preflight`
+against the **actual source-rebuilt 256 KiB Ys ROM**: SHA-256 and
+configured CRC-32 `B33E2827` both matched. This proves identity,
+not compilation or execution of generated C, nor audio/gameplay.

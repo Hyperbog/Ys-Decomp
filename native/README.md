@@ -1,3 +1,34 @@
+# M39 — Verified bank-2 sound call and SMS/GG Recomp ROM preflight
+
+The original Ys SMS source-ROM trace now reaches **Z80 PC=$8803** by
+executing the game's actual `$0C4D` load, `$0C4F` Sega mapper
+selection, and `$0C52 CALL $8803`. The source CPU's stack holds
+the real return address `$0C55`, with **104,749 instructions**,
+**1,194,183 nominal T-states**, **16** accepted interrupts and
+**20** generated VBlank events. The first bank-2 opcode is `$E5`.
+[Gated source-ROM CI passed](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38443152403).
+The sound initializer itself has **not** been executed yet.
+
+The [SMS/GG Recomp Phase-1 adapter](../Ys/recomp/README.md) also
+passed its ROM identity preflight against the **actual Ys source-built
+256 KiB cartridge**, confirming SHA-256
+`02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9`
+and CRC-32 `B33E2827`. Its separately integrated
+[adapter CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38424674348)
+passed **9 synthetic tests**. The external SmsRecomp tool is not
+vendored or executed in CI, and its generated C is **not yet
+compiled, linked or run** in the native game runtime.
+
+Windows: extract both ZIP layers, double-click `START_HERE.cmd`,
+choose **1** for synthetic SMS video diagnostics or **3** to run your
+own legally obtained Ys ROM to `$8803` and view a frozen VDP
+screenshot. This is a **Development-only test, not playable Ys**.
+
+See [M39 sound handoff and identity evidence](research/M39_SOUND_HANDOFF.md).
+Alpha/Beta/Final promotion remains blocked.
+
+## Previous milestone — M38
+
 # M38 — Original 1792-byte VRAM name-table clearing
 
 The continuous original Ys SMS Z80 trace executes **104,746**

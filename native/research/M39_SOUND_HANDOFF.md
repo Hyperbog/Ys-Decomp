@@ -76,3 +76,24 @@ Do not promote Alpha, Beta or Final: no live title rendering,
 gameplay loop, live input or native sound output exists yet.
 The full ROM remains privately reconstructed only in tagged CI;
 no original ROM or generated code is committed or released.
+
+## Verified source-ROM result
+
+[Gated CI 38443152403](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38443152403)
+passed on [commit 8112e6eb](https://github.com/Hyperbog/Ys-Decomp/commit/8112e6ebf3a05cb009b32e6e3662e80b79f46fd5):
+
+```text
+M10: 16/16 source-only banks, 262144 bytes; ROM fallback=0
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+{"preflight": "passed", "rom_size": 262144, "rom_sha256": "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9", "rom_crc32": "B33E2827"}
+PASS original Ys 1792-byte name-table VRAM clear: PC=$0C4D words=896 steps=104746 T-states=1194146 IRQ=16 VBlank=20 VRAMwrites=4353
+PASS Ys source bank-2 sound handoff: PC=$8803 savedPC=$0C55 bank2=2 opcode=$E5 steps=104749 T-states=1194183 IRQ=16 VBlank=20
+PASS authentic timed VDP image: 147471 bytes
+```
+
+All 13 native CTest cases passed. The independent adapter's nine
+mock-generation, CRC and integrity tests passed in
+[CI 38424674348](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38424674348).
+Source-ROM CRC validation is verified; static generated-C runtime
+execution is not. Do not interpret the bank-2 call handoff as
+completed sound initialization.
