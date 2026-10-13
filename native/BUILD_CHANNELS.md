@@ -20,16 +20,20 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M34 (timed original dispatcher through 32-byte palette RLD nibble transform at `$0AF6`; M33 first frame wait retained). The last validated continuous native trace reached
-  Z80 PC `$0B22` after 17,224 instructions, with one explicitly injected
-  VBlank interrupt.
+- **Checkpoint:** M35 — the naturally clocked source-ROM path now
+  reaches Z80 `PC=$0B00` after **96,733** instructions and **15**
+  accepted interrupts. The separate older M25 manually injected
+  path still verifies `PC=$0B22` after 17,224 instructions.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
   `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
   including a stateless video preview, not a PC game.
-- **Not available:** Automatic video/IRQ scheduler, game display window,
-  live input, native audio output, playable native game executable.
-  A 256×192 PPM renderer and ROM-independent synthetic frame clock are available, but do not
-  yet establish the Alpha video-renderer gate.
+- **Available Development diagnostics:** nominal Z80-timed NTSC/PAL
+  scanline/VBlank scheduler, source-ROM bounded frame execution,
+  256×192 PPM renderer and Windows native GDI test window.
+  **Not yet available:** actual game-driven live desktop window,
+  live Ys gameplay input, native audio playback or a playable
+  `ys-native-game` executable. These capabilities do not yet
+  satisfy the Alpha video/controls/interactive gates.
 - **Promotion record:** `native/release/gates.json`. Each gate starts
   `passed: false` with empty `evidence`. A promotion requires
   `passed: true` plus a nonempty link or path to evidence (test log,
@@ -73,7 +77,7 @@ archive in `dist/`. It does **not** reconstruct the ROM.
 An example output filename:
 
 ```text
-dist/ys-m34-dev-linux-x64-<commit>.zip
+dist/ys-m35-dev-linux-x64-<commit>.zip
 ```
 
 The archive contains `bin/` tools (including `ys-native-preview` and `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`),
@@ -215,7 +219,7 @@ log capture and explicit pauses. MSVC Release artifacts use the static
 C runtime to avoid a mandatory VC++ Redistributable dependency.
 
 **Extract both layers** if the GitHub Actions artifact itself contains a
-versioned `ys-m34-dev-windows-x64-...zip`. Double-click
+versioned `ys-m35-dev-windows-x64-...zip`. Double-click
 `START_HERE.cmd` from the folder containing `bin`. Choose 1 for a
 ROM-free animated SMS **test pattern**, or choose 3 for the bounded
 source-ROM timed diagnostic (requires a user-supplied Ys SMS ROM).
@@ -280,3 +284,15 @@ confirmed `$0C4A` state dispatch at 23,615 instructions,
 No extra VBlank was injected, and the full source-ROM checksum
 was unchanged. [M34 Development build artifacts](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38348967882)
 include the Windows GDI diagnostic and `START_HERE.cmd`.
+
+
+### M35 full palette fade and 12 source VBlank waits
+
+[Full gated ROM run 38350370954](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38350370954)
+verified four source fade levels, twelve original frame-wait bridge
+returns, **96,733** total Z80 instructions and **1,126,507**
+nominal T-states to `$0B00` with **15** accepted IM1 IRQs,
+**19** clock VBlank events, **2,496** VRAM and **176** PSG writes.
+The source `$03EE` ISR clears its `$C02C` palette update flag.
+The next bank-7 graphics/palette data transfer has **not** run.
+The Windows viewer still shows a saved cartridge snapshot, not live Ys.

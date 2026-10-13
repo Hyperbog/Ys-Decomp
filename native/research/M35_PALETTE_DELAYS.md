@@ -78,3 +78,19 @@ screen, a synchronized desktop game loop, live controls or audio output.
 ## Observation from initial gated validation
 
 The first M35 source-ROM run [38350223086](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38350223086) reached the target `PC=$0B00` with **12** wait returns, **4** palette passes, **12** new IRQs, **96,733** total Z80 instructions and **1,126,507** nominal T-states. A prematurely strict assertion wrongly expected `$C02C=1` at the exit: original bank-0 source `$03E8-$03EE` checks and **clears** the update flag during the interrupt handler. The observed source-correct final value is `$C02C=0`. The test has been corrected; original ROM bytes and emulator state are unchanged.
+
+## Verified M35 result
+
+[GitHub Actions source ROM run 38350370954](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38350370954) passed on commit `97c555ce4392`:
+
+```text
+M10: 16/16 source-only banks, 262144 bytes; ROM fallback=0
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+PASS timed Ys four-level palette fade to $0B00: waits=12 palette_passes=4 wakeups=12 steps=96733 T-states=1126507 IRQ=15 VBlank=19 VRAMwrites=2496 PSGwrites=176
+PASS saved original Ys ROM VDP state at PC=$0B00 (256x192 PPM)
+PASS authentic timed VDP image: 147471 bytes
+```
+
+The full M25 manually injected source regression and all 13 native
+CTest cases also passed. The live game title, sprites, audio playback
+and bank-7 transfer are still outside this checkpoint.

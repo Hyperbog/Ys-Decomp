@@ -1,3 +1,33 @@
+# M35 — Twelve original Ys palette waits, four fade levels
+
+The original Sega Master System cartridge now runs continuously from
+cold reset through **four palette nibble transforms and twelve
+clock-generated VBlank waits**, reaching **PC=`$0B00`**, just before
+the bank-7 graphics/palette data transfer.
+
+[Full source-ROM verification](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38350370954)
+passed: **96,733** Z80 instructions, **1,126,507** nominal T-states,
+**19** generated VBlanks, **15** accepted IM1 IRQs,
+**2,496** VRAM writes and **176** PSG writes. No IRQ was injected
+and all 16 source-only 256 KiB ROM banks retained the established SHA-256.
+The source ISR clears the palette-update flag at `$C02C` as part of
+each palette/frame update; the final value is correctly `00`.
+
+The Windows Development ZIP still contains `START_HERE.cmd` and a
+standalone native Win32 GDI window. Choose **1** for the synthetic
+hardware-display animation or **3** to run your own Ys Master System
+ROM to `$0B00` and view a **static** real-cartridge VDP screenshot.
+The exported screenshot is not a running game or completed title screen.
+
+```sh
+bin/ys-native-timed-rom /path/to/your/Ys.sms --frame checkpoint.ppm
+```
+
+See [M35 palette-delay source verification](research/M35_PALETTE_DELAYS.md).
+All Alpha, Beta and Final promotion gates remain false.
+
+## Previous milestone — M34
+
 # M34 — Original dispatcher and palette nibble transform
 
 The Development runtime continues from M33's naturally completed
