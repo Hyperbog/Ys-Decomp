@@ -325,7 +325,41 @@ static void test_m34_original_palette_nibble_loop(void) {
     assert(runtime.recognized_irqs==0u && runtime.clock.vblank_events==0u);
 }
 
+static void test_m35_three_natural_palette_waits(void) {
+    setup();
+    /* Source $0AF4: LD B,3 / CALL $0BC5 / DJNZ $0AF6.
+       Synthetic frame bridge / IRQ tail; real ROM ISR remains a
+       separate, stricter gated source-dependent regression. */
+    CODE(0x0AF4,0x06,0x03,0xCD,0xC5,0x0B,0x10,0xFB);
+    CODE(0x0BC5,0xF5,0xC5,0x3E,0x01,0xCD,0x42,0x00,
+                0xC1,0xF1,0xC9);
+    CODE(0x0042,0x32,0x21,0xC0,0xFB,0x3A,0x21,0xC0,
+                0xB7,0x20,0xFA,0xC9);
+    CODE(0x0038,0xF5,0xDB,0xBF,0xAF,0x32,0x21,0xC0,
+                0xF1,0xFB,0xC9);
+    cpu.pc=0x0AF4u;cpu.sp=0xDFF0u;cpu.interrupt_mode=1u;
+    vdp.registers[1]=0x20u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0,returns=0;
+    while(cpu.pc!=0x0AFBu && steps<55000u) {
+        uint16_t prior=cpu.pc;
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+        if(prior==0x0BCEu && cpu.pc==0x0AF9u) {
+            ++returns;
+            assert(ys_sms_bus_read(&bus,0xC021u)==0u);
+        }
+    }
+    assert(cpu.pc==0x0AFBu && cpu.sp==0xDFF0u &&
+           cpu.a==0 && cpu.b==0 && returns==3u);
+    assert(runtime.recognized_irqs==3u &&
+           runtime.clock.vblank_events==3u);
+    assert(vdp.status==0u && cpu.iff1 &&
+           cpu.total_tstates>163000u);
+}
+
 int main(void) {
+    test_m35_three_natural_palette_waits();
     test_m34_palette_z80_rotates_and_subtract();
     test_m34_original_palette_nibble_loop();
     test_source_busy_wait_wakes_with_natural_irq();

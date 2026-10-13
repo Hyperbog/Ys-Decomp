@@ -38,7 +38,7 @@ static bool same_registers(const YsZ80 *a, const YsZ80 *b) {
 int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
         fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops at palette-loop exit $0AF6 (prior frame ISR verified at $00C4).\n",
+              "Stops at palette fade exit $0B00 (no live title/gameplay).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -442,7 +442,112 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,palette_steps,
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
-    puts("Stop BEFORE $0AF6 CALL $0BC5 palette delay; no title/gameplay.");
+    puts("M34 palette pass zero verified; M35 continues real frame delays.");
+    /* Original source $0AF6-$0AFE runs 3 IRQ-driven waits for each
+       of four palette levels (A=0,1,2,3). Stop at $0B00 before
+       the bank-7 transfer. NO synthetic VBlank/stack/PC changes.
+       Require actual $0042 frame polling to clear its own flag. */
+    const uint16_t palette_saved_sp=cpu.sp;
+    const uint8_t mapper_saved=bus->mapper_control;
+    const uint8_t bank_saved=bus->mapped_bank[2];
+    const uint64_t before_wait_vblank=runtime.clock.vblank_events;
+    const uint64_t before_wait_irqs=runtime.recognized_irqs;
+    const uint64_t before_wait_vram=vdp->vram_writes;
+    const uint64_t before_wait_psg=sound->psg_write_count;
+    const uint16_t saved_ix=cpu.ix,saved_iy=cpu.iy;
+    unsigned long frame_wait_steps=0u;
+    unsigned frame_returns=0u;
+    unsigned palette_passes=1u; /* pass 0 transform completed by M34 */
+    unsigned frame_wakeups=0u;
+    uint64_t last_irq=runtime.recognized_irqs;
+    uint64_t last_vblank=runtime.clock.vblank_events;
+    bool invalid_wait=false;
+    while(cpu.pc!=0x0B00u && frame_wait_steps<300000u) {
+        uint16_t prior_pc=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M35 source palette delay unsupported",&runtime);
+            fprintf(stderr,"  priorPC=$%04X palette_pass=%u frame_returns=%u\n",
+                    prior_pc,palette_passes,frame_returns);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++frame_wait_steps;
+        if(runtime.recognized_irqs!=last_irq) {
+            if(runtime.recognized_irqs!=last_irq+1u ||
+               cpu.pc!=0x0038u || !(vdp->status&0x80u))
+                invalid_wait=true;
+            ++frame_wakeups;
+            last_irq=runtime.recognized_irqs;
+        }
+        if(runtime.clock.vblank_events!=last_vblank) {
+            if(runtime.clock.vblank_events!=last_vblank+1u)
+                invalid_wait=true;
+            last_vblank=runtime.clock.vblank_events;
+        }
+        if(prior_pc==0x0AF6u && cpu.pc==0x0BC5u) {
+            /* The source calls the original register-preserving
+               $0BC5 wait bridge; do not substitute host delays. */
+            if(cpu.sp!=(uint16_t)(palette_saved_sp-2u))
+                invalid_wait=true;
+        }
+        if(prior_pc==0x0B4Du && cpu.pc==0x0AEFu) {
+            ++palette_passes;
+            if(palette_passes>4u) invalid_wait=true;
+        }
+        if(cpu.pc==0x0AF9u && prior_pc==0x0BEEu) {
+            ++frame_returns;
+            if(frame_returns>12u ||
+               cpu.sp!=palette_saved_sp ||
+               ys_sms_bus_read(bus,0xC021u)!=0u ||
+               bus->mapper_control!=mapper_saved ||
+               bus->mapped_bank[2]!=bank_saved ||
+               cpu.ix!=saved_ix || cpu.iy!=saved_iy)
+                invalid_wait=true;
+        }
+        if(invalid_wait) {
+            int result=fail("M35 palette wait IRQ/stack/mapper invariant",&runtime);
+            fprintf(stderr,"  priorPC=$%04X waits=%u passes=%u"
+                    " irq=%llu vblank=%llu\n",prior_pc,frame_returns,
+                    palette_passes,
+                    (unsigned long long)runtime.recognized_irqs,
+                    (unsigned long long)runtime.clock.vblank_events);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+    }
+    if(cpu.pc!=0x0B00u || frame_returns!=12u ||
+       palette_passes!=4u || cpu.a!=4u ||
+       cpu.b!=0u || cpu.sp!=palette_saved_sp ||
+       cpu.ix!=saved_ix || cpu.iy!=saved_iy ||
+       runtime.recognized_irqs<=before_wait_irqs ||
+       runtime.clock.vblank_events<=before_wait_vblank ||
+       vdp->vram_writes<=before_wait_vram ||
+       sound->psg_write_count<=before_wait_psg ||
+       bus->mapped_bank[2]!=bank_saved ||
+       bus->mapper_control!=mapper_saved ||
+       ys_sms_bus_read(bus,0xC021u)!=0u ||
+       ys_sms_bus_read(bus,0xC02Cu)!=1u) {
+        int result=fail("M35 original 4-level palette fade completion",&runtime);
+        fprintf(stderr,"  waits=%u passes=%u wakeups=%u"
+                " steps=%lu A=%02X B=%02X C021=%02X C02C=%02X\n",
+                frame_returns,palette_passes,frame_wakeups,
+                frame_wait_steps,cpu.a,cpu.b,
+                ys_sms_bus_read(bus,0xC021u),
+                ys_sms_bus_read(bus,0xC02Cu));
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS timed Ys four-level palette fade to $0B00:"
+           " waits=%u palette_passes=%u wakeups=%u"
+           " steps=%llu T-states=%llu IRQ=%llu VBlank=%llu"
+           " VRAMwrites=%llu PSGwrites=%llu\n",
+           frame_returns,palette_passes,frame_wakeups,
+           (unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events,
+           (unsigned long long)vdp->vram_writes,
+           (unsigned long long)sound->psg_write_count);
+    puts("Stop BEFORE $0B00 bank-7 transfer; not yet a title screen.");
+
 
     if (argc==4) {
         uint8_t *rgb=malloc(YS_SMS_RGB_BYTES);
@@ -461,7 +566,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0AF6: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0B00: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);
