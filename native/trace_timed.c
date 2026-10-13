@@ -1163,7 +1163,7 @@ int main(int argc,char **argv) {
     const uint16_t actual_stage_de=(uint16_t)(((uint16_t)cpu.d<<8)|cpu.e);
     bool stage_ok=cpu.pc==0x0C72u && entered_decoder &&
         stage_steps>15ul && stage_steps<60000ul &&
-        stage_written>0u && staging_used<=expected_bytes &&
+        staging_written>0u && staging_used<=expected_bytes &&
         actual_stage_hl==(uint16_t)(0xC600u+staging_used) &&
         actual_stage_de==0xD602u &&
         cpu.sp==stage_sp &&
