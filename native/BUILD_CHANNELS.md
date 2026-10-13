@@ -22,9 +22,10 @@ release evidence, not the age of the project.
 
 - **Checkpoint:** M45 — original-ROM execution reaches
   CPU `PC=$0C92` after **430,886** Z80 instructions,
-  **50** naturally accepted interrupts and **54** generated VBlanks.
+  **56** naturally accepted interrupts and **60** generated VBlanks.
   A separate host reference decoder verifies **12,288** original
   four-row graphics bytes at their actual interleaved VRAM addresses.
+  M45 also independently verifies 5,344 staged WRAM resource bytes.
   This is still Development, not playable native Ys.
 - **Available executables:** `ys-native-info`, `ys-native-probe`,
   `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
