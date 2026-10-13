@@ -22,6 +22,14 @@ the title image until additional initialization has run.
 See [M33 source verification contract](research/M33_TIMED_WAIT.md).
 Alpha remains blocked; source-only ROM rebuild remains gated.
 
+**Verified M33 evidence:** [gated source-ROM run 38348188019](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38348188019)
+passed with `23,583` instructions, `409,651` nominal Z80
+T-states, `7` generated VBlank events, `3` accepted IM1 interrupts,
+and exact original source PC `$00C4`. The final ISR produced
+`192` VRAM writes and a cumulative `44` PSG writes.
+An actual cartridge VDP snapshot was verified as a 147,471-byte
+P6 PPM image. The 16-bank 256 KiB source-only ROM digest matched.
+
 ## Previous milestone — M32
 
 # M32 — Real Ys startup image linked to Windows Development viewer

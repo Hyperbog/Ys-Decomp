@@ -70,3 +70,29 @@ as independent regression checks.
 The Windows Development launcher still opens a **saved static image**,
 not a live game. An ISR/VRAM update is not the same as complete
 title/gameplay execution. Alpha/Beta/Final gates remain blocked.
+
+## Verified gated ROM trace
+
+Commit [47e5276d06bf](https://github.com/Hyperbog/Ys-Decomp/commit/47e5276d06bf199de507a2a8783f6fb392b3d737)
+passed [GitHub Actions run 38348188019](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38348188019):
+
+```text
+M10: 16/16 source-only banks, 262144 bytes; ROM fallback=0
+SHA256=02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9
+PASS timed Ys first original frame-wait entry: PC=$0046 SP=$DFD6 C021=01 IRQ=2 VBlank=6 steps=17227 T-states=347052
+PASS natural frame-wait VBlank entry: IRQ=3 VBlank=7 suspendedPC=$0049 SP=$DFD4 CPUsteps=22931
+PASS original Ys frame-wait completed to $00C4: steps=23583 T-states=409651 IRQ=3 VBlank=7 VRAMwrites=192 PSGwrites=44 waitsteps=6356 suspendedPC=$0049
+PASS saved original Ys ROM VDP state at PC=$00C4: [temporary gated CI path]
+PASS authentic timed VDP image: 147471 bytes
+```
+
+The earlier source-only M25 trace remained verified at PC=$0B22,
+and all 13 native CTest suites passed. This is the first sustained
+original-cartridge busy-wait loop, real clock-generated VBlank,
+sprite/data transfer and sound-frame update in one continuous
+CPU execution path.
+
+The renderer's static PPM export is **not a live game frame**.
+The first 192 VRAM writes populate sprite-related data while
+many title graphics remain uninitialized, and the screen can still
+appear blank until the startup display state advances.

@@ -250,3 +250,12 @@ cold-boot dispatcher at `$00C4` once the game itself clears
 VDP framebuffer, which can be viewed using Windows
 `START_HERE.cmd` option 3. This is **not** a live Windows game;
 the Alpha, Beta and Final release evidence gates remain false.
+
+
+**M33 gated verification passed:** [CI 38348188019](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38348188019)
+confirmed `23,583` actual ROM Z80 instructions and `409,651`
+nominal T-states, from reset through IRQ 3 and `$00C4`,
+with 192 real VRAM writes and 44 total PSG writes.
+The later saved VDP snapshot passed P6/size checks; the
+Windows executable is still a **Development visual diagnostic**,
+not a playable Ys binary.
