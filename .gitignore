@@ -12,3 +12,6 @@ __pycache__/
 # Restored from committed lossless .gz evidence archives
 /Ys/whole_system/evidence_graph.json
 /Ys/whole_system/evidence_graph_m3.json
+
+# SMS/GG Recomp output is derived from an owner's ROM and must not be committed.
+/Ys/recomp/generated/
