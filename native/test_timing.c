@@ -153,7 +153,42 @@ static void test_bank0_source_isr_first_natural_vblank(void) {
            vdp.status==0u && runtime.recognized_irqs==1u);
 }
 
+static void test_source_zero_state_isr_branch_and_mapper_save(void) {
+    setup();
+    /* Original bank-0 opcodes $003B-$0041 / $0102-$0107, followed by
+       the unmodified zero-state prologue $0148-$0168.  $8000 itself
+       is deliberately NOT executed in this synthetic fixture. */
+    CODE(0x003B,0xB7,0xF2,0x40,0x05,0xC3,0x02,0x01);
+    CODE(0x0102,0x3A,0x21,0xC0,0xB7,0x28,0x40);
+    CODE(0x0148,0xC5,0xD5,0xE5,0x08,0xD9,
+         0xF5,0xC5,0xD5,0xE5,0xDD,0xE5,0xFD,0xE5,
+         0x3A,0xFF,0xFF,0xF5,0x3A,0xFC,0xFF,0xF5,
+         0xAF,0x32,0xFC,0xFF,0x3E,0x02,0x32,0xFF,0xFF,
+         0xCD,0x00,0x80);
+    cpu.pc=0x003B;
+    cpu.sp=0xDFF0;
+    cpu.a=0x80u;
+    cpu.f=0u;
+    cpu.ix=0x1234u;cpu.iy=0x5678u;
+    cpu.a_alt=0x9Au;cpu.f_alt=0x42u;
+    assert(ys_sms_bus_write(&bus,0xFFFCu,0x80u));
+    assert(ys_sms_bus_write(&bus,0xFFFFu,0x03u));
+    assert(ys_sms_bus_write(&bus,0xC021u,0u));
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    for(unsigned i=0;cpu.pc!=0x8000u && i<45u;++i)
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+    assert(cpu.pc==0x8000u && cpu.sp==0xDFD8u);
+    assert(runtime.recognized_irqs==0u);
+    assert(bus.mapper_control==0 && bus.mapped_bank[2]==2u);
+    assert(ys_sms_bus_read(&bus,cpu.sp)==0x69u);
+    assert(ys_sms_bus_read(&bus,(uint16_t)(cpu.sp+1u))==0x01u);
+    assert(ys_sms_bus_read(&bus,(uint16_t)(cpu.sp+3u))==0x80u);
+    assert(ys_sms_bus_read(&bus,(uint16_t)(cpu.sp+5u))==0x03u);
+    assert(cpu.ix==0x1234u && cpu.iy==0x5678u);
+}
+
 int main(void) {
+    test_source_zero_state_isr_branch_and_mapper_save();
     test_bank0_source_isr_first_natural_vblank();
     test_reset_prefixes_memory_and_nibbles();
     test_conditional_branches();

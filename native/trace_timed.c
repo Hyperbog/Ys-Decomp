@@ -81,6 +81,9 @@ int main(int argc,char **argv) {
         int result=fail("first real timed VBlank IRQ not at source vector",&runtime);
         free(rom);free(bus);free(vdp);free(sound);return result;
     }
+    const YsZ80 interrupted=cpu;
+    const uint8_t control_before=bus->mapper_control;
+    const uint8_t slot2_before=bus->mapped_bank[2];
     uint16_t saved=(uint16_t)((uint16_t)ys_sms_bus_read(bus,cpu.sp) |
                      ((uint16_t)ys_sms_bus_read(bus,(uint16_t)(cpu.sp+1u))<<8));
     /* At $0038 the source code PUSH AF precedes IN A,($BF). Run it,
@@ -103,7 +106,60 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.recognized_irqs,
            saved,cpu.pc,cpu.sp);
     puts("No injected IRQ; source ISR status acknowledgment verified.");
-    puts("Stop at PC=$003B before interpreting the rest of first timed ISR.");
+    puts("M29 timed ISR status acknowledgment at PC=$003B verified.");
+    /* M30: continue this SAME clock-generated interrupt through the
+       source zero-state branch $0102->$0148, the real bank-2 $8000
+       sound update and the register/mapper restore at $0194-$01AB.
+       No injection, timing reset, stack patch or artificial return. */
+    unsigned long handler_steps=0;
+    while(cpu.pc!=saved && handler_steps<4000ul &&
+          runtime.recognized_irqs==1u) {
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("zero-state timed ISR stopped before returning",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++handler_steps;
+    }
+    bool registers_restored=
+        cpu.a==interrupted.a && cpu.f==interrupted.f &&
+        cpu.b==interrupted.b && cpu.c==interrupted.c &&
+        cpu.d==interrupted.d && cpu.e==interrupted.e &&
+        cpu.h==interrupted.h && cpu.l==interrupted.l &&
+        cpu.a_alt==interrupted.a_alt && cpu.f_alt==interrupted.f_alt &&
+        cpu.b_alt==interrupted.b_alt && cpu.c_alt==interrupted.c_alt &&
+        cpu.d_alt==interrupted.d_alt && cpu.e_alt==interrupted.e_alt &&
+        cpu.h_alt==interrupted.h_alt && cpu.l_alt==interrupted.l_alt &&
+        cpu.ix==interrupted.ix && cpu.iy==interrupted.iy;
+    bool returned=registers_restored && saved==0x0764u &&
+        cpu.pc==saved && handler_steps>20u &&
+        cpu.sp==(uint16_t)(interrupted.sp+2u) &&
+        cpu.iff1 && cpu.iff2 && cpu.ei_delay==0u &&
+        bus->mapper_control==control_before &&
+        bus->mapped_bank[2]==slot2_before &&
+        ys_sms_bus_read(bus,0xC021u)==0u &&
+        ys_sms_bus_read(bus,0xC10Fu)==1u &&
+        vdp->status==0u && runtime.recognized_irqs==1u &&
+        runtime.clock.vblank_events==5u;
+    if(!returned) {
+        int result=fail("source zero-state ISR context/mapper restoration",&runtime);
+        fprintf(stderr,"  expected PC=$%04X SP=$%04X mapper=%02X bank2=%u"
+                       " AF=%02X%02X/%02X%02X C021=%02X C10F=%02X"
+                       " shadow=%s steps=%lu\n",
+                saved,(uint16_t)(interrupted.sp+2u),control_before,
+                slot2_before,cpu.a,cpu.f,interrupted.a,interrupted.f,
+                ys_sms_bus_read(bus,0xC021u),ys_sms_bus_read(bus,0xC10Fu),
+                registers_restored?"restored":"different",handler_steps);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS timed Ys zero-state ISR to $%04X: handler_steps=%lu"
+           " total_steps=%llu T-states=%llu SP=$%04X"
+           " mapper=%02X bank2=%u IRQ=%llu\n",
+           saved,handler_steps,(unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,cpu.sp,
+           bus->mapper_control,bus->mapped_bank[2],
+           (unsigned long long)runtime.recognized_irqs);
+    puts("Stop BEFORE executing $0764 POP AF; normal startup not yet resumed.");
     free(rom);free(bus);free(vdp);free(sound);
     return EXIT_SUCCESS;
 }
