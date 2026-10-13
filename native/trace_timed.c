@@ -735,7 +735,100 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events,
            (unsigned long long)vdp->vram_writes);
-    puts("Stop at $0A77 before large name-table VRAM clear; not playable.");
+    puts("M37 small VRAM clear verified; continuing original $0A77 tail-JP.");
+
+    /* M38: original bank 0 $0A77 sets DE=$7800 and BC=$0380,
+       JP $06D4 (tail call) to write 896 zero words/1792 bytes.
+       The helper RETs to the earlier CALL $0A5B caller $0C4D.
+       The VBlank clock remains active: any genuine interrupt is
+       accepted and serviced by the SAME game ISR, never injected. */
+    const uint16_t ntable_sp=cpu.sp;
+    const uint8_t ntable_mapper_control=bus->mapper_control;
+    const uint8_t ntable_mapper_bank=bus->mapped_bank[2];
+    const uint64_t ntable_prev_irq=runtime.recognized_irqs;
+    const uint64_t ntable_prev_vblank=runtime.clock.vblank_events;
+    const uint64_t ntable_prev_vram=vdp->vram_writes;
+    const uint64_t ntable_prev_cram=vdp->cram_writes;
+    const uint16_t ntable_saved_return=(uint16_t)(
+        (uint16_t)ys_sms_bus_read(bus,ntable_sp) |
+        ((uint16_t)ys_sms_bus_read(bus,(uint16_t)(ntable_sp+1u))<<8));
+    if(ntable_saved_return!=0x0C4Du) {
+        int result=fail("M38 $0A5B tail-call return is not source $0C4D",&runtime);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    unsigned long ntable_steps=0u;
+    unsigned ntable_low=0u,ntable_high=0u;
+    uint64_t ntable_last_irq=runtime.recognized_irqs;
+    uint64_t ntable_irq_pc=0u;
+    while(cpu.pc!=0x0C4Du && ntable_steps<30000ul) {
+        uint16_t prior=cpu.pc;
+        Z80Status status=ys_sms_runtime_step_auto(&runtime);
+        if(status!=Z80_RUNNING) {
+            int result=fail("M38 source name-table VRAM clear stopped",&runtime);
+            fprintf(stderr,"  priorPC=$%04X steps=%lu written=%u/%u\n",
+                    prior,ntable_steps,ntable_low,ntable_high);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        ++ntable_steps;
+        if(prior==0x06DBu && cpu.pc==0x06DDu) ++ntable_low;
+        if(prior==0x06E0u && cpu.pc==0x06E2u) ++ntable_high;
+        if(runtime.recognized_irqs!=ntable_last_irq) {
+            if(runtime.recognized_irqs!=ntable_last_irq+1u ||
+               cpu.pc!=0x0038u || (vdp->status&0x80u)==0u) {
+                int result=fail("M38 source name-table interrupted by invalid IM1",&runtime);
+                free(rom);free(bus);free(vdp);free(sound);return result;
+            }
+            ntable_irq_pc=(uint16_t)((uint16_t)ys_sms_bus_read(bus,cpu.sp) |
+                ((uint16_t)ys_sms_bus_read(bus,(uint16_t)(cpu.sp+1u))<<8));
+            printf("PASS original Ys name-table clear natural IRQ:"
+                   " savedPC=$%04X IRQ=%llu VBlank=%llu written=%u/%u\n",
+                   (unsigned)ntable_irq_pc,
+                   (unsigned long long)runtime.recognized_irqs,
+                   (unsigned long long)runtime.clock.vblank_events,
+                   ntable_low,ntable_high);
+            ntable_last_irq=runtime.recognized_irqs;
+        }
+    }
+    bool ntable_ok=cpu.pc==0x0C4Du && ntable_low==896u &&
+        ntable_high==896u && ntable_steps>5000u &&
+        cpu.sp==(uint16_t)(ntable_sp+2u) &&
+        cpu.h==0u && cpu.l==0u &&
+        cpu.d==0x78u && cpu.e==0u &&
+        cpu.b==0u && cpu.c==0u &&
+        bus->mapper_control==ntable_mapper_control &&
+        bus->mapped_bank[2]==ntable_mapper_bank &&
+        vdp->registers[8]==0u && vdp->registers[9]==0u &&
+        vdp->vram_writes>=ntable_prev_vram+1792u &&
+        vdp->cram_writes==ntable_prev_cram &&
+        runtime.recognized_irqs>=ntable_prev_irq &&
+        runtime.clock.vblank_events>=ntable_prev_vblank &&
+        ys_sms_bus_read(bus,0xC018u)==0u &&
+        ys_sms_bus_read(bus,0xC019u)==0u;
+    if(!ntable_ok) {
+        int result=fail("M38 1792-byte original name-table clear and $0C4D return",&runtime);
+        fprintf(stderr,"  steps=%lu words=%u/%u SP=$%04X"
+                " BC=%02X%02X DE=%02X%02X VRAM=%llu->%llu"
+                " CRAM=%llu->%llu IRQ=%llu->%llu\n",
+                ntable_steps,ntable_low,ntable_high,cpu.sp,
+                cpu.b,cpu.c,cpu.d,cpu.e,
+                (unsigned long long)ntable_prev_vram,
+                (unsigned long long)vdp->vram_writes,
+                (unsigned long long)ntable_prev_cram,
+                (unsigned long long)vdp->cram_writes,
+                (unsigned long long)ntable_prev_irq,
+                (unsigned long long)runtime.recognized_irqs);
+        free(rom);free(bus);free(vdp);free(sound);return result;
+    }
+    printf("PASS original Ys 1792-byte name-table VRAM clear:"
+           " PC=$0C4D words=%u steps=%llu T-states=%llu"
+           " IRQ=%llu VBlank=%llu VRAMwrites=%llu\n",
+           ntable_low,(unsigned long long)cpu.steps,
+           (unsigned long long)cpu.total_tstates,
+           (unsigned long long)runtime.recognized_irqs,
+           (unsigned long long)runtime.clock.vblank_events,
+           (unsigned long long)vdp->vram_writes);
+    puts("Stop at $0C4D before second state graphics loading; not playable.");
+
 
 
 
@@ -757,7 +850,7 @@ int main(int argc,char **argv) {
             fputs("cannot render/write real Ys first-frame VDP snapshot\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
-        printf("PASS saved original Ys ROM VDP state at PC=$0A77: %s"
+        printf("PASS saved original Ys ROM VDP state at PC=$0C4D: %s"
                " (256x192 PPM; may be blank during initialization)\n",argv[3]);
     }
     free(rom);free(bus);free(vdp);free(sound);

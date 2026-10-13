@@ -443,7 +443,48 @@ static void test_m37_original_vram_word_clear(void) {
            runtime.clock.vblank_events==0u);
 }
 
+static void test_m38_source_name_table_clear_tail_return(void) {
+    setup();
+    /* Exact bank-0 $0A77-$0A7F JP to $06D4, source $06D4-$06E7,
+       and original $0028-$0030 RST. BC=$0380 covers precisely
+       896 words / 1792 VDP data bytes at VRAM $3800-$3EFF.
+       The tail JP finishes at the original caller $0C4D,
+       NOT the adjacent source address $0A80. */
+    CODE(0x0A77,0x11,0x00,0x78,0x01,0x80,0x03,0xC3,0xD4,0x06);
+    CODE(0x0028,0xF3,0x7B,0xD3,0xBF,0x7A,
+         0xD3,0xBF,0xFB,0xC9);
+    CODE(0x06D4,0xEF,0x79,0xB7,0x28,0x01,0x04,
+         0x7D,0xD3,0xBE,0xF5,0xF1,0x7C,0xD3,0xBE,
+         0x0D,0x20,0xF5,0x10,0xF3,0xC9);
+    cpu.pc=0x0A77u;cpu.sp=0xDFF0u;
+    cpu.h=0;cpu.l=0;
+    assert(ys_sms_bus_write(&bus,0xDFF0u,0x4Du));
+    assert(ys_sms_bus_write(&bus,0xDFF1u,0x0Cu));
+    memset(vdp.vram+0x3800u,0xABu,0x700u);
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0u,low_writes=0u,high_writes=0u;
+    while(cpu.pc!=0x0C4Du && steps<12000u) {
+        uint16_t prior=cpu.pc;
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+        if(prior==0x06DBu) ++low_writes;
+        if(prior==0x06E0u) ++high_writes;
+    }
+    assert(cpu.pc==0x0C4Du && steps>5000u && steps<12000u);
+    assert(low_writes==896u && high_writes==896u);
+    assert(vdp.vram_writes==1792u &&
+           vdp.code==1u && vdp.address==0x3F00u &&
+           vdp.cram_writes==0u);
+    assert(cpu.sp==0xDFF2u && cpu.h==0u && cpu.l==0u &&
+           cpu.d==0x78u && cpu.e==0u &&
+           cpu.b==0u && cpu.c==0u);
+    for(unsigned i=0;i<0x700u;++i)
+        assert(vdp.vram[0x3800u+i]==0u);
+    assert(runtime.recognized_irqs==0u);
+}
+
 int main(void) {
+    test_m38_source_name_table_clear_tail_return();
     test_m37_original_vram_word_clear();
     test_m36_original_bank7_rom_transfer();
     test_m35_three_natural_palette_waits();
