@@ -6,6 +6,7 @@
 #include "pc_tiles.h"
 #include "pc_records.h"
 #include "pc_objects.h"
+#include "pc_scenes.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +25,9 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       SDL_Texture *atlas,bool show_atlas,
                       const YsPcRecords *records,bool show_records,
                       unsigned group,bool show_projection,
-                      const YsPcObjectTypes *types) {
+                      const YsPcObjectTypes *types,
+                      const YsPcSceneDirectory *scenes,bool show_scenes,
+                      unsigned scene_idx,unsigned bank1_idx) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -131,6 +134,23 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
         }
         }
     }
+    if(show_scenes && scenes) {
+        /* Distinct original dispatch tables. NOT a recovered map.
+           These are pointer-value bars, not actor placements. */
+        draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,12,17,27);
+        for(unsigned i=0;i<YS_PC_SCENE_DISPATCH_COUNT;++i) {
+            int x=13+(int)i*55;
+            int height=35+(int)((unsigned)(scenes->fixed_handlers[i]-0x2C36u)*95u/0x1000u);
+            draw_rect(r,x,174-height,43,height,
+                      i==scene_idx?204:72,i==scene_idx?160:115,105);
+        }
+        for(unsigned i=0;i<YS_PC_BANK1_SCENE_ENTRY_COUNT;++i) {
+            int x=20+(int)i*61;
+            int height=24+(int)((unsigned)(scenes->bank1_entries[i]-0x4C13u)*80u/0x60u);
+            draw_rect(r,x,334-height,42,height,
+                      i==bank1_idx?113:65,i==bank1_idx?183:105,175);
+        }
+    }
     SDL_RenderPresent(r);
 }
 static unsigned read_buttons(SDL_GameController *pad) {
@@ -163,6 +183,7 @@ int main(int argc,char **argv) {
     const char *tile_path=NULL;
     const char *record_path=NULL;
     const char *object_types_path=NULL;
+    const char *scene_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
         else if(strcmp(argv[i],"--smoke-projection")==0 &&
@@ -174,8 +195,10 @@ int main(int argc,char **argv) {
         else if(strcmp(argv[i],"--object-types")==0 && !object_types_path &&
                 i+1<argc)
             object_types_path=argv[++i];
+        else if(strcmp(argv[i],"--scenes")==0 && !scene_path && i+1<argc)
+            scene_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE]\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE]\n",stderr);
             return EXIT_FAILURE;
         }
     }
@@ -253,10 +276,25 @@ int main(int argc,char **argv) {
             return EXIT_FAILURE;
         }
     }
-    bool show_records=have_records;
+    YsPcSceneDirectory scenes;
+    bool have_scenes=false;
+    if(scene_path) {
+        FILE *fp=fopen(scene_path,"rb");
+        have_scenes=fp && ys_pc_scenes_load(fp,&scenes);
+        if(fp) fclose(fp);
+        if(!have_scenes) {
+            fprintf(stderr,"PC-5 invalid source scene directory: %s\n",scene_path);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
+    bool show_scenes=have_scenes;
+    unsigned scene_idx=0u, bank1_idx=0u;
+    bool show_records=have_records && !show_scenes;
     bool show_projection=smoke_projection;
     unsigned current_group=0u;
-    bool show_atlas=atlas!=NULL && !show_records;
+    bool show_atlas=atlas!=NULL && !show_records && !show_scenes;
     SDL_GameController *pad=NULL;
     for(int i=0;i<SDL_NumJoysticks();++i)
         if(SDL_IsGameController(i)) {
@@ -279,17 +317,26 @@ int main(int argc,char **argv) {
             if(ev.type==SDL_KEYDOWN && !ev.key.repeat) {
                 if(atlas && ev.key.keysym.sym==SDLK_F2) {
                     show_atlas=!show_atlas;
-                    if(show_atlas) show_records=false;
+                    if(show_atlas) {show_records=false;show_scenes=false;}
                 }
                 if(have_records && ev.key.keysym.sym==SDLK_F3) {
                     show_records=!show_records;
-                    if(show_records) show_atlas=false;
+                    if(show_records) {show_atlas=false;show_scenes=false;}
                 }
                 if(have_records && ev.key.keysym.sym==SDLK_F4) {
                     show_records=true;
                     show_atlas=false;
+                    show_scenes=false;
                     show_projection=!show_projection;
                 }
+                if(have_scenes && ev.key.keysym.sym==SDLK_F5) {
+                    show_scenes=!show_scenes;
+                    if(show_scenes) {show_atlas=false;show_records=false;}
+                }
+                if(show_scenes && ev.key.keysym.sym==SDLK_F6)
+                    scene_idx=(scene_idx+1u)%YS_PC_SCENE_DISPATCH_COUNT;
+                if(show_scenes && ev.key.keysym.sym==SDLK_F7)
+                    bank1_idx=(bank1_idx+1u)%YS_PC_BANK1_SCENE_ENTRY_COUNT;
                 if(show_records && ev.key.keysym.sym==SDLK_PAGEUP)
                     current_group=(current_group+YS_PC_GROUP_COUNT-1u)%
                                   YS_PC_GROUP_COUNT;
@@ -301,7 +348,7 @@ int main(int argc,char **argv) {
         double elapsed=(double)(now-prior)/freq;
         prior=now;
         accumulator+=elapsed>0.25?0.25:elapsed;
-        unsigned buttons=(show_atlas || show_records)?0u:read_buttons(pad);
+        unsigned buttons=(show_atlas || show_records || show_scenes)?0u:read_buttons(pad);
         /* Gallery is a read-only reference. Do not move hidden actors. */
         for(int i=0;accumulator>=1.0/60.0 && i<16;++i) {
             ys_pc_game_tick(&game,buttons);
@@ -315,7 +362,13 @@ int main(int argc,char **argv) {
         snprintf(title,sizeof(title),
                  "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
                  game.hp,game.foe_hp,mode);
-        if(have_records && show_records)
+        if(have_scenes && show_scenes)
+            snprintf(title,sizeof(title),
+                     "Source dispatch C119=%u -> $%04X | B1[%u]=$%04X"
+                     " | NO map | F5/F6/F7",
+                     scene_idx,scenes.fixed_handlers[scene_idx],
+                     bank1_idx,scenes.bank1_entries[bank1_idx]);
+        else if(have_records && show_records)
             snprintf(title,sizeof(title),
                      "Bank7 %s NOT map | group %u/22 $%04X count %u |"
                      " F4: plot/bytes, PgUp/PgDn",
@@ -338,7 +391,8 @@ int main(int argc,char **argv) {
         draw_game(r,&game,atlas,show_atlas,
                   have_records?&source_records:NULL,show_records,current_group,
                   show_projection,
-                  have_object_types?&object_types:NULL);
+                  have_object_types?&object_types:NULL,
+                  have_scenes?&scenes:NULL,show_scenes,scene_idx,bank1_idx);
         if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
