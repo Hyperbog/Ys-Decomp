@@ -36,6 +36,23 @@ def build():
         "3e0732ffff3a81c1e67ffe163050213bbadf"
         "dd2130c27eb72844dd7700dd7729237edd7720")
     assert fixed[0x1B3C:0x1B3C+len(consumer)]==consumer
+    # PC-3 field projection: source $1B56-$1B98 writes selected
+    # object-work slots in a $30-byte-stride array. Opcode bytes
+    # disambiguate the indexed-memory LD ... ,L/H exceptions.
+    source_stores={
+        0x1B56: "dd7700dd7729",
+        0x1B5C: "237edd7720",
+        0x1B66: "6e260029292911080019",
+        0x1B70: "dd7506dd7407dd752bdd742c",
+        0x1B7C: "e123e56e2600292929",
+        0x1B85: "dd7503dd7404dd752ddd742e",
+        0x1B91: "e123113000dd1918b8",
+    }
+    for addr,ops in source_stores.items():
+        expected=bytes.fromhex(ops)
+        assert fixed[addr:addr+len(expected)]==expected, (
+            f"original object projection changed at {addr:04X}")
+
     assert source["schema"]=="ys-bank07-complete-tail-v1"
     pointers=source["map_pointers"]
     groups=source["map_groups"]
@@ -52,6 +69,7 @@ def build():
         assert all(len(row)==4 and all(type(v)==int and 0<=v<=255
                                       for v in row) for row in rows)
         # The fixed-bank consumer uses record[0]==0 as terminator.
+        assert len(rows)<=16  # $C230 + $30*i object work slots
         assert all(row[0]!=0 for row in rows)
         assert type(group["terminator_zero"])==bool
         term=int(group["terminator_zero"])
@@ -86,7 +104,7 @@ def main():
     elif args.verify.read_bytes()!=data:
         raise ValueError("derived bank-7 tuple package drift")
     print("PASS PC-2 bank7 source: 22 groups, 209 four-byte records, "
-          "20 zero terminators, bank0 $1B3C selector confirmed, "
+          "20 zero terminators, bank0 $1B3C/$1B56-$1B98 consumers confirmed, "
           "16 staging bytes; geometry/palette unknown")
 
 
