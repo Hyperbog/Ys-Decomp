@@ -110,10 +110,10 @@ static void test_catalog(void) {
     assert(ys_pc_catalog_apply(&a,&missing,true)==YS_PC_CONTENT_NOT_FOUND);
     assert(a.count==2u);
     YsPcSceneContent changed=second;
-    changed.cells[2][5]='#';
+    changed.cells[2][5]='.'; /* baseline is blocked at this position */
     assert(ys_pc_catalog_apply(&a,&changed,true)==YS_PC_CONTENT_OK);
-    assert(ys_pc_catalog_find(&a,changed.id)->cells[2][5]=='#');
-    assert(ys_pc_catalog_find(&a,base.id)->cells[2][5]=='.');
+    assert(ys_pc_catalog_find(&a,changed.id)->cells[2][5]=='.');
+    assert(ys_pc_catalog_find(&a,base.id)->cells[2][5]=='#');
     assert(ys_pc_catalog_apply(NULL,&base,false)==YS_PC_CONTENT_INVALID);
     changed.cells[2][5]='?';
     expect_failed_update(&a,&changed,YS_PC_CONTENT_BAD_TILE);
