@@ -4,6 +4,7 @@
 #include "sms_runtime.h"
 #include "sms_video.h"
 #include "pc_vdp_checkpoint.h"
+#include "pc_source_watch.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -196,8 +197,9 @@ static bool reference_staged_columns(const uint8_t *source,size_t size,
 int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 &&
           (strcmp(argv[2],"--frame")==0 ||
-           strcmp(argv[2],"--vdp-at-m44")==0)))) {
-        fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp]\n"
+           strcmp(argv[2],"--vdp-at-m44")==0 ||
+           strcmp(argv[2],"--pc12-watch")==0)))) {
+        fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json]\n"
               "Stops after four-column resource staging at $0C92 (not gameplay).\n",
               stderr);
         return EXIT_FAILURE;
@@ -1577,7 +1579,59 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
+    if(argc==4 && strcmp(argv[2],"--pc12-watch")==0) {
+        /* PC-12: only CONTINUE the already verified original M45 CPU,
+           mapper, WRAM, VDP, clock and IRQ state. Never patch PC,
+           input, memory, mapper state or VBlank. Source execution
+           may STOP on an unsupported instruction before any scene. */
+        enum { PC12_STEP_LIMIT=150000u,PC12_EXTRA_VBLANKS=90u };
+        const uint64_t start_blank=runtime.clock.vblank_events;
+        YsPcSourceWatch watch={0};
+        const char *why="budget";
+        unsigned long seen_steps=0ul;
+        for(;seen_steps<PC12_STEP_LIMIT;++seen_steps) {
+            if(!ys_pc_source_watch_sample(&watch,&runtime)) {
+                fputs("PC-12 invalid read-only original observer state\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            if(watch.observed_collision_calls!=0u) {
+                why="observed";break;
+            }
+            if(runtime.clock.vblank_events-start_blank>=PC12_EXTRA_VBLANKS) {
+                why="vblank_limit";break;
+            }
+            Z80Status state=ys_sms_runtime_step_auto(&runtime);
+            if(state!=Z80_RUNNING && state!=Z80_HALTED) {
+                why="unsupported";break;
+            }
+        }
+        FILE *file=fopen(argv[3],"wb");
+        bool ok=file && ys_pc_source_watch_write(file,&watch,&runtime,
+                                                  why,seen_steps);
+        if(file && fclose(file)!=0) ok=false;
+        if(!ok) {
+            fputs("PC-12 cannot write observation result\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        printf("PC-12 original source continuation from verified M45:"
+               " reason=%s continuation_steps=%lu PC=$%04X"
+               " slot1=%u slot2=%u source_collision_calls=%u"
+               " IRQ=%llu VBlank=%llu\n",
+               why,seen_steps,cpu.pc,(unsigned)bus->mapped_bank[1],
+               (unsigned)bus->mapped_bank[2],watch.observed_collision_calls,
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+        if(watch.observed_collision_calls==0u)
+            puts("BLOCKED PC-12: no actual original bank1 collision call"
+                 " witnessed in bounded continuation;"
+                 " no gameplay/map proof");
+        else
+            puts("OBSERVED PC-12: original mapped bank1 collision PC"
+                 " reached; inspect JSON for mapper/WRAM/IX context;"
+                 " still not proof of a playable scene");
+    } else {
     puts("Stop before source $0C92 video setup, not playable.");
+    }
 
 
 
