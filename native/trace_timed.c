@@ -200,7 +200,7 @@ int main(int argc,char **argv) {
            strcmp(argv[2],"--vdp-at-m44")==0 ||
            strcmp(argv[2],"--pc12-watch")==0)))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json]\n"
-              "Stops after four-column resource staging at $0C92 (not gameplay).\n",
+              "Default stops at source $0C92; --pc12-watch continues bounded original execution without controller input (not gameplay proof).\n",
               stderr);
         return EXIT_FAILURE;
     }
