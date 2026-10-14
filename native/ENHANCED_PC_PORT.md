@@ -74,6 +74,18 @@ creates a local, validated `--object-types FILE` package for
 tracks exactly which work bytes are known, leaving other bytes
 unknown. **This does not implement object AI or a playable game map.**
 
+## PC-5 independently verified source scene selectors
+
+[PC-5 native scene routing](research/PC5_SCENE_SELECTORS.md)
+preserves the original fixed-bank nine-entry `$C119` dispatch
+table and the eight-entry bank-1 scene routine directory, including
+source code that can write `$C181`, the independently verified
+22-group object-record selector. The package `--scenes FILE`
+adds an F5/F6/F7 **read-only pointer inspector**, not a
+rendered location or a scene-to-object mapping. The actual
+background name table, loaded palette, actor names, and authentic
+opening scene are still unknown; the gameplay room is unchanged.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
