@@ -9,6 +9,8 @@
 #include "pc_scenes.h"
 #include "pc_nametable.h"
 #include "pc_patterns.h"
+#include "pc_vdp_checkpoint.h"
+#include "sms_video.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +33,8 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       const YsPcSceneDirectory *scenes,bool show_scenes,
                       unsigned scene_idx,unsigned bank1_idx,
                       const YsPcNameTable *name_table,bool show_name_table,
-                      SDL_Texture *pattern_preview,bool show_pattern_preview) {
+                      SDL_Texture *pattern_preview,bool show_pattern_preview,
+                      SDL_Texture *vdp_preview,bool show_vdp_preview) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -184,6 +187,12 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
         /* Hide prototype health/enemy bars below source diagnostics. */
         draw_rect(r,0,YS_PC_MAP_H*TILE,WIDTH,TILE,15,22,35);
     }
+    if(show_vdp_preview && vdp_preview) {
+        draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,9,13,25);
+        SDL_Rect destination={0,0,WIDTH,YS_PC_MAP_H*TILE};
+        SDL_RenderCopy(r,vdp_preview,NULL,&destination);
+        draw_rect(r,0,YS_PC_MAP_H*TILE,WIDTH,TILE,15,22,35);
+    }
     SDL_RenderPresent(r);
 }
 static unsigned read_buttons(SDL_GameController *pad) {
@@ -219,6 +228,7 @@ int main(int argc,char **argv) {
     const char *scene_path=NULL;
     const char *name_table_path=NULL;
     const char *pattern_path=NULL;
+    const char *vdp_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
         else if(strcmp(argv[i],"--smoke-projection")==0 &&
@@ -238,10 +248,17 @@ int main(int argc,char **argv) {
         else if(strcmp(argv[i],"--patterns")==0 && !pattern_path &&
                 i+1<argc)
             pattern_path=argv[++i];
+        else if(strcmp(argv[i],"--vdp-checkpoint")==0 && !vdp_path &&
+                i+1<argc)
+            vdp_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE] [--patterns FILE]\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE] [--patterns FILE] [--vdp-checkpoint FILE]\n",stderr);
             return EXIT_FAILURE;
         }
+    }
+    if(vdp_path && (!pattern_path || !name_table_path)) {
+        fputs("--vdp-checkpoint requires --patterns and --nametable\n",stderr);
+        return EXIT_FAILURE;
     }
     if(pattern_path && !name_table_path) {
         fputs("--patterns requires --nametable FILE\n",stderr);
@@ -387,14 +404,57 @@ int main(int argc,char **argv) {
             return EXIT_FAILURE;
         }
     }
-    bool show_pattern_preview=pattern_preview!=NULL;
-    bool show_name_table=have_name_table && !show_pattern_preview;
-    bool show_scenes=have_scenes && !show_name_table && !show_pattern_preview;
+    SDL_Texture *vdp_preview=NULL;
+    bool vdp_display_enabled=false;
+    if(vdp_path) {
+        FILE *fp=fopen(vdp_path,"rb");
+        YsPcVdpCheckpoint checkpoint;
+        bool valid=fp && ys_pc_vdp_checkpoint_load(fp,&checkpoint);
+        if(fp) fclose(fp);
+        fp=fopen(pattern_path,"rb");
+        YsPcPatterns patterns;
+        bool patterns_valid=fp && ys_pc_patterns_load(fp,&patterns);
+        if(fp) fclose(fp);
+        if(!valid || !patterns_valid ||
+           !ys_pc_vdp_checkpoint_matches(&checkpoint,&patterns,&name_table)) {
+            fprintf(stderr,"PC-8 invalid or source-mismatched VDP snapshot: %s\n",
+                    vdp_path);
+            SDL_DestroyTexture(pattern_preview);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+        uint8_t image[YS_SMS_RGB_BYTES];
+        if(!ys_sms_video_render(&checkpoint.vdp,image,sizeof(image),NULL)) {
+            fputs("PC-8 original-state VDP renderer failed\n",stderr);
+            SDL_DestroyTexture(pattern_preview);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+        vdp_display_enabled=(checkpoint.vdp.registers[0]&4u)!=0u &&
+                            (checkpoint.vdp.registers[1]&0x40u)!=0u;
+        vdp_preview=SDL_CreateTexture(r,SDL_PIXELFORMAT_RGB24,
+            SDL_TEXTUREACCESS_STATIC,YS_SMS_SCREEN_WIDTH,YS_SMS_SCREEN_HEIGHT);
+        if(!vdp_preview ||
+           SDL_UpdateTexture(vdp_preview,NULL,image,YS_SMS_SCREEN_WIDTH*3)!=0) {
+            fprintf(stderr,"PC-8 RGB texture failed: %s\n",SDL_GetError());
+            SDL_DestroyTexture(vdp_preview);
+            SDL_DestroyTexture(pattern_preview);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
+    bool show_vdp_preview=vdp_preview!=NULL;
+    bool show_pattern_preview=pattern_preview!=NULL && !show_vdp_preview;
+    bool show_name_table=have_name_table && !show_pattern_preview && !show_vdp_preview;
+    bool show_scenes=have_scenes && !show_name_table && !show_pattern_preview && !show_vdp_preview;
     unsigned scene_idx=0u, bank1_idx=0u;
-    bool show_records=have_records && !show_scenes && !show_name_table && !show_pattern_preview;
+    bool show_records=have_records && !show_scenes && !show_name_table && !show_pattern_preview && !show_vdp_preview;
     bool show_projection=smoke_projection;
     unsigned current_group=0u;
-    bool show_atlas=atlas!=NULL && !show_records && !show_scenes && !show_name_table && !show_pattern_preview;
+    bool show_atlas=atlas!=NULL && !show_records && !show_scenes && !show_name_table && !show_pattern_preview && !show_vdp_preview;
     SDL_GameController *pad=NULL;
     for(int i=0;i<SDL_NumJoysticks();++i)
         if(SDL_IsGameController(i)) {
@@ -417,22 +477,22 @@ int main(int argc,char **argv) {
             if(ev.type==SDL_KEYDOWN && !ev.key.repeat) {
                 if(atlas && ev.key.keysym.sym==SDLK_F2) {
                     show_atlas=!show_atlas;
-                    if(show_atlas) {show_records=false;show_scenes=false;show_name_table=false;show_pattern_preview=false;}
+                    if(show_atlas) {show_records=false;show_scenes=false;show_name_table=false;show_pattern_preview=false;show_vdp_preview=false;}
                 }
                 if(have_records && ev.key.keysym.sym==SDLK_F3) {
                     show_records=!show_records;
-                    if(show_records) {show_atlas=false;show_scenes=false;show_name_table=false;show_pattern_preview=false;}
+                    if(show_records) {show_atlas=false;show_scenes=false;show_name_table=false;show_pattern_preview=false;show_vdp_preview=false;}
                 }
                 if(have_records && ev.key.keysym.sym==SDLK_F4) {
                     show_records=true;
                     show_atlas=false;
                     show_scenes=false;
-                    show_name_table=false;show_pattern_preview=false;
+                    show_name_table=false;show_pattern_preview=false;show_vdp_preview=false;
                     show_projection=!show_projection;
                 }
                 if(have_scenes && ev.key.keysym.sym==SDLK_F5) {
                     show_scenes=!show_scenes;
-                    if(show_scenes) {show_atlas=false;show_records=false;show_name_table=false;show_pattern_preview=false;}
+                    if(show_scenes) {show_atlas=false;show_records=false;show_name_table=false;show_pattern_preview=false;show_vdp_preview=false;}
                 }
                 if(have_name_table && ev.key.keysym.sym==SDLK_F8) {
                     show_name_table=!show_name_table;
@@ -440,7 +500,7 @@ int main(int argc,char **argv) {
                         show_atlas=false;
                         show_records=false;
                         show_scenes=false;
-                        show_pattern_preview=false;
+                        show_pattern_preview=false;show_vdp_preview=false;
                     }
                 }
                 if(pattern_preview && ev.key.keysym.sym==SDLK_F9) {
@@ -450,6 +510,16 @@ int main(int argc,char **argv) {
                         show_records=false;
                         show_scenes=false;
                         show_name_table=false;
+                    }
+                }
+                if(vdp_preview && ev.key.keysym.sym==SDLK_F10) {
+                    show_vdp_preview=!show_vdp_preview;
+                    if(show_vdp_preview) {
+                        show_atlas=false;
+                        show_records=false;
+                        show_scenes=false;
+                        show_name_table=false;
+                        show_pattern_preview=false;
                     }
                 }
                 if(show_scenes && ev.key.keysym.sym==SDLK_F6)
@@ -467,7 +537,7 @@ int main(int argc,char **argv) {
         double elapsed=(double)(now-prior)/freq;
         prior=now;
         accumulator+=elapsed>0.25?0.25:elapsed;
-        unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table || show_pattern_preview)?0u:read_buttons(pad);
+        unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table || show_pattern_preview || show_vdp_preview)?0u:read_buttons(pad);
         /* Gallery is a read-only reference. Do not move hidden actors. */
         for(int i=0;accumulator>=1.0/60.0 && i<16;++i) {
             ys_pc_game_tick(&game,buttons);
@@ -481,7 +551,12 @@ int main(int argc,char **argv) {
         snprintf(title,sizeof(title),
                  "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
                  game.hp,game.foe_hp,mode);
-        if(show_pattern_preview && pattern_preview)
+        if(show_vdp_preview && vdp_preview)
+            snprintf(title,sizeof(title),
+                     "PC8 original $0C87 simultaneous VRAM+CRAM+regs"
+                     " | display=%s | NOT playable | F10",
+                     vdp_display_enabled?"on":"off");
+        else if(show_pattern_preview && pattern_preview)
             snprintf(title,sizeof(title),
                      "M43/M44 SOURCE index-gray | 384 tiles |"
                      " matched %u, unresolved %u | NO CRAM/map | F9",
@@ -522,11 +597,13 @@ int main(int argc,char **argv) {
                   have_object_types?&object_types:NULL,
                   have_scenes?&scenes:NULL,show_scenes,scene_idx,bank1_idx,
                   have_name_table?&name_table:NULL,show_name_table,
-                  pattern_preview,show_pattern_preview);
+                  pattern_preview,show_pattern_preview,
+                  vdp_preview,show_vdp_preview);
         if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
     if(pad) SDL_GameControllerClose(pad);
+    SDL_DestroyTexture(vdp_preview);
     SDL_DestroyTexture(pattern_preview);
     SDL_DestroyTexture(atlas);
     SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
