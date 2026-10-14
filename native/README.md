@@ -7,6 +7,7 @@ and [PC-4 original conditional object parameter recovery](research/PC4_OBJECT_TY
 and [PC-5 separate scene selector directories](research/PC5_SCENE_SELECTORS.md)
 and [PC-6 authentic initialization name-table bytes](research/PC6_INITIAL_NAMETABLE.md)
 and [PC-7 native pixel-index composition of original pattern/name-table data](research/PC7_PATTERN_NAME_PREVIEW.md)
+and [PC-8 single-checkpoint original VDP/CRAM register capture](research/PC8_SIMULTANEOUS_VDP.md)
 and [PC-3 source object-work projection](research/PC3_OBJECT_WORK_PROJECTION.md) describe
 the new SDL2 `ys-native-game` placeholder-room prototype, native
 fixed-tick gameplay core and tests. It does not execute the original ROM.
