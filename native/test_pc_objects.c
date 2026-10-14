@@ -24,16 +24,26 @@ static void verify_known_bytes(const YsPcObjectSlot *s) {
 }
 /* Optional *real source-derived* group-data verification. This is
    not a RAM execution trace or an authenticated scene placement. */
-static void verify_source_package(const char *path) {
+static void verify_source_package(const char *path,const char *type_path) {
     FILE *f=fopen(path,"rb");
     assert(f);
     YsPcRecords recovered;
     assert(ys_pc_records_load(f,&recovered));
     fclose(f);
+    YsPcObjectTypes table;
+    if(type_path) {
+        FILE *source=fopen(type_path,"rb");
+        assert(source);
+        assert(ys_pc_object_types_load(source,&table));
+        fclose(source);
+    }
     YsPcObjectProjection projection;
-    unsigned total=0u,zero_groups=0u;
+    unsigned total=0u,zero_groups=0u,defaults=0u,indexed=0u;
+    unsigned seen[YS_PC_OBJECT_TYPE_COUNT]={0};
     for(unsigned g=0u;g<YS_PC_GROUP_COUNT;++g) {
-        assert(ys_pc_project_objects(&recovered,g,&projection));
+        assert(type_path ?
+               ys_pc_project_objects_typed(&recovered,g,&table,&projection) :
+               ys_pc_project_objects(&recovered,g,&projection));
         assert(projection.count==recovered.groups[g].count);
         total+=projection.count;
         if(!projection.count) ++zero_groups;
@@ -46,21 +56,50 @@ static void verify_source_package(const char *path) {
             assert(p->work[0]==p->source[0] &&
                    p->work[41]==p->source[0] &&
                    p->work[32]==p->source[1]);
-            verify_known_bytes(p);
+            if(!type_path) verify_known_bytes(p);
+            else if((p->source[1]&0x80u)==0u) {
+                ++defaults;
+                assert(p->work[1]==0x20u && p->work[18]==1u &&
+                       p->work[33]==4u && p->work[13]==10u &&
+                       p->work[14]==10u && !p->known[34]);
+            } else {
+                ++indexed;
+                unsigned index=p->source[1]&0x7Fu;
+                assert(index<YS_PC_OBJECT_TYPE_COUNT);
+                ++seen[index];
+                const uint8_t *entry=table.entry[index];
+                assert(p->work[33]==entry[0] && p->work[34]==entry[1] &&
+                       p->work[42]==entry[1]);
+                for(unsigned v=0u;v<6u;++v)
+                    assert(p->known[35u+v] &&
+                           p->work[35u+v]==entry[2u+v]);
+                assert(p->work[23]==entry[8] && p->work[24]==entry[9] &&
+                       p->work[18]==1u && p->work[1]==0x20u &&
+                       p->work[14]==1u && !p->known[13u]);
+            }
         }
     }
     assert(total==209u && zero_groups==1u);
-    assert(ys_pc_project_objects(&recovered,0u,&projection));
+    if(type_path) {
+        assert(defaults==36u && indexed==173u);
+        for(unsigned i=0;i<YS_PC_OBJECT_TYPE_COUNT;++i)
+            assert(seen[i]!=0u);
+    }
+    assert(type_path ?
+           ys_pc_project_objects_typed(&recovered,0u,&table,&projection) :
+           ys_pc_project_objects(&recovered,0u,&projection));
     assert(projection.count==16u);
     assert(projection.objects[0].source[0]==3u);
     assert(projection.objects[0].source[1]==0u);
     assert(projection.objects[0].value_a==56u);
     assert(projection.objects[0].value_b==352u);
-    puts("PASS PC-3: all 209 source-derived bank7 object fields projected");
+    puts(type_path ?
+        "PASS PC-4: 36 default, 173 indexed source objects; 35 table entries used" :
+        "PASS PC-3: all 209 source-derived bank7 object fields projected");
 }
 int main(int argc,char **argv) {
-    assert(argc==1 || argc==2);
-    if(argc==2) verify_source_package(argv[1]);
+    assert(argc>=1 && argc<=3);
+    if(argc>=2) verify_source_package(argv[1],argc==3?argv[2]:NULL);
     YsPcRecords records;
     YsPcObjectProjection out;
     fixture(&records);
