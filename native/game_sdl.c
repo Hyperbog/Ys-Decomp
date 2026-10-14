@@ -7,6 +7,7 @@
 #include "pc_records.h"
 #include "pc_objects.h"
 #include "pc_scenes.h"
+#include "pc_nametable.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +28,8 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       unsigned group,bool show_projection,
                       const YsPcObjectTypes *types,
                       const YsPcSceneDirectory *scenes,bool show_scenes,
-                      unsigned scene_idx,unsigned bank1_idx) {
+                      unsigned scene_idx,unsigned bank1_idx,
+                      const YsPcNameTable *name_table,bool show_name_table) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -151,6 +153,26 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       i==bank1_idx?113:65,i==bank1_idx?183:105,175);
         }
     }
+    if(show_name_table && name_table) {
+        /* Source-authentic M43 name entries at VRAM $3900-$3EFF.
+           Diagnostic INDEX grayscale, NOT actual Ys colors or a game map.
+           The unknown upper 4 name-table rows $3800-$38FF are omitted. */
+        draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,12,17,27);
+        for(unsigned y=0;y<YS_PC_NT_H;++y)
+            for(unsigned x=0;x<YS_PC_NT_W;++x) {
+                YsPcNameCell cell;
+                if(!ys_pc_nametable_cell(name_table,x,y,&cell))
+                    continue;
+                Uint8 shade=(Uint8)(26u+
+                    ((unsigned)cell.pattern*185u)/511u);
+                int px=(int)x*16,py=12+(int)y*15;
+                draw_rect(r,px,py,15,14,shade,shade,shade);
+                if(cell.palette_1)
+                    draw_rect(r,px+1,py+11,13,2,125,125,125);
+                if(cell.priority)
+                    draw_rect(r,px+1,py+1,13,2,241,241,241);
+            }
+    }
     SDL_RenderPresent(r);
 }
 static unsigned read_buttons(SDL_GameController *pad) {
@@ -184,6 +206,7 @@ int main(int argc,char **argv) {
     const char *record_path=NULL;
     const char *object_types_path=NULL;
     const char *scene_path=NULL;
+    const char *name_table_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
         else if(strcmp(argv[i],"--smoke-projection")==0 &&
@@ -197,8 +220,11 @@ int main(int argc,char **argv) {
             object_types_path=argv[++i];
         else if(strcmp(argv[i],"--scenes")==0 && !scene_path && i+1<argc)
             scene_path=argv[++i];
+        else if(strcmp(argv[i],"--nametable")==0 && !name_table_path &&
+                i+1<argc)
+            name_table_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE]\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE]\n",stderr);
             return EXIT_FAILURE;
         }
     }
@@ -289,12 +315,27 @@ int main(int argc,char **argv) {
             return EXIT_FAILURE;
         }
     }
-    bool show_scenes=have_scenes;
+    YsPcNameTable name_table;
+    bool have_name_table=false;
+    if(name_table_path) {
+        FILE *fp=fopen(name_table_path,"rb");
+        have_name_table=fp && ys_pc_nametable_load(fp,&name_table);
+        if(fp) fclose(fp);
+        if(!have_name_table) {
+            fprintf(stderr,"PC-6 invalid source name-table asset: %s\n",
+                    name_table_path);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
+    bool show_name_table=have_name_table;
+    bool show_scenes=have_scenes && !show_name_table;
     unsigned scene_idx=0u, bank1_idx=0u;
-    bool show_records=have_records && !show_scenes;
+    bool show_records=have_records && !show_scenes && !show_name_table;
     bool show_projection=smoke_projection;
     unsigned current_group=0u;
-    bool show_atlas=atlas!=NULL && !show_records && !show_scenes;
+    bool show_atlas=atlas!=NULL && !show_records && !show_scenes && !show_name_table;
     SDL_GameController *pad=NULL;
     for(int i=0;i<SDL_NumJoysticks();++i)
         if(SDL_IsGameController(i)) {
@@ -317,21 +358,30 @@ int main(int argc,char **argv) {
             if(ev.type==SDL_KEYDOWN && !ev.key.repeat) {
                 if(atlas && ev.key.keysym.sym==SDLK_F2) {
                     show_atlas=!show_atlas;
-                    if(show_atlas) {show_records=false;show_scenes=false;}
+                    if(show_atlas) {show_records=false;show_scenes=false;show_name_table=false;}
                 }
                 if(have_records && ev.key.keysym.sym==SDLK_F3) {
                     show_records=!show_records;
-                    if(show_records) {show_atlas=false;show_scenes=false;}
+                    if(show_records) {show_atlas=false;show_scenes=false;show_name_table=false;}
                 }
                 if(have_records && ev.key.keysym.sym==SDLK_F4) {
                     show_records=true;
                     show_atlas=false;
                     show_scenes=false;
+                    show_name_table=false;
                     show_projection=!show_projection;
                 }
                 if(have_scenes && ev.key.keysym.sym==SDLK_F5) {
                     show_scenes=!show_scenes;
-                    if(show_scenes) {show_atlas=false;show_records=false;}
+                    if(show_scenes) {show_atlas=false;show_records=false;show_name_table=false;}
+                }
+                if(have_name_table && ev.key.keysym.sym==SDLK_F8) {
+                    show_name_table=!show_name_table;
+                    if(show_name_table) {
+                        show_atlas=false;
+                        show_records=false;
+                        show_scenes=false;
+                    }
                 }
                 if(show_scenes && ev.key.keysym.sym==SDLK_F6)
                     scene_idx=(scene_idx+1u)%YS_PC_SCENE_DISPATCH_COUNT;
@@ -348,7 +398,7 @@ int main(int argc,char **argv) {
         double elapsed=(double)(now-prior)/freq;
         prior=now;
         accumulator+=elapsed>0.25?0.25:elapsed;
-        unsigned buttons=(show_atlas || show_records || show_scenes)?0u:read_buttons(pad);
+        unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table)?0u:read_buttons(pad);
         /* Gallery is a read-only reference. Do not move hidden actors. */
         for(int i=0;accumulator>=1.0/60.0 && i<16;++i) {
             ys_pc_game_tick(&game,buttons);
@@ -362,7 +412,11 @@ int main(int argc,char **argv) {
         snprintf(title,sizeof(title),
                  "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
                  game.hp,game.foe_hp,mode);
-        if(have_scenes && show_scenes)
+        if(have_name_table && show_name_table)
+            snprintf(title,sizeof(title),
+                     "Original init VRAM $3900-$3EFF: 768 tile words | "
+                     "INDEX gray ONLY, NOT world map | F8");
+        else if(have_scenes && show_scenes)
             snprintf(title,sizeof(title),
                      "Source dispatch C119=%u -> $%04X | B1[%u]=$%04X"
                      " | NO map | F5/F6/F7",
@@ -392,7 +446,8 @@ int main(int argc,char **argv) {
                   have_records?&source_records:NULL,show_records,current_group,
                   show_projection,
                   have_object_types?&object_types:NULL,
-                  have_scenes?&scenes:NULL,show_scenes,scene_idx,bank1_idx);
+                  have_scenes?&scenes:NULL,show_scenes,scene_idx,bank1_idx,
+                  have_name_table?&name_table:NULL,show_name_table);
         if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
