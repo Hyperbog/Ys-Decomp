@@ -170,7 +170,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         return timed_condition(opcode,f_before) ? 17u : 10u; /* CALL cc */
     if ((opcode&0xC7u)==0xC2u) return 10u; /* JP cc */
     switch(opcode) {
-    case 0x00: case 0x07: case 0x08: case 0x0F:
+    case 0x00: case 0x07: case 0x08: case 0x0F: case 0x1F:
     case 0x2F: case 0xD9:
     case 0xF3: case 0xFB: return 4u;
     case 0xCB: return (sub&7u)==6u ?
@@ -302,6 +302,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         cpu->a=(uint8_t)((prior>>1)|(prior<<7));
         cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
                            (cpu->a&(Z80_F_3|Z80_F_5)) | (prior&1u));
+        break;
+    }
+    case 0x1F: { /* RRA: bank-2 sound transform $8191-$8194. */
+        uint8_t prior=cpu->a;
+        cpu->a=(uint8_t)((prior>>1)|((cpu->f&Z80_F_C)<<7));
+        cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
+                         (cpu->a&(Z80_F_3|Z80_F_5)) | (prior&1u));
         break;
     }
     case 0xCB: {
