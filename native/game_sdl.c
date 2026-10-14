@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 enum { TILE=32, WIDTH=YS_PC_MAP_W*TILE,
        HEIGHT=(YS_PC_MAP_H+1)*TILE };
@@ -88,7 +89,12 @@ static unsigned read_buttons(SDL_GameController *pad) {
     }
     return b;
 }
-int main(void) {
+int main(int argc,char **argv) {
+    const bool smoke=(argc==2 && strcmp(argv[1],"--smoke")==0);
+    if(argc!=1 && !smoke) {
+        fputs("usage: ys-native-game [--smoke]\n",stderr);
+        return EXIT_FAILURE;
+    }
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER)!=0) {
         fprintf(stderr,"SDL2 startup: %s\n",SDL_GetError());
         return EXIT_FAILURE;
@@ -143,6 +149,7 @@ int main(void) {
                  game.hp,game.foe_hp,mode);
         SDL_SetWindowTitle(w,title);
         draw_game(r,&game);
+        if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
     if(pad) SDL_GameControllerClose(pad);
