@@ -53,6 +53,23 @@ static void test_loader(void) {
     raw[10]=9u;header_crc(raw);
     assert(!load_fixture(raw,sizeof(raw),&table));
 }
+static void verify_exact_mask(const YsPcObjectSlot *slot,bool indexed) {
+    bool want[YS_PC_OBJECT_SLOT_BYTES]={0};
+    const unsigned common[]={0u,3u,4u,6u,7u,32u,41u,43u,44u,45u,46u};
+    const unsigned low[]={1u,13u,14u,18u,33u};
+    const unsigned high[]={1u,14u,18u,23u,24u,33u,34u,42u};
+    for(unsigned i=0;i<sizeof(common)/sizeof(common[0]);++i)
+        want[common[i]]=true;
+    if(indexed) {
+        for(unsigned i=0;i<sizeof(high)/sizeof(high[0]);++i)
+            want[high[i]]=true;
+        for(unsigned i=35u;i<=40u;++i) want[i]=true;
+    } else
+        for(unsigned i=0;i<sizeof(low)/sizeof(low[0]);++i)
+            want[low[i]]=true;
+    for(unsigned i=0;i<YS_PC_OBJECT_SLOT_BYTES;++i)
+        assert((slot->known[i]!=0u)==want[i]);
+}
 static void test_init_paths(void) {
     uint8_t raw[YS_PC_OBJECT_TYPE_FILE_BYTES];
     YsPcObjectTypes table;
@@ -70,6 +87,8 @@ static void test_init_paths(void) {
     assert(ys_pc_project_objects_typed(&src,0u,&table,&out));
     const YsPcObjectSlot *hi=&out.objects[0];
     const YsPcObjectSlot *lo=&out.objects[1];
+    verify_exact_mask(hi,true);
+    verify_exact_mask(lo,false);
     assert(hi->work[0]==3u && hi->work[32]==0x81u);
     assert(hi->value_a==56u && hi->value_b==352u);
     assert(hi->work[33]==table.entry[1][0]);
