@@ -1,5 +1,11 @@
 ## Enhanced native Ys PC port (new track)
 
+**PC-12 original CPU research:** [Bounded post-M45 collision-call watch](native/research/PC12_RUNTIME_COLLISION_WATCH.md)
+is an opt-in, read-only attempt to observe the actual source
+mapper and IX inputs at original bank-1 collision PCs.
+A terminated or unobserved watch is explicitly a gameplay
+evidence blocker; it does not add a native Ys area.
+
 **PC-11 source collision routing:** [Bank-1 collision-call provenance](native/research/PC11_BANK1_COLLISION_ROUTES.md)
 now proves the `$476C` entry path selects physical bank 4 before
 three original `$807C` calls, and reproduces the source byte-bound
