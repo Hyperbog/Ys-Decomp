@@ -935,7 +935,27 @@ static void test_m46c_source_wait_bridge_entry(void) {
            runtime.recognized_irqs==0u && runtime.clock.vblank_events==0u);
 }
 
+
+/* M46c bank-2 $8204 SUB $81: correct signed-conditional RET M flags,
+   immediate operand timing, and arithmetic result without host changes. */
+static void test_m46c_sub_immediate_and_ret_sign(void) {
+    setup();
+    CODE(0,0xD6,0x81,0xF8);
+    cpu.a=0x80u;cpu.sp=0xDFF0u;
+    assert(ys_sms_bus_write(&bus,0xDFF0u,0x34u));
+    assert(ys_sms_bus_write(&bus,0xDFF1u,0x12u));
+    measured(7u,2u);
+    assert(cpu.a==0xFFu && cpu.f==0xBBu);
+    measured(11u,0x1234u); /* RET M taken after a negative result */
+    setup();
+    CODE(0,0xD6,0x81,0xF8);
+    cpu.a=0x81u;cpu.sp=0xDFF0u;
+    measured(7u,2u);
+    assert(cpu.a==0u && cpu.f==(Z80_F_Z|Z80_F_N));
+    measured(5u,3u); /* RET M not taken after a zero result */
+}
 int main(void) {
+    test_m46c_sub_immediate_and_ret_sign();
     test_m46c_source_wait_bridge_entry();
     test_m46b_cb_set_register_and_memory();
     test_m46b_source_vdp_irq_gate();
