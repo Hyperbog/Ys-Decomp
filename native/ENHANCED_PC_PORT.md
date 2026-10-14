@@ -38,6 +38,19 @@ gallery and placeholder gameplay with **F2**. The original palette,
 tilemap arrangement and intended sprite usage are **not** established.
 This does not yet turn the placeholder room into an authentic Ys map.
 
+## PC-2 recovered map-object metadata
+
+The [PC-2 bank-7 object-record ledger](research/PC2_BANK7_MAP_RECORDS.md)
+adds 22 source-backed group pointers, 209 four-byte object records,
+and 20 zero terminators. A fixed-bank selector at `$1B3C-$1B60`
+and its source operand bytes are independently verified. The PC
+renderer accepts an optional `--records FILE` and shows a **read-only
+numeric field inspection view** (F3; PageUp/PageDown to change group).
+It is not yet a decoded spatial tilemap, and the existing placeholder
+gameplay is unchanged. The 16 bank-7 video/palette initialization
+bytes at `$B9C3` are included as source bytes **without claiming
+they are actual SMS CRAM colors**.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
