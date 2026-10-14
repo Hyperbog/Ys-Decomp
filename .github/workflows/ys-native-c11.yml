@@ -73,6 +73,20 @@ jobs:
           # PC-8: preserve M46/Z80 decomp as REFERENCE tooling only.
           # Build source-only original cartridge locally; no ROM is shipped.
           python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-9: validate authentic bank4 $807C collision predicate,
+          # three bank1 candidate callers, and 3968 original Z80 cases.
+          python3 native/tools/export_pc_collision.py --out "$RUNNER_TEMP/ys-pc9-collision.bin"
+          python3 native/tools/export_pc_collision.py --verify "$RUNNER_TEMP/ys-pc9-collision.bin"
+          python3 Ys/tools/bank04_crossbank_ledger.py --check
+          python3 Ys/tools/bank04_collision_trace.py "$RUNNER_TEMP/ys-pc8-source.sms" --check
+          ./build-native/ys-pc-collision-tests "$RUNNER_TEMP/ys-pc9-collision.bin"
+          ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin"
+          ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin" --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc9-bad-collision.bin"
+          if ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-bad-collision.bin"; then
+            echo "PC-9 invalid collision source was accepted" >&2
+            exit 1
+          fi
           ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --vdp-at-m44 "$RUNNER_TEMP/ys-pc8-m44.vdp"
           ./build-native/ys-pc-vdp-probe "$RUNNER_TEMP/ys-pc8-m44.vdp" "$RUNNER_TEMP/ys-pc-init-patterns.bin" "$RUNNER_TEMP/ys-pc-init-nt.bin" "$RUNNER_TEMP/ys-pc8-m44.ppm"
           python3 -c 'import pathlib,os; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc8-m44.ppm"; b=p.read_bytes(); assert b[:15]==bytes([80,54,10,50,53,54,32,49,57,50,10,50,53,53,10]) and len(b)==147471, (p,len(b)); print("PASS PC-8 source M44 RGB framebuffer:",len(b),"bytes")'
