@@ -80,6 +80,10 @@ jobs:
           python3 Ys/tools/bank04_crossbank_ledger.py --check
           python3 Ys/tools/bank04_collision_trace.py "$RUNNER_TEMP/ys-pc8-source.sms" --check
           ./build-native/ys-pc-collision-tests "$RUNNER_TEMP/ys-pc9-collision.bin"
+          # PC-11: prove entry $476C writes bank4 before three original
+          # collision calls. This remains CONDITIONAL on runtime entry.
+          python3 native/tools/verify_pc_collision_routes.py
+          ./build-native/ys-pc-collision-routes-tests "$RUNNER_TEMP/ys-pc9-collision.bin"
           ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin"
           ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin" --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin"
           printf 'corrupt' > "$RUNNER_TEMP/ys-pc9-bad-collision.bin"
