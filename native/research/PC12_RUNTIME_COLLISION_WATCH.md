@@ -61,6 +61,50 @@ not be relabeled as a successful gameplay collision trace.
 CI verifies the observation report's internal consistency
 in either case, not a fabricated scene transition.
 
+## Actual source-cartridge observation
+
+The first bounded CI attempt stopped at original fixed-bank
+`PC=$0AAD` after eight post-M45 instructions: source
+`CB EB` (`SET 5,E`) was unsupported by the separate reference
+Z80 interpreter. Original `Ys/phase6/code.lst` also establishes
+`CB F3` (`SET 6,E`) at `$0AB5`. PC-12 added the original
+`CB SET b,r/(HL)` operation with correct **unchanged flags**,
+register/RAM behavior, ROM-write protection and measured
+8/15 T-state coverage, with independently tested original
+opcode fixtures. This change is **reference CPU tooling only**,
+not the native PC game's execution architecture.
+
+After this correction, the [PC-12 native CI](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38654211945)
+replayed the complete source-only cartridge and reached:
+
+| Actual original-source observation | Value |
+| --- | --- |
+| Start | M45 original `PC=$0C92` |
+| Continued instruction/refresh steps | **5,333** |
+| Stop PC | **`$8204`**, sound-command handler |
+| Stop cause | Unsupported reference Z80 instruction |
+| Physical bank mapped at CPU slot 1 | **1** |
+| Physical bank mapped at CPU slot 2 | **2** |
+| Natural recognized IRQs | **57** |
+| Natural VBlank events | **61** |
+| Mapper-qualified `$47C2/$486C/$48DF` calls | **0** |
+
+Source `Ys/phase4/README.md` identifies bank-2
+`$81D9–$8328` as a **pending sound-command dispatcher**
+with a documented `JP C,$8204` branch for the
+`$80–$9F` family. This checkpoint therefore shows that
+the bounded source execution reached the bank-2 sound
+path, **not** a world collision routine. No synthetic
+player input was supplied.
+
+**Result: BLOCKED**, not gameplay-authenticated. The updated
+interpreter removed the first `$0AAD` coverage gap, but
+the bounded observation still has no actual player/scene/
+collision caller IX state. The next bounded research question
+is the original bank-2 sound decoder/interpreter gap at
+`$8204` and what independent source evidence is needed
+before the first real controllable game area can be observed.
+
 ## Files and tests
 
 - `native/pc_source_watch.h/.c`: passive mapper-qualified
