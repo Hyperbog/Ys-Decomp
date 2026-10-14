@@ -5,6 +5,7 @@ The new [PC-0 foundation](native/ENHANCED_PC_PORT.md) and
 and [PC-2 verified map-object record ledger](native/research/PC2_BANK7_MAP_RECORDS.md)
 and [PC-4 conditional original object initializer](native/research/PC4_OBJECT_TYPE_INITIALIZER.md)
 and [PC-5 verified scene routing](native/research/PC5_SCENE_SELECTORS.md)
+and [PC-6 original name-table initialization data](native/research/PC6_INITIAL_NAMETABLE.md)
 plus [PC-3 source work-field projection](native/research/PC3_OBJECT_WORK_PROJECTION.md)
 introduce
 an independent C11 game-state core and SDL2-native `ys-native-game`
