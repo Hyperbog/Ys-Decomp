@@ -181,6 +181,8 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
         draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,12,17,27);
         SDL_Rect destination={0,0,WIDTH,YS_PC_MAP_H*TILE};
         SDL_RenderCopy(r,pattern_preview,NULL,&destination);
+        /* Hide prototype health/enemy bars below source diagnostics. */
+        draw_rect(r,0,YS_PC_MAP_H*TILE,WIDTH,TILE,15,22,35);
     }
     SDL_RenderPresent(r);
 }
