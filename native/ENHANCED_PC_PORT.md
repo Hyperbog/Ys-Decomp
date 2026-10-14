@@ -177,6 +177,19 @@ playable-area execution trace.** There is still no proven live
 player/world geometry, authentic area, or scene-to-collision
 relationship; PC-10's experimental placeholder room is unchanged.
 
+## PC-12 bounded original-source runtime observation
+
+[PC-12 collision-call source watch](research/PC12_RUNTIME_COLLISION_WATCH.md)
+adds an **opt-in, nonmutating** original CPU/mapper/IX
+observation after the independently verified M45 `$0C92`
+checkpoint. It checks five original bank-1 PCs only when
+physical bank 1 is actually mapped, and records real raw
+WRAM/IX/mapper inputs if reached. Explicit bounded stop
+reasons include unsupported instruction, step/VBlank
+limit or an observed original call. **A blocked run is not
+proof of any playable gameplay state.** The PC-10
+placeholder remains untouched.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
