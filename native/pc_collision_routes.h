@@ -29,8 +29,27 @@ typedef enum {
     YS_PC_COLLISION_ROUTE_OK=0,
     YS_PC_COLLISION_ROUTE_BAD_ARGUMENT,
     YS_PC_COLLISION_ROUTE_WRONG_BANK,
-    YS_PC_COLLISION_ROUTE_BAD_INDEX
+    YS_PC_COLLISION_ROUTE_BAD_INDEX,
+    YS_PC_COLLISION_ROUTE_INACTIVE
 } YsPcCollisionRouteStatus;
+
+/* Original bank1 $4783-$479C / $48A5-$48BE derives target
+   C/B/E/D from C20D or C20E and C211/C210 using 8-bit ADD.
+   IX13/14 chooses the collision descriptor at each $807C caller;
+   IX17/16 contains the origin of the tested object.
+   No live gameplay values are inferred from these input names. */
+typedef struct {
+    uint8_t slot2_bank, c20d, c20e, c211, c210;
+    uint8_t ix13, ix14, ix17, ix16;
+} YsPcCollisionFrameInput;
+
+/* Reproduce ORIGINAL bounds construction before the native $807C
+   predicate. INACTIVE means original double-ADD returned early for
+   selector 0 or 128. Invalid/unverified descriptor indices fail closed.
+   This still does not model a game-map wall collision. */
+YsPcCollisionRouteStatus ys_pc_collision_route_frame(
+    const YsPcCollisionTable *table,YsPcCollisionRoute route,
+    const YsPcCollisionFrameInput *frame,YsPcCollisionCallResult *out);
 
 /* Execute ONLY the proven native object-boundary predicate with
    EXPLICIT mapper+IX/register inputs. Does not infer original gameplay
