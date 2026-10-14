@@ -2,6 +2,7 @@
 
 The new [PC-0 foundation](native/ENHANCED_PC_PORT.md) and
 [PC-1 source-verified tile gallery](native/research/PC1_BANK3_TILE_GALLERY.md)
+and [PC-2 verified map-object record ledger](native/research/PC2_BANK7_MAP_RECORDS.md)
 introduce
 an independent C11 game-state core and SDL2-native `ys-native-game`
 prototype with keyboard/controller input. Its room, art and combat values
