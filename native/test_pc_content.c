@@ -135,9 +135,17 @@ static void test_content_driven_gameplay(void) {
     customized.movement_ticks=3u;
     customized.player.hp=7u;
     customized.foe.hp=2u;
+    YsPcContentCatalog scenes;
+    ys_pc_catalog_init(&scenes);
+    assert(ys_pc_catalog_apply(&scenes,&customized,false)==YS_PC_CONTENT_OK);
     YsPcGame g;ys_pc_game_reset(&g);
-    assert(ys_pc_game_reset_scene(&g,&customized));
+    assert(ys_pc_game_reset_named_scene(&g,&scenes,customized.id));
     assert(g.hp==7 && g.foe_hp==2 && g.x==2 && g.y==2);
+    YsPcGame saved=g;
+    assert(!ys_pc_game_reset_named_scene(&g,&scenes,"unknown.scene.id"));
+    assert(!ys_pc_game_reset_named_scene(&g,NULL,customized.id));
+    assert(!ys_pc_game_reset_named_scene(NULL,&scenes,customized.id));
+    assert(memcmp(&g,&saved,sizeof(g))==0);
     assert(ys_pc_game_tile(&g,4,2)=='.');
     ys_pc_game_tick(&g,YS_PC_START);
     g.x=3;g.y=2;
