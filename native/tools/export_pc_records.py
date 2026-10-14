@@ -14,6 +14,7 @@ import zlib
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "Ys" / "tools"))
 from whole_bank07 import full_bank
+from whole_bank00 import full_bank as fixed_bank
 
 MAGIC=b"YSPC7M01"
 GROUPS=22
@@ -27,6 +28,14 @@ EXPECTED_SIZE=1000
 def build():
     source=json.loads((ROOT/"Ys/wholebank07/source.json").read_text())
     bank=full_bank()   # Verifies full physical bank-7 source digest.
+    fixed=fixed_bank() # Independently source-built physical bank 0.
+    # Source $1B3C-$1B60: select bank 7; read $C181 & 0x7F;
+    # compare group index to 0x16; look up $BA3B via RST $18;
+    # stop upon zero first byte; otherwise store to object slots.
+    consumer=bytes.fromhex(
+        "3e0732ffff3a81c1e67ffe163050213bbadf"
+        "dd2130c27eb72844dd7700dd7729237edd7720")
+    assert fixed[0x1B3C:0x1B3C+len(consumer)]==consumer
     assert source["schema"]=="ys-bank07-complete-tail-v1"
     pointers=source["map_pointers"]
     groups=source["map_groups"]
@@ -42,6 +51,8 @@ def build():
         rows=group["records"]
         assert all(len(row)==4 and all(type(v)==int and 0<=v<=255
                                       for v in row) for row in rows)
+        # The fixed-bank consumer uses record[0]==0 as terminator.
+        assert all(row[0]!=0 for row in rows)
         assert type(group["terminator_zero"])==bool
         term=int(group["terminator_zero"])
         stop=pointers[i+1] if i+1<GROUPS else END
@@ -75,7 +86,8 @@ def main():
     elif args.verify.read_bytes()!=data:
         raise ValueError("derived bank-7 tuple package drift")
     print("PASS PC-2 bank7 source: 22 groups, 209 four-byte records, "
-          "20 zero terminators, 16 staging bytes; geometry/palette unknown")
+          "20 zero terminators, bank0 $1B3C selector confirmed, "
+          "16 staging bytes; geometry/palette unknown")
 
 
 if __name__=="__main__":
