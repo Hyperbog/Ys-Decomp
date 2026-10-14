@@ -230,9 +230,37 @@ static void test_rld_nibble_rotation_and_rom_guard(void) {
     assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
     assert(cpu.fault_pc==5 && cpu.pc==5);
 }
+static void test_pc12_source_set_bits(void) {
+    setup();
+    /* Original source bank0 $0AAD CB EB (SET 5,E) and
+       $0AB5 CB F3 (SET 6,E), verified in Ys/phase6/code.lst.
+       CB FE is a separate memory SET instruction with 15T. */
+    LOAD(0,0x1E,0x00,0xCB,0xEB,0xCB,0xF3,
+         0x21,0x00,0xC0,0xCB,0xFE);
+    assert(ys_sms_bus_write(&bus,0xC000u,0x05u));
+    run(2,1);
+    cpu.f=Z80_F_C|Z80_F_Z|Z80_F_N;
+    const uint8_t unchanged=cpu.f;
+    run(4,1);
+    assert(cpu.e==0x20u && cpu.f==unchanged &&
+           cpu.last_tstates==8u);
+    run(6,1);
+    assert(cpu.e==0x60u && cpu.f==unchanged &&
+           cpu.last_tstates==8u);
+    run(9,1);
+    run(11,1);
+    assert(ys_sms_bus_read(&bus,0xC000u)==0x85u &&
+           cpu.f==unchanged && cpu.last_tstates==15u);
+    setup();
+    LOAD(0,0x21,0x00,0x00,0xCB,0xFE);
+    run(3,1);
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.fault_pc==3u && cpu.pc==3u);
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
+    test_pc12_source_set_bits();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
