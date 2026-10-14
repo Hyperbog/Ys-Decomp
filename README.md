@@ -1,3 +1,14 @@
+## Enhanced native Ys PC port (new track)
+
+The new [PC-0 foundation](native/ENHANCED_PC_PORT.md) introduces
+an independent C11 game-state core and SDL2-native `ys-native-game`
+prototype with keyboard/controller input. Its room, art and combat values
+are **placeholders**, not verified content from Ys. Z80 execution and
+ROM rebuilding remain reverse-engineering tools, not the intended PC
+runtime. The original-release Alpha/Beta/Final gates remain unchanged.
+
+---
+
 ## Ys PC builds: Development / Alpha / Beta / Final
 
 The native C11 Ys branch now has a [versioned, cross-platform development-build process](native/BUILD_CHANNELS.md), now at M44 with self-contained Windows click-to-run diagnostics and verified original source-ROM graphics decompression, including downloadable Windows/Linux/macOS diagnostics tied to exact commits, local packaging commands, automated checks and gated promotion requirements. **The current Development binaries are not a playable PC game.** Alpha requires interactive native gameplay; Beta requires an end-to-end game; Final requires cross-platform fidelity/release sign-off. No ROM image is bundled.
