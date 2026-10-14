@@ -103,7 +103,7 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
         } else {
         unsigned offset=ys_pc_records_start(records,group);
         unsigned count=records->groups[group].count;
-        for(unsigned i=0;i<count;++i
+        for(unsigned i=0;i<count;++i)
             for(unsigned field=0;field<YS_PC_RECORD_WIDTH;++field) {
                 uint8_t raw=records->records[offset+i][field];
                 int height=2+(int)raw*48/255;
