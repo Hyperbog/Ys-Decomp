@@ -902,7 +902,41 @@ static void test_m46b_cb_set_register_and_memory(void) {
     assert(cpu.f==(Z80_F_Z|Z80_F_C) && cpu.total_tstates==38u);
 }
 
+
+/* M46c: authentic bank-0 $0AB2 -> $0BC5 -> $0042 frame-wait
+   entry. The fixture has no synthetic interrupts or CPU jumps. */
+static void test_m46c_source_wait_bridge_entry(void) {
+    setup();
+    CODE(0x0AB2,0xCD,0xC5,0x0B);
+    CODE(0x0BC5,0xF5,0xC5,0xD5,0xE5,0x08,0xD9,
+         0xF5,0xC5,0xD5,0xE5,0xDD,0xE5,0xFD,0xE5,
+         0x3A,0xFF,0xFF,0xF5,0x3E,0x01,0xCD,0x42,0x00);
+    CODE(0x0042,0x32,0x21,0xC0,0xFB,0x3A,0x21,0xC0,
+         0xB7,0x20,0xFA,0xC9);
+    cpu.pc=0x0AB2u;
+    cpu.sp=0xDFF0u;
+    cpu.a=0xA0u;cpu.f=Z80_F_Z;
+    cpu.ix=0x1234u;cpu.iy=0x5678u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0u;
+    while(cpu.pc!=0x0046u && steps<40u) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+    }
+    assert(cpu.pc==0x0046u && steps==19u);
+    assert(cpu.sp==0xDFD6u && cpu.iff1 && cpu.iff2 &&
+           cpu.ei_delay==1u);
+    assert(ys_sms_bus_read(&bus,0xC021u)==1u);
+    assert(ys_sms_bus_read(&bus,0xDFD6u)==0xDCu &&
+           ys_sms_bus_read(&bus,0xDFD7u)==0x0Bu);
+    assert(ys_sms_bus_read(&bus,0xDFEEu)==0xB5u &&
+           ys_sms_bus_read(&bus,0xDFEFu)==0x0Au);
+    assert(bus.mapped_bank[2]==2u && vdp.vram_writes==0u &&
+           runtime.recognized_irqs==0u && runtime.clock.vblank_events==0u);
+}
+
 int main(void) {
+    test_m46c_source_wait_bridge_entry();
     test_m46b_cb_set_register_and_memory();
     test_m46b_source_vdp_irq_gate();
     test_m46_video_setup_prefix();
