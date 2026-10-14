@@ -84,6 +84,12 @@ jobs:
           # collision calls. This remains CONDITIONAL on runtime entry.
           python3 native/tools/verify_pc_collision_routes.py
           ./build-native/ys-pc-collision-routes-tests "$RUNNER_TEMP/ys-pc9-collision.bin"
+          # PC-12: continue the ACTUAL source execution after verified
+          # M45 PC=$0C92, with natural CPU/IRQ/input. Observe but NEVER
+          # synthesize a scene or assume an unreachable collision event.
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc12-watch "$RUNNER_TEMP/ys-pc12-watch.json"
+          python3 native/tools/verify_pc12_watch.py "$RUNNER_TEMP/ys-pc12-watch.json"
+          python3 -c 'import json,os,pathlib; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc12-watch.json"; v=json.loads(p.read_text()); print("PC-12 bounded result:", v["stop_reason"], "PC", v["stop_pc"], "calls", v["observed_collision_calls"])'
           ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin"
           ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin" --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin"
           printf 'corrupt' > "$RUNNER_TEMP/ys-pc9-bad-collision.bin"
