@@ -127,6 +127,23 @@ using the existing SMS video research renderer. It remains
 outside the native PC game loop and does **not** establish a
 playable Ys scene, true camera/collision or original-game Alpha.
 
+## PC-9 source-backed object collision predicate
+
+[PC-9 collision source/semantics ledger](research/PC9_SOURCE_COLLISION.md)
+introduces the original **31 bank-4 collision descriptors** and a
+C11 equivalent of the original **$807C–$80A1 Z80 carry-returning
+object-boundary predicate**. It uses the real source raw bytes and
+tested 8-bit overflow/equality semantics. The three bank-1
+candidate callers are statically verified, but their mapper state
+in live gameplay remains unknown.
+
+The native diagnostic `--collision FILE` uses **F11** to browse
+the 31 descriptors and a 16×8 grid of the original synthetic
+predicate-test cases. This is **not a recovered Ys area map**,
+player-world coordinates, or replacement for the prototype's
+placeholder collision. Real NPC identification, tile collision,
+scene selection and gameplay progression still need proof.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
