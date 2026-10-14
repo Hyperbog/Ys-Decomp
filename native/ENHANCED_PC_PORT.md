@@ -51,6 +51,17 @@ gameplay is unchanged. The 16 bank-7 video/palette initialization
 bytes at `$B9C3` are included as source bytes **without claiming
 they are actual SMS CRAM colors**.
 
+## PC-3 source object work-field projection
+
+The [PC-3 source object work-field projection](research/PC3_OBJECT_WORK_PROJECTION.md)
+now reconstructs the original bank-0 object initializer's
+**16-slot, 48-byte-per-object work layout** for all 209 verified
+bank-7 records. It conservatively fills only 11 explicitly supported
+work bytes and computes two `8×`-scaled 16-bit values for each object;
+unverified work bytes remain marked unknown. The diagnostic **F4**
+view plots those two numeric fields, **not a recovered Ys map**.
+No character movement, collision or scene geometry is inferred.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
