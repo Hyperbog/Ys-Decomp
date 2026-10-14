@@ -234,7 +234,7 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
         draw_rect(r,0,YS_PC_MAP_H*TILE,WIDTH,TILE,15,22,35);
     }
     SDL_RenderPresent(r);
-
+}
 static unsigned read_buttons(SDL_GameController *pad) {
     const Uint8 *keys=SDL_GetKeyboardState(NULL);
     unsigned b=0;
