@@ -11,7 +11,7 @@ static void fixture(YsPcRecords *r) {
     r->records[0][2]=6u;r->records[0][3]=44u;
     r->records[1][0]=0x82u;r->records[1][1]=0x01u;
     r->records[1][2]=255u;r->records[1][3]=255u;
-    r->groups[1].source_pc=0xBA70u;
+    r->groups[1].source_pc=0xBA6Fu;
 }
 static void verify_known_bytes(const YsPcObjectSlot *s) {
     static const unsigned offsets[]={0,3,4,6,7,32,41,43,44,45,46};
@@ -22,7 +22,45 @@ static void verify_known_bytes(const YsPcObjectSlot *s) {
         assert((s->known[i]!=0u)==expected);
     }
 }
-int main(void) {
+/* Optional *real source-derived* group-data verification. This is
+   not a RAM execution trace or an authenticated scene placement. */
+static void verify_source_package(const char *path) {
+    FILE *f=fopen(path,"rb");
+    assert(f);
+    YsPcRecords recovered;
+    assert(ys_pc_records_load(f,&recovered));
+    fclose(f);
+    YsPcObjectProjection projection;
+    unsigned total=0u,zero_groups=0u;
+    for(unsigned g=0u;g<YS_PC_GROUP_COUNT;++g) {
+        assert(ys_pc_project_objects(&recovered,g,&projection));
+        assert(projection.count==recovered.groups[g].count);
+        total+=projection.count;
+        if(!projection.count) ++zero_groups;
+        for(unsigned i=0u;i<projection.count;++i) {
+            const YsPcObjectSlot *p=&projection.objects[i];
+            assert(p->source_record_pc==
+                   recovered.groups[g].source_pc+4u*i);
+            assert(p->value_a==(unsigned)p->source[2]*8u+8u);
+            assert(p->value_b==(unsigned)p->source[3]*8u);
+            assert(p->work[0]==p->source[0] &&
+                   p->work[41]==p->source[0] &&
+                   p->work[32]==p->source[1]);
+            verify_known_bytes(p);
+        }
+    }
+    assert(total==209u && zero_groups==1u);
+    assert(ys_pc_project_objects(&recovered,0u,&projection));
+    assert(projection.count==16u);
+    assert(projection.objects[0].source[0]==3u);
+    assert(projection.objects[0].source[1]==0u);
+    assert(projection.objects[0].value_a==56u);
+    assert(projection.objects[0].value_b==352u);
+    puts("PASS PC-3: all 209 source-derived bank7 object fields projected");
+}
+int main(int argc,char **argv) {
+    assert(argc==1 || argc==2);
+    if(argc==2) verify_source_package(argv[1]);
     YsPcRecords records;
     YsPcObjectProjection out;
     fixture(&records);
