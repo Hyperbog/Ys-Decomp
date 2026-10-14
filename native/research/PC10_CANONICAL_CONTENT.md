@@ -27,6 +27,9 @@ No ROM, actual extracted textures or reference fixtures were altered.
   the original start coordinates (2,2), stationary foe (9,7),
   starting HP 5/3, eight-tick movement, room walls, one locked goal,
   bump combat and restart behavior.
+- Engine exposes a symbolic-ID resolver (`ys_pc_game_reset_named_scene`)
+  that selects a catalog entry before validating and copying the scene;
+  missing IDs leave the current state intact.
 - Engine now validates and copies `YsPcSceneContent` into
   `YsPcGame` at reset. `ys_pc_game_tick` and `game_sdl`
   read from this owned content snapshot, not from a hardcoded
