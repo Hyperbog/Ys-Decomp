@@ -21,6 +21,8 @@ runtime. The original-release Alpha/Beta/Final gates remain unchanged.
 
 ## Ys PC builds: Development / Alpha / Beta / Final
 
+**Universal mod-forward development policy:** [MOD_FORWARD_METHODOLOGY.md](MOD_FORWARD_METHODOLOGY.md) sets the shared standard for replaceable content, stable resource IDs, extensible menus, deterministic mod resolution, save compatibility and editor-ready data across DOS, NES, SNES, SMS, Genesis and future ports. It is a development policy, not a claim that the current Ys native build has a mod loader or editor.
+
 The native C11 Ys branch now has a [versioned, cross-platform development-build process](native/BUILD_CHANNELS.md), now at M44 with self-contained Windows click-to-run diagnostics and verified original source-ROM graphics decompression, including downloadable Windows/Linux/macOS diagnostics tied to exact commits, local packaging commands, automated checks and gated promotion requirements. **The current Development binaries are not a playable PC game.** Alpha requires interactive native gameplay; Beta requires an end-to-end game; Final requires cross-platform fidelity/release sign-off. No ROM image is bundled.
 
 ---
