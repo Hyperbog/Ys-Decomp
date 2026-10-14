@@ -42,7 +42,7 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
         for(int x=0;x<YS_PC_MAP_W;++x) {
-            char tile=ys_pc_tile(x,y);
+            char tile=ys_pc_game_tile(g,x,y);
             if(tile=='#') {
                 draw_rect(r,x*TILE,y*TILE,TILE,TILE,26,40,64);
                 draw_rect(r,x*TILE+2,y*TILE+2,TILE-4,TILE-4,38,58,85);
