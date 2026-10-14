@@ -69,8 +69,9 @@ name-table, camera offset or collision layers are recovered here.
   reconstructed level.
 
 The original initializer also calls `$1B9B`, performing additional
-conditional object initialization depending on the first record
-byte. **Those writes are not modeled here**. A native object with
+conditional object initialization with the second record byte
+(`record[1]`) in A at the `CALL $1B9B` site. The first byte
+(`record[0]`) controls the zero-terminator test and other stored fields. **Those writes are not modeled here**. A native object with
 partially known work fields is not yet a valid in-world NPC/enemy
 instance.
 
