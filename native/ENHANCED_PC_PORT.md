@@ -149,7 +149,7 @@ scene selection and gameplay progression still need proof.
 [PC-10 canonical scene foundation](research/PC10_CANONICAL_CONTENT.md)
 introduces an **experimental C11, in-memory** versioned scene
 format with stable `prototype.*` IDs, strict validation and a
-deterministic add/replace catalog. The unchanged **placeholder**
+deterministic add/replace catalog with ID-based scene activation. The unchanged **placeholder**
 PC-0 room, spawns and eight-tick movement are now supplied through
 that content interface. Invalid scene registration/replacement
 fails without mutating the catalog or runtime game state.
