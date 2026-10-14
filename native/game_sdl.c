@@ -3,6 +3,7 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include "pc_game.h"
+#include "pc_tiles.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +18,8 @@ static void draw_rect(SDL_Renderer *r,int x,int y,int w,int h,
     SDL_SetRenderDrawColor(r,red,green,blue,255);
     SDL_RenderFillRect(r,&box);
 }
-static void draw_game(SDL_Renderer *r,const YsPcGame *g) {
+static void draw_game(SDL_Renderer *r,const YsPcGame *g,
+                      SDL_Texture *atlas,bool show_atlas) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -63,6 +65,12 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g) {
                   g->stage==YS_PC_CLEAR?60:180,
                   g->stage==YS_PC_CLEAR?180:60,90);
     }
+    if(show_atlas && atlas) {
+        /* Historical tile pixels only. Room/map and palette are unknown. */
+        draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,12,17,27);
+        SDL_Rect dst={0,16,WIDTH,YS_PC_ATLAS_H*4};
+        SDL_RenderCopy(r,atlas,NULL,&dst);
+    }
     SDL_RenderPresent(r);
 }
 static unsigned read_buttons(SDL_GameController *pad) {
@@ -90,10 +98,16 @@ static unsigned read_buttons(SDL_GameController *pad) {
     return b;
 }
 int main(int argc,char **argv) {
-    const bool smoke=(argc==2 && strcmp(argv[1],"--smoke")==0);
-    if(argc!=1 && !smoke) {
-        fputs("usage: ys-native-game [--smoke]\n",stderr);
-        return EXIT_FAILURE;
+    bool smoke=false;
+    const char *tile_path=NULL;
+    for(int i=1;i<argc;++i) {
+        if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
+        else if(strcmp(argv[i],"--tiles")==0 && !tile_path && i+1<argc)
+            tile_path=argv[++i];
+        else {
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE]\\n",stderr);
+            return EXIT_FAILURE;
+        }
     }
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER)!=0) {
         fprintf(stderr,"SDL2 startup: %s\n",SDL_GetError());
@@ -110,6 +124,30 @@ int main(int argc,char **argv) {
         SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
         return EXIT_FAILURE;
     }
+    SDL_Texture *atlas=NULL;
+    if(tile_path) {
+        FILE *fp=fopen(tile_path,"rb");
+        YsPcTiles tiles;
+        bool valid=fp && ys_pc_tiles_load(fp,&tiles);
+        if(fp) fclose(fp);
+        if(!valid) {
+            fprintf(stderr,"PC-1 invalid derived tile asset: %s\\n",tile_path);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+        uint8_t pixels[YS_PC_ATLAS_W*YS_PC_ATLAS_H*3];
+        ys_pc_tiles_grayscale(&tiles,pixels);
+        atlas=SDL_CreateTexture(r,SDL_PIXELFORMAT_RGB24,
+                                SDL_TEXTUREACCESS_STATIC,
+                                YS_PC_ATLAS_W,YS_PC_ATLAS_H);
+        if(!atlas || SDL_UpdateTexture(atlas,NULL,pixels,YS_PC_ATLAS_W*3)!=0) {
+            fprintf(stderr,"PC-1 SDL texture: %s\\n",SDL_GetError());
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
+    bool show_atlas=atlas!=NULL; /* F2 switches back to placeholder room. */
     SDL_GameController *pad=NULL;
     for(int i=0;i<SDL_NumJoysticks();++i)
         if(SDL_IsGameController(i)) {
@@ -129,6 +167,9 @@ int main(int argc,char **argv) {
                (ev.type==SDL_KEYDOWN &&
                 ev.key.keysym.sym==SDLK_ESCAPE))
                 running=false;
+            if(atlas && ev.type==SDL_KEYDOWN && !ev.key.repeat &&
+               ev.key.keysym.sym==SDLK_F2)
+                show_atlas=!show_atlas;
         }
         Uint64 now=SDL_GetPerformanceCounter();
         double elapsed=(double)(now-prior)/freq;
@@ -147,12 +188,19 @@ int main(int argc,char **argv) {
         snprintf(title,sizeof(title),
                  "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
                  game.hp,game.foe_hp,mode);
+        if(atlas && show_atlas)
+            snprintf(title,sizeof(title),
+                     "Ys bank-3 source tiles (176) | grayscale PREVIEW | F2: room");
+        else if(atlas)
+            snprintf(title,sizeof(title),
+                     "Ys PC placeholder room | F2: authentic bank-3 tile gallery");
         SDL_SetWindowTitle(w,title);
-        draw_game(r,&game);
+        draw_game(r,&game,atlas,show_atlas);
         if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
     if(pad) SDL_GameControllerClose(pad);
+    SDL_DestroyTexture(atlas);
     SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
     return EXIT_SUCCESS;
 }
