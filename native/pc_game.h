@@ -29,5 +29,10 @@ void ys_pc_game_tick(YsPcGame *game,unsigned buttons);
    or shipping data-only mod-loader contract. Invalid input leaves the
    gameplay state unchanged. */
 bool ys_pc_game_reset_scene(YsPcGame *game,const YsPcSceneContent *scene);
+/* Resolve a stable symbolic ID from a validated catalog and copy
+   its scene. Missing/invalid ID leaves current game state untouched. */
+bool ys_pc_game_reset_named_scene(YsPcGame *game,
+                                  const YsPcContentCatalog *catalog,
+                                  const char *scene_id);
 char ys_pc_game_tile(const YsPcGame *game,int x,int y);
 #endif
