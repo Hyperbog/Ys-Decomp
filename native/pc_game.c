@@ -1,41 +1,37 @@
 #include "pc_game.h"
-#include <stddef.h>
-
-/* A placeholder test room, not a recovered map from the SMS cartridge. */
-static const char *const room[YS_PC_MAP_H]={
-    "################",
-    "#..............#",
-    "#...####.......#",
-    "#..............#",
-    "#......###.....#",
-    "#..............#",
-    "#..###.........#",
-    "#..............#",
-    "#........##....#",
-    "#..............#",
-    "#............G.#",
-    "################"
-};
 
 char ys_pc_tile(int x,int y) {
-    if(x<0 || x>=YS_PC_MAP_W || y<0 || y>=YS_PC_MAP_H)
-        return '#';
-    return room[y][x];
+    YsPcSceneContent prototype;
+    ys_pc_content_placeholder(&prototype);
+    return ys_pc_content_cell(&prototype,x,y);
+}
+char ys_pc_game_tile(const YsPcGame *g,int x,int y) {
+    return g?ys_pc_content_cell(&g->scene,x,y):'#';
+}
+bool ys_pc_game_reset_scene(YsPcGame *g,const YsPcSceneContent *s) {
+    if(!g || ys_pc_content_validate(s)!=YS_PC_CONTENT_OK)
+        return false;
+    YsPcGame next={0};
+    next.scene=*s; /* copy before mutating g: caller may pass &g->scene */
+    next.stage=YS_PC_TITLE;
+    next.x=s->player.x;next.y=s->player.y;
+    next.foe_x=s->foe.x;next.foe_y=s->foe.y;
+    next.hp=s->player.hp;next.foe_hp=s->foe.hp;
+    *g=next;
+    return true;
 }
 void ys_pc_game_reset(YsPcGame *g) {
     if(!g) return;
-    *g=(YsPcGame){0};
-    g->stage=YS_PC_TITLE;
-    g->x=2;g->y=2;
-    g->foe_x=9;g->foe_y=7;
-    g->hp=5;g->foe_hp=3;
+    YsPcSceneContent prototype;
+    ys_pc_content_placeholder(&prototype);
+    (void)ys_pc_game_reset_scene(g,&prototype);
 }
 void ys_pc_game_tick(YsPcGame *g,unsigned buttons) {
     if(!g) return;
     ++g->frame;
     if(g->stage!=YS_PC_PLAY) {
         if(buttons&YS_PC_START) {
-            ys_pc_game_reset(g);
+            (void)ys_pc_game_reset_scene(g,&g->scene);
             g->stage=YS_PC_PLAY;
         }
         return;
@@ -50,12 +46,12 @@ void ys_pc_game_tick(YsPcGame *g,unsigned buttons) {
     else if(buttons&YS_PC_LEFT) dx=-1;
     else if(buttons&YS_PC_RIGHT) dx=1;
     if(!dx && !dy) return;
-    g->move_delay=7u; /* Deterministic eight-tick movement interval. */
+    g->move_delay=(unsigned)(g->scene.movement_ticks-1u);
     int nx=g->x+dx,ny=g->y+dy;
-    char tile=ys_pc_tile(nx,ny);
+    char tile=ys_pc_game_tile(g,nx,ny);
     if(tile=='#' || (tile=='G' && g->foe_hp>0)) return;
     if(nx==g->foe_x && ny==g->foe_y && g->foe_hp>0) {
-        /* A provisional bump-combat interaction, not original balance. */
+        /* Provisional PC-0 bump combat; NOT source-verified Ys AI. */
         --g->foe_hp;
         if(!g->foe_hp) ++g->defeats;
         else if(--g->hp==0) g->stage=YS_PC_DEAD;
