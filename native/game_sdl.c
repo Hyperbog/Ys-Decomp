@@ -10,6 +10,7 @@
 #include "pc_nametable.h"
 #include "pc_patterns.h"
 #include "pc_vdp_checkpoint.h"
+#include "pc_collision.h"
 #include "sms_video.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -34,7 +35,9 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       unsigned scene_idx,unsigned bank1_idx,
                       const YsPcNameTable *name_table,bool show_name_table,
                       SDL_Texture *pattern_preview,bool show_pattern_preview,
-                      SDL_Texture *vdp_preview,bool show_vdp_preview) {
+                      SDL_Texture *vdp_preview,bool show_vdp_preview,
+                      const YsPcCollisionTable *collisions,
+                      bool show_collision,unsigned collision_index) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -193,8 +196,45 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
         SDL_RenderCopy(r,vdp_preview,NULL,&destination);
         draw_rect(r,0,YS_PC_MAP_H*TILE,WIDTH,TILE,15,22,35);
     }
+    if(show_collision && collisions && collision_index<YS_PC_COLLISION_BOXES) {
+        /* 31 original box descriptors; deterministic 16x8 test probes from
+           Z80 predicate corpus. Green=carry, gray=no carry. NOT map pixels. */
+        draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,12,17,27);
+        const YsPcCollisionBox *box=&collisions->boxes[collision_index];
+        for(unsigned seed=0;seed<16u;++seed) {
+            uint8_t oy=(uint8_t)(seed*17u+33u);
+            uint8_t ox=(uint8_t)(seed*29u+51u);
+            uint8_t ya=(uint8_t)((unsigned)box->y_offset+oy);
+            uint8_t xa=(uint8_t)((unsigned)box->x_offset+ox);
+            for(unsigned variant=0;variant<8u;++variant) {
+                YsPcCollisionProbe probe={
+                    oy,ox,(uint8_t)(ya+variant%3u),
+                    (uint8_t)((unsigned)ya+box->y_extent-1u+
+                        (variant/3u)%3u),
+                    (uint8_t)(xa+variant%3u),
+                    (uint8_t)((unsigned)xa+box->x_extent-1u+
+                        (variant/3u)%3u)
+                };
+                bool carry=false;
+                if(ys_pc_collision_eval(collisions,collision_index,
+                                        &probe,&carry))
+                    draw_rect(r,18+(int)variant*60,12+(int)seed*19,
+                              48,15,carry?84:65,carry?182:78,
+                              carry?128:96);
+            }
+        }
+        const uint8_t raw[4]={box->y_offset,box->y_extent,
+                               box->x_offset,box->x_extent};
+        for(unsigned k=0;k<4u;++k) {
+            int height=2+(int)raw[k]*37/255;
+            int x=30+(int)k*122;
+            draw_rect(r,x,326,100,47,27,42,61);
+            draw_rect(r,x,371-height,100,height,153,166,188);
+        }
+        draw_rect(r,0,YS_PC_MAP_H*TILE,WIDTH,TILE,15,22,35);
+    }
     SDL_RenderPresent(r);
-}
+
 static unsigned read_buttons(SDL_GameController *pad) {
     const Uint8 *keys=SDL_GetKeyboardState(NULL);
     unsigned b=0;
@@ -229,6 +269,7 @@ int main(int argc,char **argv) {
     const char *name_table_path=NULL;
     const char *pattern_path=NULL;
     const char *vdp_path=NULL;
+    const char *collision_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
         else if(strcmp(argv[i],"--smoke-projection")==0 &&
@@ -251,8 +292,11 @@ int main(int argc,char **argv) {
         else if(strcmp(argv[i],"--vdp-checkpoint")==0 && !vdp_path &&
                 i+1<argc)
             vdp_path=argv[++i];
+        else if(strcmp(argv[i],"--collision")==0 && !collision_path &&
+                i+1<argc)
+            collision_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE] [--patterns FILE] [--vdp-checkpoint FILE]\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE] [--patterns FILE] [--vdp-checkpoint FILE] [--collision FILE]\n",stderr);
             return EXIT_FAILURE;
         }
     }
@@ -446,7 +490,25 @@ int main(int argc,char **argv) {
             return EXIT_FAILURE;
         }
     }
-    bool show_vdp_preview=vdp_preview!=NULL;
+    YsPcCollisionTable collision_table;
+    bool have_collision=false;
+    if(collision_path) {
+        FILE *fp=fopen(collision_path,"rb");
+        have_collision=fp && ys_pc_collision_load(fp,&collision_table);
+        if(fp) fclose(fp);
+        if(!have_collision) {
+            fprintf(stderr,"PC-9 invalid source bank4 collision data: %s\n",
+                    collision_path);
+            SDL_DestroyTexture(vdp_preview);
+            SDL_DestroyTexture(pattern_preview);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
+    bool show_collision=have_collision;
+    unsigned collision_index=0u;
+    bool show_vdp_preview=vdp_preview!=NULL && !show_collision;
     bool show_pattern_preview=pattern_preview!=NULL && !show_vdp_preview;
     bool show_name_table=have_name_table && !show_pattern_preview && !show_vdp_preview;
     bool show_scenes=have_scenes && !show_name_table && !show_pattern_preview && !show_vdp_preview;
@@ -475,6 +537,30 @@ int main(int argc,char **argv) {
                 ev.key.keysym.sym==SDLK_ESCAPE))
                 running=false;
             if(ev.type==SDL_KEYDOWN && !ev.key.repeat) {
+                if(ev.key.keysym.sym==SDLK_F2 ||
+                   ev.key.keysym.sym==SDLK_F3 ||
+                   ev.key.keysym.sym==SDLK_F4 ||
+                   ev.key.keysym.sym==SDLK_F5 ||
+                   ev.key.keysym.sym==SDLK_F8 ||
+                   ev.key.keysym.sym==SDLK_F9 ||
+                   ev.key.keysym.sym==SDLK_F10)
+                    show_collision=false;
+                if(have_collision && ev.key.keysym.sym==SDLK_F11) {
+                    show_collision=!show_collision;
+                    if(show_collision) {
+                        show_atlas=false;
+                        show_records=false;
+                        show_scenes=false;
+                        show_name_table=false;
+                        show_pattern_preview=false;
+                        show_vdp_preview=false;
+                    }
+                }
+                if(show_collision && ev.key.keysym.sym==SDLK_PAGEUP)
+                    collision_index=(collision_index+YS_PC_COLLISION_BOXES-1u)%
+                                    YS_PC_COLLISION_BOXES;
+                if(show_collision && ev.key.keysym.sym==SDLK_PAGEDOWN)
+                    collision_index=(collision_index+1u)%YS_PC_COLLISION_BOXES;
                 if(atlas && ev.key.keysym.sym==SDLK_F2) {
                     show_atlas=!show_atlas;
                     if(show_atlas) {show_records=false;show_scenes=false;show_name_table=false;show_pattern_preview=false;show_vdp_preview=false;}
@@ -537,7 +623,7 @@ int main(int argc,char **argv) {
         double elapsed=(double)(now-prior)/freq;
         prior=now;
         accumulator+=elapsed>0.25?0.25:elapsed;
-        unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table || show_pattern_preview || show_vdp_preview)?0u:read_buttons(pad);
+        unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table || show_pattern_preview || show_vdp_preview || show_collision)?0u:read_buttons(pad);
         /* Gallery is a read-only reference. Do not move hidden actors. */
         for(int i=0;accumulator>=1.0/60.0 && i<16;++i) {
             ys_pc_game_tick(&game,buttons);
@@ -551,7 +637,14 @@ int main(int argc,char **argv) {
         snprintf(title,sizeof(title),
                  "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
                  game.hp,game.foe_hp,mode);
-        if(show_vdp_preview && vdp_preview)
+        if(show_collision && have_collision) {
+            const YsPcCollisionBox *box=&collision_table.boxes[collision_index];
+            snprintf(title,sizeof(title),
+                     "BANK4 $807C source hitbox %u/31 | raw Y:%u+%u X:%u+%u"
+                     " | 16x8 synthetic carry probes | PgUp/PgDn F11",
+                     collision_index+1u,box->y_offset,box->y_extent,
+                     box->x_offset,box->x_extent);
+        } else if(show_vdp_preview && vdp_preview)
             snprintf(title,sizeof(title),
                      "PC8 original $0C87 simultaneous VRAM+CRAM+regs"
                      " | display=%s | NOT playable | F10",
@@ -598,7 +691,9 @@ int main(int argc,char **argv) {
                   have_scenes?&scenes:NULL,show_scenes,scene_idx,bank1_idx,
                   have_name_table?&name_table:NULL,show_name_table,
                   pattern_preview,show_pattern_preview,
-                  vdp_preview,show_vdp_preview);
+                  vdp_preview,show_vdp_preview,
+                  have_collision?&collision_table:NULL,
+                  show_collision,collision_index);
         if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
