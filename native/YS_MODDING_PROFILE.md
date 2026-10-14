@@ -53,7 +53,9 @@ claim that symbolic prototype IDs already constitute an end-user compatibility c
   is explicit and rejects missing IDs; the catalog is sorted by
   symbolic ID so insertion order has no effect. Invalid operations
   do not mutate the catalog. Capacity is eight scenes.
-- `ys_pc_game_reset_scene(game,scene)` validates before copying
+- `ys_pc_game_reset_named_scene(game,catalog,scene_id)` first resolves
+  a symbolic ID, rejecting missing/invalid references without changing
+  game state. `ys_pc_game_reset_scene(game,scene)` validates before copying
   the scene into *owned game state*. The game does not hold pointers
   to an external catalog. Restart preserves the selected scene.
   The PC-0 `ys_pc_game_reset` and `ys_pc_game_tick` APIs still run
