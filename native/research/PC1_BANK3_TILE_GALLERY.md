@@ -67,7 +67,7 @@ packages. The SVG/SDL rectangles and game room are still placeholders.
 
 This phase **does not** implement a recovered Ys map, identify a
 player/enemy sprite, import an original color palette, or demonstrate
-real Yas/Adol game progression. The user-facing `ys-native-game`
+real Ys/Adol game progression. The user-facing `ys-native-game`
 remains an interactive architecture prototype, not an Alpha
 version of the original game's content.
 
