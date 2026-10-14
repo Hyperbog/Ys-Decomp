@@ -191,7 +191,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0x0B: case 0x1B: case 0x2B: return 6u;
     case 0x22: case 0x2A: return 16u;
     case 0x32: case 0x3A: return 13u;
-    case 0xE6: case 0xF6: case 0xFE: return 7u;
+    case 0xD6: case 0xE6: case 0xF6: case 0xFE: return 7u;
     case 0xC3: return 10u;
     case 0xE9: return 4u;
     case 0xC9: return 10u;
@@ -403,6 +403,12 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     }
     case 0x32: if (!store(cpu,fetch16(cpu),cpu->a)) goto fail; break;
     case 0x3A: cpu->a=ys_sms_bus_read(cpu->bus,fetch16(cpu)); break;
+    case 0xD6: { /* SUB n: source bank-2 sound command $8204. */
+        uint8_t rhs=fetch(cpu), lhs=cpu->a;
+        cpu->a=(uint8_t)(lhs-rhs);
+        cpu->f=sub_flags(lhs,rhs,cpu->a);
+        break;
+    }
     case 0xAF: cpu->a=0;cpu->f=Z80_F_Z|Z80_F_PV;break;
     case 0xE6: cpu->a=(uint8_t)(cpu->a & fetch(cpu));
         cpu->f=(uint8_t)(sz53(cpu->a)|Z80_F_H|(parity(cpu->a)?Z80_F_PV:0));
