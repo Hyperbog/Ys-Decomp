@@ -62,6 +62,16 @@ jobs:
           ./build-native/ys-pc-scenes-tests "$RUNNER_TEMP/ys-pc-source-scenes.bin"
           ./build-native/ys-native-game --smoke --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin"
           ./build-native/ys-native-game --smoke --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin" --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          python3 native/tools/export_pc_nametable.py --out "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          python3 native/tools/export_pc_nametable.py --verify "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          ./build-native/ys-pc-nametable-tests "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          printf 'broken' > "$RUNNER_TEMP/ys-pc-bad-init-nt.bin"
+          if ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-bad-init-nt.bin"; then
+            echo "Corrupt initialization VRAM name-table was accepted" >&2
+            exit 1
+          fi
           printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid-scenes.bin"
           if ./build-native/ys-native-game --smoke --scenes "$RUNNER_TEMP/ys-pc-invalid-scenes.bin"; then
             echo "Invalid source scene directory was accepted" >&2
