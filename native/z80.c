@@ -170,7 +170,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         return timed_condition(opcode,f_before) ? 17u : 10u; /* CALL cc */
     if ((opcode&0xC7u)==0xC2u) return 10u; /* JP cc */
     switch(opcode) {
-    case 0x00: case 0x07: case 0x08: case 0x0F:
+    case 0x00: case 0x07: case 0x08: case 0x0F: case 0x1F:
     case 0x2F: case 0xD9:
     case 0xF3: case 0xFB: return 4u;
     case 0xCB: return (sub&7u)==6u ?
@@ -191,7 +191,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0x0B: case 0x1B: case 0x2B: return 6u;
     case 0x22: case 0x2A: return 16u;
     case 0x32: case 0x3A: return 13u;
-    case 0xE6: case 0xF6: case 0xFE: return 7u;
+    case 0xD6: case 0xE6: case 0xF6: case 0xFE: return 7u;
     case 0xC3: return 10u;
     case 0xE9: return 4u;
     case 0xC9: return 10u;
@@ -304,6 +304,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                            (cpu->a&(Z80_F_3|Z80_F_5)) | (prior&1u));
         break;
     }
+    case 0x1F: { /* RRA: bank-2 sound transform $8191-$8194. */
+        uint8_t prior=cpu->a;
+        cpu->a=(uint8_t)((prior>>1)|((cpu->f&Z80_F_C)<<7));
+        cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
+                         (cpu->a&(Z80_F_3|Z80_F_5)) | (prior&1u));
+        break;
+    }
     case 0xCB: {
         uint8_t operation=fetch(cpu);
         if ((operation&0xC0u)==0x40u) {
@@ -314,6 +321,12 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                uses CB B8 (RES 7,B) for interleaved VRAM RLE. */
             uint8_t value=(uint8_t)(r8(cpu,operation&7u) &
                                    ~(1u<<((operation>>3)&7u)));
+            if(!w8(cpu,operation&7u,value)) goto fail;
+        } else if ((operation&0xC0u)==0xC0u) {
+            /* SET b,r and SET b,(HL) do not modify flags.
+               Original Ys $0AAD uses CB EB (SET 5,E). */
+            uint8_t value=(uint8_t)(r8(cpu,operation&7u) |
+                                   (1u<<((operation>>3)&7u)));
             if(!w8(cpu,operation&7u,value)) goto fail;
         } else {
             cpu->status=Z80_UNSUPPORTED;goto fail;
@@ -397,6 +410,12 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     }
     case 0x32: if (!store(cpu,fetch16(cpu),cpu->a)) goto fail; break;
     case 0x3A: cpu->a=ys_sms_bus_read(cpu->bus,fetch16(cpu)); break;
+    case 0xD6: { /* SUB n: source bank-2 sound command $8204. */
+        uint8_t rhs=fetch(cpu), lhs=cpu->a;
+        cpu->a=(uint8_t)(lhs-rhs);
+        cpu->f=sub_flags(lhs,rhs,cpu->a);
+        break;
+    }
     case 0xAF: cpu->a=0;cpu->f=Z80_F_Z|Z80_F_PV;break;
     case 0xE6: cpu->a=(uint8_t)(cpu->a & fetch(cpu));
         cpu->f=(uint8_t)(sz53(cpu->a)|Z80_F_H|(parity(cpu->a)?Z80_F_PV:0));

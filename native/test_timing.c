@@ -802,7 +802,182 @@ static void test_m45_source_four_column_resource(void) {
            runtime.clock.vblank_events==0u);
 }
 
+
+/* M46a: original bank-0 $0C92-$0C9B, immediately after M45's
+   four-column resource staging. This is a synthetic execution fixture,
+   not a full source-ROM runtime verification or title-screen proof. */
+static void test_m46_video_setup_prefix(void) {
+    setup();
+    CODE(0x0C92,0x3E,0x20,0x32,0x19,0xC0,
+         0x3E,0x81,0x32,0x64,0xDE);
+    cpu.pc=0x0C92u;
+    cpu.f=(uint8_t)(Z80_F_S|Z80_F_C);
+    assert(ys_sms_bus_write(&bus,0xC018u,0x6Bu));
+    assert(ys_sms_bus_write(&bus,0xC019u,0x55u));
+    assert(ys_sms_bus_write(&bus,0xC01Au,0x72u));
+    assert(ys_sms_bus_write(&bus,0xDE63u,0x39u));
+    assert(ys_sms_bus_write(&bus,0xDE64u,0x66u));
+    assert(ys_sms_bus_write(&bus,0xDE65u,0x4Cu));
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    const uint16_t next_pc[]={0x0C94u,0x0C97u,0x0C99u,0x0C9Cu};
+    const uint8_t cycles[]={7u,13u,7u,13u};
+    for(unsigned i=0u;i<4u;++i) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        assert(cpu.pc==next_pc[i] && cpu.last_tstates==cycles[i]);
+    }
+    assert(cpu.steps==4u && cpu.total_tstates==40u);
+    assert(cpu.a==0x81u && cpu.f==(Z80_F_S|Z80_F_C));
+    assert(cpu.sp==0xDFF0u && bus.mapped_bank[2]==2u);
+    assert(ys_sms_bus_read(&bus,0xC018u)==0x6Bu);
+    assert(ys_sms_bus_read(&bus,0xC019u)==0x20u);
+    assert(ys_sms_bus_read(&bus,0xC01Au)==0x72u);
+    assert(ys_sms_bus_read(&bus,0xDE63u)==0x39u);
+    assert(ys_sms_bus_read(&bus,0xDE64u)==0x81u);
+    assert(ys_sms_bus_read(&bus,0xDE65u)==0x4Cu);
+    assert(vdp.vram_writes==0u && runtime.recognized_irqs==0u &&
+           runtime.clock.vblank_events==0u);
+}
+
+
+/* M46b original $0C9C CALL $0AA7 to $0AB2 via $0028 RST helper.
+   Synthetic source opcodes, not a replacement for ROM-backed CI. */
+static void test_m46b_source_vdp_irq_gate(void) {
+    setup();
+    CODE(0x0C9C,0xCD,0xA7,0x0A);
+    CODE(0x0AA7,0x3A,0x11,0xC0,0x5F,0x16,0x81,
+         0xCB,0xEB,0xEF,0xDB,0xBF);
+    CODE(0x0028,0xF3,0x7B,0xD3,0xBF,0x7A,0xD3,0xBF,
+         0xFB,0xC9);
+    cpu.pc=0x0C9Cu;
+    cpu.f=(uint8_t)(Z80_F_Z|Z80_F_C);
+    cpu.sp=0xDFF0u;
+    assert(ys_sms_bus_write(&bus,0xC011u,0x80u));
+    assert(ys_sms_bus_write(&bus,0xC012u,0x67u));
+    vdp.registers[1]=0x80u;
+    vdp.status=0x40u; /* Status read-to-clear, no pending VBlank IRQ. */
+    cpu.interrupt_mode=1u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    const uint16_t pc_seq[]={0x0AA7u,0x0AAAu,0x0AABu,0x0AADu,
+                             0x0AAFu,0x0028u,0x0029u,0x002Au,
+                             0x002Cu,0x002Du,0x002Fu,0x0030u,
+                             0x0AB0u,0x0AB2u};
+    const uint8_t cycles[]={17u,13u,4u,7u,8u,11u,4u,4u,
+                            11u,4u,11u,4u,10u,11u};
+    for(unsigned i=0u;i<14u;++i) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        assert(cpu.pc==pc_seq[i] && cpu.last_tstates==cycles[i]);
+    }
+    assert(cpu.steps==14u && cpu.total_tstates==119u);
+    assert(cpu.sp==0xDFEEu && cpu.f==(Z80_F_Z|Z80_F_C));
+    assert(cpu.d==0x81u && cpu.e==0xA0u && cpu.a==0x40u);
+    assert(cpu.iff1 && cpu.iff2 && cpu.ei_delay==0u);
+    assert(vdp.registers[1]==0xA0u && vdp.status==0u);
+    assert(vdp.control_writes==2u && vdp.register_writes==1u);
+    assert(vdp.vram_writes==0u && vdp.cram_writes==0u);
+    assert(bus.mapped_bank[2]==2u && runtime.recognized_irqs==0u);
+    assert(runtime.clock.vblank_events==0u);
+    assert(ys_sms_bus_read(&bus,0xC011u)==0x80u);
+    assert(ys_sms_bus_read(&bus,0xC012u)==0x67u);
+    assert(ys_sms_bus_read(&bus,0xDFEEu)==0x9Fu);
+    assert(ys_sms_bus_read(&bus,0xDFEFu)==0x0Cu);
+    assert(ys_sms_bus_read(&bus,0xDFECu)==0xB0u);
+    assert(ys_sms_bus_read(&bus,0xDFEDu)==0x0Au);
+}
+
+
+static void test_m46b_cb_set_register_and_memory(void) {
+    setup();
+    CODE(0,0xCB,0xEB,0xCB,0xFE,0xCB,0xC6);
+    cpu.e=0u;cpu.h=0xC0u;cpu.l=0x00u;
+    cpu.f=(uint8_t)(Z80_F_Z|Z80_F_C);
+    assert(ys_sms_bus_write(&bus,0xC000u,0u));
+    assert(ys_sms_bus_write(&bus,0xC001u,0x57u));
+    measured(8u,0x0002u); /* SET 5,E */
+    assert(cpu.e==0x20u && cpu.f==(Z80_F_Z|Z80_F_C));
+    measured(15u,0x0004u); /* SET 7,(HL) */
+    assert(ys_sms_bus_read(&bus,0xC000u)==0x80u);
+    measured(15u,0x0006u); /* SET 0,(HL) */
+    assert(ys_sms_bus_read(&bus,0xC000u)==0x81u);
+    assert(ys_sms_bus_read(&bus,0xC001u)==0x57u);
+    assert(cpu.f==(Z80_F_Z|Z80_F_C) && cpu.total_tstates==38u);
+}
+
+
+/* M46c: authentic bank-0 $0AB2 -> $0BC5 -> $0042 frame-wait
+   entry. The fixture has no synthetic interrupts or CPU jumps. */
+static void test_m46c_source_wait_bridge_entry(void) {
+    setup();
+    CODE(0x0AB2,0xCD,0xC5,0x0B);
+    CODE(0x0BC5,0xF5,0xC5,0xD5,0xE5,0x08,0xD9,
+         0xF5,0xC5,0xD5,0xE5,0xDD,0xE5,0xFD,0xE5,
+         0x3A,0xFF,0xFF,0xF5,0x3E,0x01,0xCD,0x42,0x00);
+    CODE(0x0042,0x32,0x21,0xC0,0xFB,0x3A,0x21,0xC0,
+         0xB7,0x20,0xFA,0xC9);
+    cpu.pc=0x0AB2u;
+    cpu.sp=0xDFF0u;
+    cpu.a=0xA0u;cpu.f=Z80_F_Z;
+    cpu.ix=0x1234u;cpu.iy=0x5678u;
+    assert(ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC));
+    unsigned steps=0u;
+    while(cpu.pc!=0x0046u && steps<40u) {
+        assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
+        ++steps;
+    }
+    assert(cpu.pc==0x0046u && steps==19u);
+    assert(cpu.sp==0xDFD6u && cpu.iff1 && cpu.iff2 &&
+           cpu.ei_delay==1u);
+    assert(ys_sms_bus_read(&bus,0xC021u)==1u);
+    assert(ys_sms_bus_read(&bus,0xDFD6u)==0xDCu &&
+           ys_sms_bus_read(&bus,0xDFD7u)==0x0Bu);
+    assert(ys_sms_bus_read(&bus,0xDFEEu)==0xB5u &&
+           ys_sms_bus_read(&bus,0xDFEFu)==0x0Au);
+    assert(bus.mapped_bank[2]==2u && vdp.vram_writes==0u &&
+           runtime.recognized_irqs==0u && runtime.clock.vblank_events==0u);
+}
+
+
+/* M46c bank-2 $8204 SUB $81: correct signed-conditional RET M flags,
+   immediate operand timing, and arithmetic result without host changes. */
+static void test_m46c_sub_immediate_and_ret_sign(void) {
+    setup();
+    CODE(0,0xD6,0x81,0xF8);
+    cpu.a=0x80u;cpu.sp=0xDFF0u;
+    assert(ys_sms_bus_write(&bus,0xDFF0u,0x34u));
+    assert(ys_sms_bus_write(&bus,0xDFF1u,0x12u));
+    measured(7u,2u);
+    assert(cpu.a==0xFFu && cpu.f==0xBBu);
+    measured(11u,0x1234u); /* RET M taken after a negative result */
+    setup();
+    CODE(0,0xD6,0x81,0xF8);
+    cpu.a=0x81u;cpu.sp=0xDFF0u;
+    measured(7u,2u);
+    assert(cpu.a==0u && cpu.f==(Z80_F_Z|Z80_F_N));
+    measured(5u,3u); /* RET M not taken after a zero result */
+}
+
+/* M46c bank-2 $8191: four 4T RRA instructions reduce the high nibble.
+   Also verify carry enters bit 7 and S/Z/PV remain unchanged. */
+static void test_m46c_rra_carry_and_flags(void) {
+    setup();
+    CODE(0,0x1F,0x1F,0x1F,0x1F);
+    cpu.a=0xA0u;cpu.f=(uint8_t)(Z80_F_Z|Z80_F_PV|Z80_F_H|Z80_F_N);
+    measured(4u,1u);measured(4u,2u);
+    measured(4u,3u);measured(4u,4u);
+    assert(cpu.a==0x0Au && cpu.f==(Z80_F_Z|Z80_F_PV|Z80_F_3));
+    assert(cpu.total_tstates==16u);
+    setup();
+    CODE(0,0x1F);
+    cpu.a=0x01u;cpu.f=(uint8_t)(Z80_F_C|Z80_F_S|Z80_F_H|Z80_F_N);
+    measured(4u,1u);
+    assert(cpu.a==0x80u && cpu.f==(Z80_F_S|Z80_F_C));
+}
 int main(void) {
+    test_m46c_rra_carry_and_flags();
+    test_m46c_sub_immediate_and_ret_sign();
+    test_m46c_source_wait_bridge_entry();
+    test_m46b_cb_set_register_and_memory();
+    test_m46b_source_vdp_irq_gate();
+    test_m46_video_setup_prefix();
     test_m45_source_four_column_resource();
     test_m44_cb_res_flags_and_cycles();
     test_m44_interleaved_pattern_rom_fixture();
