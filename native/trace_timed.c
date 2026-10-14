@@ -195,10 +195,11 @@ static bool reference_staged_columns(const uint8_t *source,size_t size,
 int main(int argc,char **argv) {
     const bool m46_prefix=(argc==3 && strcmp(argv[2],"--m46-prefix")==0);
     const bool m46b=(argc==3 && strcmp(argv[2],"--m46b")==0);
-    if (!(argc==2 || m46_prefix || m46b ||
+    const bool m46c=(argc==3 && strcmp(argv[2],"--m46c")==0);
+    if (!(argc==2 || m46_prefix || m46b || m46c ||
           (argc==4 && strcmp(argv[2],"--frame")==0))) {
-        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm | --m46-prefix | --m46b]\n"
-              "Default M45 $0C92; M46a $0C9C; M46b $0AB2 (not gameplay).\n",
+        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm | --m46-prefix | --m46b | --m46c]\n"
+              "M45 $0C92; M46a $0C9C; M46b $0AB2; M46c $0AB5 (not gameplay).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1558,7 +1559,7 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
 
-    if(m46_prefix || m46b) {
+    if(m46_prefix || m46b || m46c) {
         /* M46a executes only the original $0C92-$0C9B prefix.
            This deliberately stops before $0C9C CALL $0AA7. */
         const uint8_t prefix[]={0x3Eu,0x20u,0x32u,0x19u,0xC0u,
@@ -1641,7 +1642,7 @@ int main(int argc,char **argv) {
 
 
 
-    if(m46b) {
+    if(m46b || m46c) {
         /* The exact bank-0 source $0C9C CALL $0AA7 executes through
            the original $0028 VDP-control helper and IN A,($BF).
            Stop at $0AB2 before CALL $0BC5's timed frame wait. */
@@ -1745,7 +1746,112 @@ int main(int argc,char **argv) {
                (unsigned long long)cpu.total_tstates,expected_r1,
                status_before,(unsigned long long)runtime.recognized_irqs,
                (unsigned long long)runtime.clock.vblank_events);
-        puts("Stop before $0AB2 CALL $0BC5; no title/gameplay claim.");
+        if(!m46c) puts("Stop before $0AB2 CALL $0BC5; no title/gameplay claim.");
+    }
+
+
+    if(m46c) {
+        /* M46c: no host-injected time, IRQ, mapper or CPU state.
+           CALL $0BC5 saves the whole Z80 context, waits at source
+           $0046 for an accepted VBlank IM1 IRQ, then restores and
+           returns to $0AB5 (before source SET 6,E). */
+        const uint8_t entry[]={0xCDu,0xC5u,0x0Bu};
+        const uint8_t wait_prefix[]={0xF5u,0xC5u,0xD5u,0xE5u,
+                                      0x08u,0xD9u};
+        const uint8_t poll[]={0x32u,0x21u,0xC0u,0xFBu,0x3Au,0x21u,
+                               0xC0u,0xB7u,0x20u,0xFAu,0xC9u};
+        bool bytes_ok=true;
+        for(size_t i=0;i<sizeof(entry);++i)
+            if(ys_sms_bus_read(bus,(uint16_t)(0x0AB2u+i))!=entry[i])
+                bytes_ok=false;
+        for(size_t i=0;i<sizeof(wait_prefix);++i)
+            if(ys_sms_bus_read(bus,(uint16_t)(0x0BC5u+i))!=wait_prefix[i])
+                bytes_ok=false;
+        for(size_t i=0;i<sizeof(poll);++i)
+            if(ys_sms_bus_read(bus,(uint16_t)(0x0042u+i))!=poll[i])
+                bytes_ok=false;
+        if(!bytes_ok) {
+            int result=fail("M46c source $0BC5 frame-wait bytes differ",&runtime);
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        const YsZ80 before=cpu;
+        const uint8_t bank_before=bus->mapped_bank[2];
+        const uint8_t mapper_before=bus->mapper_control;
+        const uint64_t irq_before=runtime.recognized_irqs;
+        const uint64_t blank_before=runtime.clock.vblank_events;
+        const uint64_t vram_before=vdp->vram_writes;
+        const uint64_t psg_before=sound->psg_write_count;
+        bool entered_bridge=false,entered_poll=false,accepted_wait_irq=false;
+        uint16_t interrupted_at=0u;
+        unsigned long wait_steps=0u;
+        while(cpu.pc!=0x0AB5u && wait_steps<110000ul) {
+            uint16_t previous_pc=cpu.pc;
+            uint64_t prev_irq=runtime.recognized_irqs;
+            Z80Status st=ys_sms_runtime_step_auto(&runtime);
+            if(st!=Z80_RUNNING) {
+                int result=fail("M46c original natural frame wait stopped",&runtime);
+                fprintf(stderr,"  prev=$%04X steps=%lu\n",previous_pc,wait_steps);
+                free(rom);free(bus);free(vdp);free(sound);return result;
+            }
+            ++wait_steps;
+            if(previous_pc==0x0BD9u && cpu.pc==0x0042u)
+                entered_bridge=true;
+            if(previous_pc==0x0045u && cpu.pc==0x0046u)
+                entered_poll=true;
+            if(runtime.recognized_irqs!=prev_irq) {
+                if(runtime.recognized_irqs!=prev_irq+1u ||
+                   cpu.pc!=0x0038u || (vdp->status&0x80u)==0u) {
+                    int result=fail("M46c IM1 acknowledgement invalid",&runtime);
+                    free(rom);free(bus);free(vdp);free(sound);return result;
+                }
+                if(!accepted_wait_irq) {
+                    interrupted_at=(uint16_t)(
+                        (uint16_t)ys_sms_bus_read(bus,cpu.sp) |
+                        ((uint16_t)ys_sms_bus_read(
+                            bus,(uint16_t)(cpu.sp+1u))<<8));
+                    if(interrupted_at<0x0046u || interrupted_at>0x004Cu) {
+                        int result=fail("M46c IRQ interrupted outside wait loop",&runtime);
+                        fprintf(stderr,"  interrupted=$%04X\n",interrupted_at);
+                        free(rom);free(bus);free(vdp);free(sound);return result;
+                    }
+                    accepted_wait_irq=true;
+                }
+            }
+        }
+        bool wait_ok=cpu.pc==0x0AB5u &&
+            entered_bridge && entered_poll && accepted_wait_irq &&
+            wait_steps>25ul && wait_steps<110000ul &&
+            same_registers(&cpu,&before) && cpu.sp==before.sp &&
+            cpu.interrupt_mode==before.interrupt_mode &&
+            bus->mapped_bank[2]==bank_before &&
+            bus->mapper_control==mapper_before &&
+            runtime.recognized_irqs>irq_before &&
+            runtime.clock.vblank_events>blank_before &&
+            ys_sms_bus_read(bus,0xC021u)==0u &&
+            vdp->vram_writes>=vram_before &&
+            sound->psg_write_count>=psg_before;
+        if(!wait_ok) {
+            int result=fail("M46c source context/mapper/wakeup mismatch",&runtime);
+            fprintf(stderr,"  bridge=%u poll=%u irq=%u waitsteps=%lu"
+                    " SP=$%04X expected=$%04X PC=$%04X C021=%02X\n",
+                    entered_bridge,entered_poll,accepted_wait_irq,
+                    wait_steps,cpu.sp,before.sp,cpu.pc,
+                    ys_sms_bus_read(bus,0xC021u));
+            free(rom);free(bus);free(vdp);free(sound);return result;
+        }
+        printf("PASS M46c source $0BC5 natural frame wait to $0AB5:"
+               " steps=%llu T-states=%llu IRQ=%llu VBlank=%llu"
+               " waitsteps=%lu interruptedPC=$%04X"
+               " C021=%02X VDPwrites=%llu PSGwrites=%llu\n",
+               (unsigned long long)cpu.steps,
+               (unsigned long long)cpu.total_tstates,
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events,
+               wait_steps,interrupted_at,
+               ys_sms_bus_read(bus,0xC021u),
+               (unsigned long long)vdp->vram_writes,
+               (unsigned long long)sound->psg_write_count);
+        puts("Stop before source $0AB5 SET 6,E; not playable.");
     }
 
     if (argc==4) {
