@@ -62,6 +62,18 @@ unverified work bytes remain marked unknown. The diagnostic **F4**
 view plots those two numeric fields, **not a recovered Ys map**.
 No character movement, collision or scene geometry is inferred.
 
+## PC-4 verified conditional object initialization
+
+[PC-4 object parameter initialization](research/PC4_OBJECT_TYPE_INITIALIZER.md)
+reconstructs both branches of original bank-0 `$1B9B` as native
+object-data transforms: 36 standard entries receive fixed defaults,
+and 173 table-indexed entries use one of 35 ten-byte parameter
+records at original source `$1C05-$1D62`. The source-only exporter
+creates a local, validated `--object-types FILE` package for
+`ys-native-game --records FILE`. The native object projection
+tracks exactly which work bytes are known, leaving other bytes
+unknown. **This does not implement object AI or a playable game map.**
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
