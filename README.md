@@ -1,5 +1,12 @@
 ## Enhanced native Ys PC port (new track)
 
+**PC-11 source collision routing:** [Bank-1 collision-call provenance](native/research/PC11_BANK1_COLLISION_ROUTES.md)
+now proves the `$476C` entry path selects physical bank 4 before
+three original `$807C` calls, and reproduces the source byte-bound
+producer in native C11. This is conditional source control-flow
+evidence, **not** a confirmed live gameplay mapper trace or a
+playable original Ys map.
+
 **PC-10 mod-forward adoption:** [Ys-specific support profile](native/YS_MODDING_PROFILE.md)
 and [canonical experimental scene-content foundation](native/research/PC10_CANONICAL_CONTENT.md)
 specify a versioned in-memory prototype scene with stable symbolic IDs,
