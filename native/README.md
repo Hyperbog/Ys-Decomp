@@ -1,4 +1,14 @@
-# M45 — Original Ys four-column resource staging verified
+# Enhanced native PC port (separate development track)
+
+[PC-0 foundation and build instructions](ENHANCED_PC_PORT.md) describe
+the new SDL2 `ys-native-game` placeholder-room prototype, native
+fixed-tick gameplay core and tests. It does not execute the original ROM.
+The source-ROM Z80/VDP utilities below remain separate reference tools;
+no real Ys Alpha gameplay is yet verified.
+
+---
+
+## M45 — Original Ys four-column resource staging verified
 
 The original Ys Master System cartridge now executes continuously
 through the M44 12,288-byte VRAM pattern transfer and the subsequent
