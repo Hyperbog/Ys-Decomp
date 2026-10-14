@@ -1,6 +1,7 @@
 #ifndef YS_PC_OBJECTS_H
 #define YS_PC_OBJECTS_H
 #include "pc_records.h"
+#include "pc_object_types.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -23,4 +24,9 @@ typedef struct {
    object-kind-dependent initialization, or collision is implemented. */
 bool ys_pc_project_objects(const YsPcRecords *data,unsigned group,
                            YsPcObjectProjection *out);
+/* PC-4 source-backed $1B9B initialization when a validated bank-0
+   parameter table is provided. Does NOT execute object behaviors. */
+bool ys_pc_project_objects_typed(const YsPcRecords *data,unsigned group,
+                                 const YsPcObjectTypes *types,
+                                 YsPcObjectProjection *out);
 #endif
