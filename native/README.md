@@ -5,6 +5,7 @@ and [PC-1 source-only bank-3 tile gallery](research/PC1_BANK3_TILE_GALLERY.md),
 plus [PC-2 source bank-7 map-object record verification](research/PC2_BANK7_MAP_RECORDS.md)
 and [PC-4 original conditional object parameter recovery](research/PC4_OBJECT_TYPE_INITIALIZER.md)
 and [PC-5 separate scene selector directories](research/PC5_SCENE_SELECTORS.md)
+and [PC-6 authentic initialization name-table bytes](research/PC6_INITIAL_NAMETABLE.md)
 and [PC-3 source object-work projection](research/PC3_OBJECT_WORK_PROJECTION.md) describe
 the new SDL2 `ys-native-game` placeholder-room prototype, native
 fixed-tick gameplay core and tests. It does not execute the original ROM.
