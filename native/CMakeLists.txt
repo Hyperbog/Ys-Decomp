@@ -70,21 +70,27 @@ endif()
 add_executable(ys-native-frames video_frames.c)
 target_link_libraries(ys-native-frames PRIVATE
     ys_sms_clock ys_sms_video ys_video_fixture)
-# SDL2 is optional: headless build and CI do not depend on system SDL2.
+# The hardware diagnostic and the new PC game have independent switches.
+# Headless PC simulation/tests do not require SDL2.
 option(YS_ENABLE_SDL2_DISPLAY "Build optional SDL2 synthetic VDP window" ON)
-if(YS_ENABLE_SDL2_DISPLAY)
+option(YS_ENABLE_PC_SDL2 "Build enhanced native PC gameplay window" ON)
+if(YS_ENABLE_SDL2_DISPLAY OR YS_ENABLE_PC_SDL2)
     find_package(SDL2 QUIET)
     if(TARGET SDL2::SDL2)
-        add_executable(ys-native-display display_sdl.c)
-        target_link_libraries(ys-native-display PRIVATE
-            ys_sms_clock ys_sms_video ys_video_fixture SDL2::SDL2)
-        add_executable(ys-native-game game_sdl.c)
-        target_link_libraries(ys-native-game PRIVATE ys_pc_game SDL2::SDL2)
-        if(MSVC)
-            target_compile_options(ys-native-game PRIVATE /W4)
-        else()
-            target_compile_options(ys-native-game PRIVATE
-                -Wall -Wextra -Wpedantic -Werror)
+        if(YS_ENABLE_SDL2_DISPLAY)
+            add_executable(ys-native-display display_sdl.c)
+            target_link_libraries(ys-native-display PRIVATE
+                ys_sms_clock ys_sms_video ys_video_fixture SDL2::SDL2)
+        endif()
+        if(YS_ENABLE_PC_SDL2)
+            add_executable(ys-native-game game_sdl.c)
+            target_link_libraries(ys-native-game PRIVATE ys_pc_game SDL2::SDL2)
+            if(MSVC)
+                target_compile_options(ys-native-game PRIVATE /W4)
+            else()
+                target_compile_options(ys-native-game PRIVATE
+                    -Wall -Wextra -Wpedantic -Werror)
+            endif()
         endif()
     endif()
 endif()
