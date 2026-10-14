@@ -45,6 +45,7 @@ jobs:
           python3 native/tools/export_pc_records.py --out "$RUNNER_TEMP/ys-pc-source-records.bin"
           python3 native/tools/export_pc_records.py --verify "$RUNNER_TEMP/ys-pc-source-records.bin"
           ./build-native/ys-native-game --smoke --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          ./build-native/ys-native-game --smoke --smoke-projection --records "$RUNNER_TEMP/ys-pc-source-records.bin"
           ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
           printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid-records.bin"
           if ./build-native/ys-native-game --smoke --records "$RUNNER_TEMP/ys-pc-invalid-records.bin"; then
