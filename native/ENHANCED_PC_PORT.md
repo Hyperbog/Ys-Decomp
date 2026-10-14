@@ -144,6 +144,22 @@ player-world coordinates, or replacement for the prototype's
 placeholder collision. Real NPC identification, tile collision,
 scene selection and gameplay progression still need proof.
 
+## PC-10 experimental mod-forward content seam
+
+[PC-10 canonical scene foundation](research/PC10_CANONICAL_CONTENT.md)
+introduces an **experimental C11, in-memory** versioned scene
+format with stable `prototype.*` IDs, strict validation and a
+deterministic add/replace catalog. The unchanged **placeholder**
+PC-0 room, spawns and eight-tick movement are now supplied through
+that content interface. Invalid scene registration/replacement
+fails without mutating the catalog or runtime game state.
+
+The [Ys-specific modding profile](YS_MODDING_PROFILE.md) records
+**implemented vs proposed** support. There is no serialized
+mod format, mod loader, editor, original playable Ys scene
+or original-game parity claim in PC-10. Source bank addresses
+remain private importer/provenance details rather than public IDs.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
