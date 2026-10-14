@@ -1,7 +1,8 @@
 # Enhanced native PC port (separate development track)
 
 [PC-0 foundation and build instructions](ENHANCED_PC_PORT.md)
-and [PC-1 source-only bank-3 tile gallery](research/PC1_BANK3_TILE_GALLERY.md) describe
+and [PC-1 source-only bank-3 tile gallery](research/PC1_BANK3_TILE_GALLERY.md),
+plus [PC-2 source bank-7 map-object record verification](research/PC2_BANK7_MAP_RECORDS.md) describe
 the new SDL2 `ys-native-game` placeholder-room prototype, native
 fixed-tick gameplay core and tests. It does not execute the original ROM.
 The source-ROM Z80/VDP utilities below remain separate reference tools;
