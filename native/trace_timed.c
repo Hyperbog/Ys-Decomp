@@ -3,6 +3,7 @@
    This is a bounded diagnostic, never interactive gameplay. No injected IRQ. */
 #include "sms_runtime.h"
 #include "sms_video.h"
+#include "pc_vdp_checkpoint.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -193,8 +194,10 @@ static bool reference_staged_columns(const uint8_t *source,size_t size,
 }
 
 int main(int argc,char **argv) {
-    if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
-        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
+    if (!(argc==2 || (argc==4 &&
+          (strcmp(argv[2],"--frame")==0 ||
+           strcmp(argv[2],"--vdp-at-m44")==0)))) {
+        fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp]\n"
               "Stops after four-column resource staging at $0C92 (not gameplay).\n",
               stderr);
         return EXIT_FAILURE;
@@ -1464,6 +1467,26 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events,
            (unsigned long long)vdp->vram_writes);
+
+    /* PC-8: snapshot actual *simultaneously resident* VDP state
+       immediately upon real-source return to PC=$0C87 after M44.
+       No Z80/VDP RAM/register changes or runtime shortcuts. */
+    if(argc==4 && strcmp(argv[2],"--vdp-at-m44")==0) {
+        FILE *snapshot=fopen(argv[3],"wb");
+        bool saved=snapshot &&
+            ys_pc_vdp_checkpoint_save(snapshot,vdp,cpu.pc);
+        if(snapshot && fclose(snapshot)!=0) saved=false;
+        if(!saved) {
+            fputs("PC-8 cannot write M44 VDP state capture\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);
+            return EXIT_FAILURE;
+        }
+        printf("PASS PC-8 original simultaneous VDP capture at PC=$%04X:"
+               " 16384 VRAM, 32 CRAM, 16 registers, IRQ=%llu VBlank=%llu\n",
+               cpu.pc,
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+    }
 
     /* M45: original bank-0 $0C87-$0C91 selects HL=$A4D1,
        DE=$C600, C=4, and calls $0BEF. The real source routine
