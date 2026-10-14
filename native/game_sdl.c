@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include "pc_game.h"
 #include "pc_tiles.h"
+#include "pc_records.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +20,9 @@ static void draw_rect(SDL_Renderer *r,int x,int y,int w,int h,
     SDL_RenderFillRect(r,&box);
 }
 static void draw_game(SDL_Renderer *r,const YsPcGame *g,
-                      SDL_Texture *atlas,bool show_atlas) {
+                      SDL_Texture *atlas,bool show_atlas,
+                      const YsPcRecords *records,bool show_records,
+                      unsigned group) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -71,6 +74,34 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
         SDL_Rect dst={0,16,WIDTH,YS_PC_ATLAS_H*4};
         SDL_RenderCopy(r,atlas,NULL,&dst);
     }
+    if(show_records && records && group<YS_PC_GROUP_COUNT) {
+        /* Each COLUMN is a four-byte source record; ROWS are unknown fields.
+           This is a numeric source-data visualization, NOT map geometry. */
+        draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,12,17,27);
+        unsigned offset=ys_pc_records_start(records,group);
+        unsigned count=records->groups[group].count;
+        for(unsigned i=0;i<count;++i)
+            for(unsigned field=0;field<YS_PC_RECORD_WIDTH;++field) {
+                uint8_t raw=records->records[offset+i][field];
+                int height=2+(int)raw*48/255;
+                int x=8+(int)i*31,top=22+(int)field*88;
+                Uint8 red=(field==0u)?159u:55u;
+                Uint8 green=(field==1u)?183u:80u;
+                Uint8 blue=(field==2u)?197u:96u;
+                if(field==3u) { red=203u;green=145u;blue=69u; }
+                draw_rect(r,x,top,24,55,29,42,58);
+                draw_rect(r,x,top+55-height,24,height,red,green,blue);
+            }
+        /* 16 transferred source bytes: their color meaning is unknown. */
+        for(unsigned i=0;i<YS_PC_STAGING_BYTES;++i) {
+            uint8_t raw=records->staging[i];
+            int h=2+(int)raw*15/255;
+            draw_rect(r,8+(int)i*31,YS_PC_MAP_H*TILE-18,
+                      22,16,39,49,68);
+            draw_rect(r,8+(int)i*31,YS_PC_MAP_H*TILE-2-h,
+                      22,h,129,153,168);
+        }
+    }
     SDL_RenderPresent(r);
 }
 static unsigned read_buttons(SDL_GameController *pad) {
@@ -100,12 +131,15 @@ static unsigned read_buttons(SDL_GameController *pad) {
 int main(int argc,char **argv) {
     bool smoke=false;
     const char *tile_path=NULL;
+    const char *record_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
         else if(strcmp(argv[i],"--tiles")==0 && !tile_path && i+1<argc)
             tile_path=argv[++i];
+        else if(strcmp(argv[i],"--records")==0 && !record_path && i+1<argc)
+            record_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE]\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE]\n",stderr);
             return EXIT_FAILURE;
         }
     }
@@ -147,7 +181,23 @@ int main(int argc,char **argv) {
             return EXIT_FAILURE;
         }
     }
-    bool show_atlas=atlas!=NULL; /* F2 switches back to placeholder room. */
+    YsPcRecords source_records;
+    bool have_records=false;
+    if(record_path) {
+        FILE *fp=fopen(record_path,"rb");
+        have_records=fp && ys_pc_records_load(fp,&source_records);
+        if(fp) fclose(fp);
+        if(!have_records) {
+            fprintf(stderr,"PC-2 invalid derived source record data: %s\n",
+                    record_path);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
+    bool show_records=have_records;
+    unsigned current_group=0u;
+    bool show_atlas=atlas!=NULL && !show_records;
     SDL_GameController *pad=NULL;
     for(int i=0;i<SDL_NumJoysticks();++i)
         if(SDL_IsGameController(i)) {
@@ -167,15 +217,27 @@ int main(int argc,char **argv) {
                (ev.type==SDL_KEYDOWN &&
                 ev.key.keysym.sym==SDLK_ESCAPE))
                 running=false;
-            if(atlas && ev.type==SDL_KEYDOWN && !ev.key.repeat &&
-               ev.key.keysym.sym==SDLK_F2)
-                show_atlas=!show_atlas;
+            if(ev.type==SDL_KEYDOWN && !ev.key.repeat) {
+                if(atlas && ev.key.keysym.sym==SDLK_F2) {
+                    show_atlas=!show_atlas;
+                    if(show_atlas) show_records=false;
+                }
+                if(have_records && ev.key.keysym.sym==SDLK_F3) {
+                    show_records=!show_records;
+                    if(show_records) show_atlas=false;
+                }
+                if(show_records && ev.key.keysym.sym==SDLK_PAGEUP)
+                    current_group=(current_group+YS_PC_GROUP_COUNT-1u)%
+                                  YS_PC_GROUP_COUNT;
+                if(show_records && ev.key.keysym.sym==SDLK_PAGEDOWN)
+                    current_group=(current_group+1u)%YS_PC_GROUP_COUNT;
+            }
         }
         Uint64 now=SDL_GetPerformanceCounter();
         double elapsed=(double)(now-prior)/freq;
         prior=now;
         accumulator+=elapsed>0.25?0.25:elapsed;
-        unsigned buttons=show_atlas?0u:read_buttons(pad);
+        unsigned buttons=(show_atlas || show_records)?0u:read_buttons(pad);
         /* Gallery is a read-only reference. Do not move hidden actors. */
         for(int i=0;accumulator>=1.0/60.0 && i<16;++i) {
             ys_pc_game_tick(&game,buttons);
@@ -189,14 +251,22 @@ int main(int argc,char **argv) {
         snprintf(title,sizeof(title),
                  "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
                  game.hp,game.foe_hp,mode);
-        if(atlas && show_atlas)
+        if(have_records && show_records)
+            snprintf(title,sizeof(title),
+                     "Bank7 source tuples, NOT map | group %u/22 $%04X"
+                     " records %u | PgUp/PgDn change, F3: room",
+                     current_group+1u,
+                     source_records.groups[current_group].source_pc,
+                     source_records.groups[current_group].count);
+        else if(atlas && show_atlas)
             snprintf(title,sizeof(title),
                      "Ys bank-3 source tiles (176) | grayscale PREVIEW | F2: room");
         else if(atlas)
             snprintf(title,sizeof(title),
                      "Ys PC placeholder room | F2: authentic bank-3 tile gallery");
         SDL_SetWindowTitle(w,title);
-        draw_game(r,&game,atlas,show_atlas);
+        draw_game(r,&game,atlas,show_atlas,
+                  have_records?&source_records:NULL,show_records,current_group);
         if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
