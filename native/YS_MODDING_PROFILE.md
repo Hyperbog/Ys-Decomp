@@ -79,6 +79,18 @@ deterministic sorted IDs, replacement/addition, scene-derived engine
 state and restart behavior without any source ROM. All original
 bounded Z80/VDP research regression checks remain separate.
 
+## PC-11 source collision routing
+
+[PC-11](research/PC11_BANK1_COLLISION_ROUTES.md) identifies
+a conditional original bank-1 entry path that maps bank 4,
+derives target bounds from original source descriptor records,
+and calls the original collision predicate at three sites.
+The validated native route enum and explicit byte-context
+adapter are **internal research interfaces**, not scene-ID
+collision geometry or an externally moddable actor system.
+The canonical prototype room and its independent collision
+rules remain unchanged.
+
 ## Next gates
 
 1. Recover a verified authentic original Ys playable scene and
