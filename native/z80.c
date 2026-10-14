@@ -315,6 +315,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             uint8_t value=(uint8_t)(r8(cpu,operation&7u) &
                                    ~(1u<<((operation>>3)&7u)));
             if(!w8(cpu,operation&7u,value)) goto fail;
+        } else if ((operation&0xC0u)==0xC0u) {
+            /* Original $0AAD CB EB (SET 5,E) and $0AB5 CB F3
+               (SET 6,E). General CB SET b,r/(HL), flags unchanged.
+               Interpreter-only source validation, not PC gameplay. */
+            uint8_t value=(uint8_t)(r8(cpu,operation&7u) |
+                                   (1u<<((operation>>3)&7u)));
+            if(!w8(cpu,operation&7u,value)) goto fail;
         } else {
             cpu->status=Z80_UNSUPPORTED;goto fail;
         }
