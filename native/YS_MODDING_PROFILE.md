@@ -91,6 +91,15 @@ collision geometry or an externally moddable actor system.
 The canonical prototype room and its independent collision
 rules remain unchanged.
 
+## PC-12 original runtime observation boundary
+
+[PC-12](research/PC12_RUNTIME_COLLISION_WATCH.md) adds a
+bounded reference-Z80 tool to observe potential collision
+caller runtime PCs and source mapper/IX/WRAM context.
+It does **not** populate the canonical scene registry,
+define authentic object/resource IDs, or grant support
+for external mod packs, saves, editor or real gameplay.
+
 ## Next gates
 
 1. Recover a verified authentic original Ys playable scene and
