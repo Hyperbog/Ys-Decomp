@@ -1589,7 +1589,7 @@ int main(int argc,char **argv) {
 
 
 
-    if (argc==4) {
+    if (argc==4 && strcmp(argv[2],"--frame")==0) {
         uint8_t *rgb=malloc(YS_SMS_RGB_BYTES);
         if (!rgb) {
             fputs("cannot allocate RGB frame\n",stderr);
