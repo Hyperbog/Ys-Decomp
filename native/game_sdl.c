@@ -5,6 +5,7 @@
 #include "pc_game.h"
 #include "pc_tiles.h"
 #include "pc_records.h"
+#include "pc_objects.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,7 +23,7 @@ static void draw_rect(SDL_Renderer *r,int x,int y,int w,int h,
 static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       SDL_Texture *atlas,bool show_atlas,
                       const YsPcRecords *records,bool show_records,
-                      unsigned group) {
+                      unsigned group,bool show_projection) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -78,9 +79,31 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
         /* Each COLUMN is a four-byte source record; ROWS are unknown fields.
            This is a numeric source-data visualization, NOT map geometry. */
         draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,12,17,27);
+        if(show_projection) {
+            /* Two scaled object work fields, NOT a recovered world map.
+               Both axes are normalized diagnostic register values. */
+            YsPcObjectProjection projection;
+            if(ys_pc_project_objects(records,group,&projection)) {
+                for(unsigned k=0;k<=4u;++k) {
+                    int gx=8+(int)k*(WIDTH-16)/4;
+                    int gy=12+(int)k*(YS_PC_MAP_H*TILE-24)/4;
+                    draw_rect(r,gx,12,1,YS_PC_MAP_H*TILE-24,38,55,75);
+                    draw_rect(r,8,gy,WIDTH-16,1,38,55,75);
+                }
+                for(unsigned i=0;i<projection.count;++i) {
+                    const YsPcObjectSlot *slot=&projection.objects[i];
+                    int px=8+(int)((unsigned)slot->value_a*
+                                   (WIDTH-22u)/2048u);
+                    int py=12+(int)((unsigned)slot->value_b*
+                                    (YS_PC_MAP_H*TILE-30u)/2048u);
+                    draw_rect(r,px-3,py-3,9,9,40,46,66);
+                    draw_rect(r,px-1,py-1,5,5,205,172,106);
+                }
+            }
+        } else {
         unsigned offset=ys_pc_records_start(records,group);
         unsigned count=records->groups[group].count;
-        for(unsigned i=0;i<count;++i)
+        for(unsigned i=0;i<count;++i
             for(unsigned field=0;field<YS_PC_RECORD_WIDTH;++field) {
                 uint8_t raw=records->records[offset+i][field];
                 int height=2+(int)raw*48/255;
@@ -100,6 +123,7 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       22,16,39,49,68);
             draw_rect(r,8+(int)i*31,YS_PC_MAP_H*TILE-2-h,
                       22,h,129,153,168);
+        }
         }
     }
     SDL_RenderPresent(r);
@@ -130,10 +154,13 @@ static unsigned read_buttons(SDL_GameController *pad) {
 }
 int main(int argc,char **argv) {
     bool smoke=false;
+    bool smoke_projection=false;
     const char *tile_path=NULL;
     const char *record_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
+        else if(strcmp(argv[i],"--smoke-projection")==0 &&
+                !smoke_projection) smoke_projection=true;
         else if(strcmp(argv[i],"--tiles")==0 && !tile_path && i+1<argc)
             tile_path=argv[++i];
         else if(strcmp(argv[i],"--records")==0 && !record_path && i+1<argc)
@@ -142,6 +169,10 @@ int main(int argc,char **argv) {
             fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE]\n",stderr);
             return EXIT_FAILURE;
         }
+    }
+    if(smoke_projection && (!smoke || !record_path)) {
+        fputs("--smoke-projection requires --smoke and --records FILE\n",stderr);
+        return EXIT_FAILURE;
     }
     if(SDL_Init(SDL_INIT_VIDEO|SDL_INIT_EVENTS|SDL_INIT_GAMECONTROLLER)!=0) {
         fprintf(stderr,"SDL2 startup: %s\n",SDL_GetError());
@@ -196,6 +227,7 @@ int main(int argc,char **argv) {
         }
     }
     bool show_records=have_records;
+    bool show_projection=smoke_projection;
     unsigned current_group=0u;
     bool show_atlas=atlas!=NULL && !show_records;
     SDL_GameController *pad=NULL;
@@ -226,6 +258,11 @@ int main(int argc,char **argv) {
                     show_records=!show_records;
                     if(show_records) show_atlas=false;
                 }
+                if(have_records && ev.key.keysym.sym==SDLK_F4) {
+                    show_records=true;
+                    show_atlas=false;
+                    show_projection=!show_projection;
+                }
                 if(show_records && ev.key.keysym.sym==SDLK_PAGEUP)
                     current_group=(current_group+YS_PC_GROUP_COUNT-1u)%
                                   YS_PC_GROUP_COUNT;
@@ -253,8 +290,9 @@ int main(int argc,char **argv) {
                  game.hp,game.foe_hp,mode);
         if(have_records && show_records)
             snprintf(title,sizeof(title),
-                     "Bank7 source tuples, NOT map | group %u/22 $%04X"
-                     " records %u | PgUp/PgDn change, F3: room",
+                     "Bank7 %s NOT map | group %u/22 $%04X count %u |"
+                     " F4: plot/bytes, PgUp/PgDn",
+                     show_projection?"work-field plot,":"source bytes,",
                      current_group+1u,
                      source_records.groups[current_group].source_pc,
                      source_records.groups[current_group].count);
@@ -266,7 +304,8 @@ int main(int argc,char **argv) {
                      "Ys PC placeholder room | F2: authentic bank-3 tile gallery");
         SDL_SetWindowTitle(w,title);
         draw_game(r,&game,atlas,show_atlas,
-                  have_records?&source_records:NULL,show_records,current_group);
+                  have_records?&source_records:NULL,show_records,current_group,
+                  show_projection);
         if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
