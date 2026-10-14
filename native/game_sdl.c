@@ -105,7 +105,7 @@ int main(int argc,char **argv) {
         else if(strcmp(argv[i],"--tiles")==0 && !tile_path && i+1<argc)
             tile_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE]\\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE]\n",stderr);
             return EXIT_FAILURE;
         }
     }
@@ -131,7 +131,7 @@ int main(int argc,char **argv) {
         bool valid=fp && ys_pc_tiles_load(fp,&tiles);
         if(fp) fclose(fp);
         if(!valid) {
-            fprintf(stderr,"PC-1 invalid derived tile asset: %s\\n",tile_path);
+            fprintf(stderr,"PC-1 invalid derived tile asset: %s\n",tile_path);
             SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
             return EXIT_FAILURE;
         }
@@ -141,7 +141,7 @@ int main(int argc,char **argv) {
                                 SDL_TEXTUREACCESS_STATIC,
                                 YS_PC_ATLAS_W,YS_PC_ATLAS_H);
         if(!atlas || SDL_UpdateTexture(atlas,NULL,pixels,YS_PC_ATLAS_W*3)!=0) {
-            fprintf(stderr,"PC-1 SDL texture: %s\\n",SDL_GetError());
+            fprintf(stderr,"PC-1 SDL texture: %s\n",SDL_GetError());
             SDL_DestroyTexture(atlas);
             SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
             return EXIT_FAILURE;
