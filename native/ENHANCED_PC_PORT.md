@@ -113,6 +113,20 @@ original setup stages but their simultaneously resident display
 state has **not** been verified. No collision, true scene or
 authentic native Ys gameplay is claimed.
 
+## PC-8 simultaneous original VDP state at M44
+
+[PC-8 bounded source-execution snapshot](research/PC8_SIMULTANEOUS_VDP.md)
+exports complete **simultaneous** VRAM (16 KiB), CRAM (32 bytes)
+and VDP registers (16 bytes) from the **actual source-executed**
+M44 `PC=$0C87` checkpoint. Native C11 compares its pattern
+VRAM `$0000–$2FFF` and name-table bytes `$3900–$3EFF`
+against the independent PC-6/PC-7 source exports, failing closed
+on any mismatch. A new optional `--vdp-checkpoint FILE` and
+**F10** diagnostic view renders captured palette/register state
+using the existing SMS video research renderer. It remains
+outside the native PC game loop and does **not** establish a
+playable Ys scene, true camera/collision or original-game Alpha.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
