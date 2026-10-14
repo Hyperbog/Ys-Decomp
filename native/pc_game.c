@@ -20,6 +20,12 @@ bool ys_pc_game_reset_scene(YsPcGame *g,const YsPcSceneContent *s) {
     *g=next;
     return true;
 }
+bool ys_pc_game_reset_named_scene(YsPcGame *g,
+                                  const YsPcContentCatalog *catalog,
+                                  const char *scene_id) {
+    const YsPcSceneContent *s=ys_pc_catalog_find(catalog,scene_id);
+    return ys_pc_game_reset_scene(g,s);
+}
 void ys_pc_game_reset(YsPcGame *g) {
     if(!g) return;
     YsPcSceneContent prototype;
