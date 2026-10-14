@@ -99,6 +99,20 @@ The top four name-table rows, later display-time tile residency
 and active scene remain unverified. The placeholder gameplay
 room is untouched.
 
+## PC-7 source-backed graphics composition
+
+[PC-7 pattern VRAM and name-table diagnostic preview](research/PC7_PATTERN_NAME_PREVIEW.md)
+reconstructs the original M44 four-plane upload into **12,288
+pattern bytes / 384 tiles**, and combines those with the earlier
+M43 **768 name-table cells**. All 768 source name-table references
+are within the 384 verified tiles. `--patterns FILE` together
+with `--nametable FILE` adds an **F9 pixel-index composite**
+with correct horizontal/vertical flips. Grayscale indices are
+*not* original CRAM colors. The M43/M44 uploads are consecutive
+original setup stages but their simultaneously resident display
+state has **not** been verified. No collision, true scene or
+authentic native Ys gameplay is claimed.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
