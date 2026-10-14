@@ -1,5 +1,12 @@
 ## Enhanced native Ys PC port (new track)
 
+**PC-10 mod-forward adoption:** [Ys-specific support profile](native/YS_MODDING_PROFILE.md)
+and [canonical experimental scene-content foundation](native/research/PC10_CANONICAL_CONTENT.md)
+specify a versioned in-memory prototype scene with stable symbolic IDs,
+strict validation and deterministic explicit replacement/addition. The
+original **PC-0 placeholder gameplay is unchanged**; no actual end-user
+mod loader/editor or authentic Ys level is implemented.
+
 The new [PC-0 foundation](native/ENHANCED_PC_PORT.md) and
 [PC-1 source-verified tile gallery](native/research/PC1_BANK3_TILE_GALLERY.md)
 and [PC-2 verified map-object record ledger](native/research/PC2_BANK7_MAP_RECORDS.md)
