@@ -47,6 +47,10 @@ M43 name words through **only those 384 source-proven M44 tiles**.
 For every word with tile index 0–383, it reads the corresponding
 four source bitplanes to recover the exact 4-bit pixel indices,
 applying the original name-word horizontal/vertical flip bits.
+The source-only PC-7 run found that **all 768 name-table
+references resolve** to indices 0–383 in the M44 pattern bank:
+**768 matched; 0 missing**. The fallback path remains a required
+error/diagnostic guard for future differently sourced resources.
 For words referring to tile index 384–511, a separate
 `255` **unresolved sentinel** is emitted. Tests enforce
 that source pattern 0..383 never gets silently replaced by an
