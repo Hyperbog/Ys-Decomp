@@ -8,6 +8,7 @@
 #include "pc_objects.h"
 #include "pc_scenes.h"
 #include "pc_nametable.h"
+#include "pc_patterns.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +30,8 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       const YsPcObjectTypes *types,
                       const YsPcSceneDirectory *scenes,bool show_scenes,
                       unsigned scene_idx,unsigned bank1_idx,
-                      const YsPcNameTable *name_table,bool show_name_table) {
+                      const YsPcNameTable *name_table,bool show_name_table,
+                      SDL_Texture *pattern_preview,bool show_pattern_preview) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -173,6 +175,13 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                     draw_rect(r,px+1,py+1,13,2,241,241,241);
             }
     }
+    if(show_pattern_preview && pattern_preview) {
+        /* Source-derived pattern/name-table composition in index-gray.
+           Tile indices 384..511 are magenta UNRESOLVED. No CRAM palette. */
+        draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,12,17,27);
+        SDL_Rect destination={0,0,WIDTH,YS_PC_MAP_H*TILE};
+        SDL_RenderCopy(r,pattern_preview,NULL,&destination);
+    }
     SDL_RenderPresent(r);
 }
 static unsigned read_buttons(SDL_GameController *pad) {
@@ -207,6 +216,7 @@ int main(int argc,char **argv) {
     const char *object_types_path=NULL;
     const char *scene_path=NULL;
     const char *name_table_path=NULL;
+    const char *pattern_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
         else if(strcmp(argv[i],"--smoke-projection")==0 &&
@@ -223,10 +233,17 @@ int main(int argc,char **argv) {
         else if(strcmp(argv[i],"--nametable")==0 && !name_table_path &&
                 i+1<argc)
             name_table_path=argv[++i];
+        else if(strcmp(argv[i],"--patterns")==0 && !pattern_path &&
+                i+1<argc)
+            pattern_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE]\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE] [--patterns FILE]\n",stderr);
             return EXIT_FAILURE;
         }
+    }
+    if(pattern_path && !name_table_path) {
+        fputs("--patterns requires --nametable FILE\n",stderr);
+        return EXIT_FAILURE;
     }
     if(object_types_path && !record_path) {
         fputs("--object-types requires --records FILE\n",stderr);
@@ -329,13 +346,53 @@ int main(int argc,char **argv) {
             return EXIT_FAILURE;
         }
     }
-    bool show_name_table=have_name_table;
-    bool show_scenes=have_scenes && !show_name_table;
+    SDL_Texture *pattern_preview=NULL;
+    YsPcPatternCoverage coverage={0};
+    if(pattern_path) {
+        FILE *fp=fopen(pattern_path,"rb");
+        YsPcPatterns p;
+        bool valid=fp && ys_pc_patterns_load(fp,&p);
+        if(fp) fclose(fp);
+        if(!valid) {
+            fprintf(stderr,"PC-7 invalid source pattern data: %s\n",pattern_path);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+        uint8_t indices[YS_PC_PREVIEW_W*YS_PC_PREVIEW_H];
+        uint8_t rgb[YS_PC_PREVIEW_W*YS_PC_PREVIEW_H*3];
+        if(!ys_pc_patterns_preview(&p,&name_table,indices,&coverage)) {
+            fputs("PC-7 name-table/pattern composite failed\n",stderr);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+        for(size_t i=0;i<sizeof(indices);++i) {
+            uint8_t shade=(uint8_t)(indices[i]*17u);
+            rgb[3u*i]=indices[i]==255u?255u:shade;
+            rgb[3u*i+1u]=indices[i]==255u?0u:shade;
+            rgb[3u*i+2u]=indices[i]==255u?255u:shade;
+        }
+        pattern_preview=SDL_CreateTexture(r,SDL_PIXELFORMAT_RGB24,
+                          SDL_TEXTUREACCESS_STATIC,
+                          YS_PC_PREVIEW_W,YS_PC_PREVIEW_H);
+        if(!pattern_preview ||
+           SDL_UpdateTexture(pattern_preview,NULL,rgb,YS_PC_PREVIEW_W*3)!=0) {
+            fprintf(stderr,"PC-7 SDL texture: %s\n",SDL_GetError());
+            SDL_DestroyTexture(pattern_preview);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
+    bool show_pattern_preview=pattern_preview!=NULL;
+    bool show_name_table=have_name_table && !show_pattern_preview;
+    bool show_scenes=have_scenes && !show_name_table && !show_pattern_preview;
     unsigned scene_idx=0u, bank1_idx=0u;
-    bool show_records=have_records && !show_scenes && !show_name_table;
+    bool show_records=have_records && !show_scenes && !show_name_table && !show_pattern_preview;
     bool show_projection=smoke_projection;
     unsigned current_group=0u;
-    bool show_atlas=atlas!=NULL && !show_records && !show_scenes && !show_name_table;
+    bool show_atlas=atlas!=NULL && !show_records && !show_scenes && !show_name_table && !show_pattern_preview;
     SDL_GameController *pad=NULL;
     for(int i=0;i<SDL_NumJoysticks();++i)
         if(SDL_IsGameController(i)) {
@@ -358,22 +415,22 @@ int main(int argc,char **argv) {
             if(ev.type==SDL_KEYDOWN && !ev.key.repeat) {
                 if(atlas && ev.key.keysym.sym==SDLK_F2) {
                     show_atlas=!show_atlas;
-                    if(show_atlas) {show_records=false;show_scenes=false;show_name_table=false;}
+                    if(show_atlas) {show_records=false;show_scenes=false;show_name_table=false;show_pattern_preview=false;}
                 }
                 if(have_records && ev.key.keysym.sym==SDLK_F3) {
                     show_records=!show_records;
-                    if(show_records) {show_atlas=false;show_scenes=false;show_name_table=false;}
+                    if(show_records) {show_atlas=false;show_scenes=false;show_name_table=false;show_pattern_preview=false;}
                 }
                 if(have_records && ev.key.keysym.sym==SDLK_F4) {
                     show_records=true;
                     show_atlas=false;
                     show_scenes=false;
-                    show_name_table=false;
+                    show_name_table=false;show_pattern_preview=false;
                     show_projection=!show_projection;
                 }
                 if(have_scenes && ev.key.keysym.sym==SDLK_F5) {
                     show_scenes=!show_scenes;
-                    if(show_scenes) {show_atlas=false;show_records=false;show_name_table=false;}
+                    if(show_scenes) {show_atlas=false;show_records=false;show_name_table=false;show_pattern_preview=false;}
                 }
                 if(have_name_table && ev.key.keysym.sym==SDLK_F8) {
                     show_name_table=!show_name_table;
@@ -381,6 +438,16 @@ int main(int argc,char **argv) {
                         show_atlas=false;
                         show_records=false;
                         show_scenes=false;
+                        show_pattern_preview=false;
+                    }
+                }
+                if(pattern_preview && ev.key.keysym.sym==SDLK_F9) {
+                    show_pattern_preview=!show_pattern_preview;
+                    if(show_pattern_preview) {
+                        show_atlas=false;
+                        show_records=false;
+                        show_scenes=false;
+                        show_name_table=false;
                     }
                 }
                 if(show_scenes && ev.key.keysym.sym==SDLK_F6)
@@ -398,7 +465,7 @@ int main(int argc,char **argv) {
         double elapsed=(double)(now-prior)/freq;
         prior=now;
         accumulator+=elapsed>0.25?0.25:elapsed;
-        unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table)?0u:read_buttons(pad);
+        unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table || show_pattern_preview)?0u:read_buttons(pad);
         /* Gallery is a read-only reference. Do not move hidden actors. */
         for(int i=0;accumulator>=1.0/60.0 && i<16;++i) {
             ys_pc_game_tick(&game,buttons);
@@ -412,7 +479,12 @@ int main(int argc,char **argv) {
         snprintf(title,sizeof(title),
                  "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
                  game.hp,game.foe_hp,mode);
-        if(have_name_table && show_name_table)
+        if(show_pattern_preview && pattern_preview)
+            snprintf(title,sizeof(title),
+                     "M43/M44 SOURCE index-gray | 384 tiles |"
+                     " matched %u, unresolved %u | NO CRAM/map | F9",
+                     coverage.matched_cells,coverage.unresolved_cells);
+        else if(have_name_table && show_name_table)
             snprintf(title,sizeof(title),
                      "Original init VRAM $3900-$3EFF: 768 tile words | "
                      "INDEX gray ONLY, NOT world map | F8");
@@ -447,11 +519,13 @@ int main(int argc,char **argv) {
                   show_projection,
                   have_object_types?&object_types:NULL,
                   have_scenes?&scenes:NULL,show_scenes,scene_idx,bank1_idx,
-                  have_name_table?&name_table:NULL,show_name_table);
+                  have_name_table?&name_table:NULL,show_name_table,
+                  pattern_preview,show_pattern_preview);
         if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
     if(pad) SDL_GameControllerClose(pad);
+    SDL_DestroyTexture(pattern_preview);
     SDL_DestroyTexture(atlas);
     SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
     return EXIT_SUCCESS;
