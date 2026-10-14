@@ -28,6 +28,16 @@ game, a recovered scene, complete game or an Alpha build.
 Audio and save/load are not implemented. No commercial ROM or assets are
 shipped or loaded. The five Alpha evidence gates stay false.
 
+## PC-1 source graphics milestone
+
+A new [bank-3 graphics research and runtime gallery](research/PC1_BANK3_TILE_GALLERY.md)
+uses **176 original Mode-4 tiles** exported from the previously
+source-verified physical ROM bank 3. The SDL2 game can display their
+16×11 grayscale-index preview via `--tiles FILE`, switching between
+gallery and placeholder gameplay with **F2**. The original palette,
+tilemap arrangement and intended sprite usage are **not** established.
+This does not yet turn the placeholder room into an authentic Ys map.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
