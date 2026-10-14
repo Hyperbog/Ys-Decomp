@@ -2,6 +2,8 @@
 
 Applies to all game architectures. Project-specific build and license rules take precedence where stricter.
 
+**Universal mod-forward methodology:** Before implementing or altering native gameplay, asset imports, audio, graphics, menus, settings, saves or future editors, follow [MOD_FORWARD_METHODOLOGY.md](MOD_FORWARD_METHODOLOGY.md). This shared DOS/NES/SNES/SMS/Genesis engineering standard requires replaceable data, stable IDs, deterministic mods and editor-compatible interfaces where appropriate, while preserving the original game's behavior as the unmodified baseline. It does not loosen the source/evidence and security rules below or imply that Ys already has a functioning mod SDK.
+
 1. **Establish source of truth.** Before work, record original binary SHA-256, format, compiler/assembler version if known, bank/section/overlay address space, and Git baseline. Never silently change an original image or its target assembly.
 2. **Work on whole subsystems.** Prioritize full banks, complete executable game subsystems and boot-to-play validation. An isolated handful of bytes is not a project milestone. Plan code, data, callers, side effects and build coverage together.
 3. **Protect target/evaluator within matching iterations.** Lock golden assembly, expected outputs, build scripts and toolchain settings. Changes to these require a *separate reviewed infrastructure task*, not a way to make a candidate pass. Never game the comparison with inline opaque assembly for a high-level matching task. Native 6502/Z80 reconstruction in assembly is legitimate.
