@@ -113,6 +113,13 @@ ctest --test-dir build-native --output-on-failure
 
 The source package is not checked into Git; generate it locally.
 
+## PC-8 follow-up
+
+[PC-8](PC8_SIMULTANEOUS_VDP.md) tests an actual simultaneous
+M44-source VDP checkpoint against these two separately
+recovered resource packages, including the 32 CRAM colors and
+16 VDP registers. **PC-7 by itself is only a resource composite.**
+
 ## Genuine game-content blockers
 
 To call this an authentic *rendered original scene*, first verify
