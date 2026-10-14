@@ -11,6 +11,7 @@ and [PC-8 single-checkpoint original VDP/CRAM register capture](research/PC8_SIM
 and [PC-9 verified source bank-4 object collision predicate](research/PC9_SOURCE_COLLISION.md),
 [PC-10 canonical prototype scene contract](research/PC10_CANONICAL_CONTENT.md)
 and [Ys modding support profile](YS_MODDING_PROFILE.md)
+and [PC-11 conditional original bank-1 collision-call routes](research/PC11_BANK1_COLLISION_ROUTES.md)
 and [PC-3 source object-work projection](research/PC3_OBJECT_WORK_PROJECTION.md) describe
 the new SDL2 `ys-native-game` placeholder-room prototype, native
 fixed-tick gameplay core and tests. It does not execute the original ROM.
