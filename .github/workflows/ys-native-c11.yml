@@ -39,6 +39,14 @@ jobs:
         run: |
           test -x ./build-native/ys-native-game
           ./build-native/ys-native-game --smoke
+          python3 native/tools/export_pc_tiles.py --out "$RUNNER_TEMP/ys-pc-source-tiles.bin"
+          python3 native/tools/export_pc_tiles.py --verify "$RUNNER_TEMP/ys-pc-source-tiles.bin"
+          ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin"
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid.bin"
+          if ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-invalid.bin"; then
+            echo "Invalid tile source was accepted" >&2
+            exit 1
+          fi
       - name: Verify cartridge startup only when explicitly requested
         if: ${{ (github.event_name == 'workflow_dispatch' && inputs.rom_trace) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[rom-check]')) }}
         run: |
