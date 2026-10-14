@@ -1,8 +1,9 @@
 #ifndef YS_PC_GAME_H
 #define YS_PC_GAME_H
 #include <stdint.h>
+#include <stdbool.h>
+#include "pc_content.h"
 
-enum { YS_PC_MAP_W=16, YS_PC_MAP_H=12 };
 enum {
     YS_PC_UP=1u, YS_PC_DOWN=2u, YS_PC_LEFT=4u, YS_PC_RIGHT=8u,
     YS_PC_START=16u
@@ -14,11 +15,19 @@ typedef struct {
     YsPcStage stage;
     int x, y, foe_x, foe_y, hp, foe_hp, defeats;
     unsigned frame, move_delay;
+    /* Owned validated scene snapshot: deterministic restart and no
+       dangling registry pointers. Still only a PLACEHOLDER test room. */
+    YsPcSceneContent scene;
 } YsPcGame;
 
-/* Engine-only prototype. All map/content and art are placeholders. */
-char ys_pc_tile(int x, int y);
+/* PC-0 API continues to use the identical original placeholder room. */
+char ys_pc_tile(int x,int y);
 void ys_pc_game_reset(YsPcGame *game);
-void ys_pc_game_tick(YsPcGame *game, unsigned buttons);
+void ys_pc_game_tick(YsPcGame *game,unsigned buttons);
 
+/* PC-10 experimental engine content seam, not an original Ys game map
+   or shipping data-only mod-loader contract. Invalid input leaves the
+   gameplay state unchanged. */
+bool ys_pc_game_reset_scene(YsPcGame *game,const YsPcSceneContent *scene);
+char ys_pc_game_tile(const YsPcGame *game,int x,int y);
 #endif
