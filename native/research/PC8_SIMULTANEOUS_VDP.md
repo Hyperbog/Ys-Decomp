@@ -56,6 +56,28 @@ writes could, in principle, mutate VRAM between adjacent source
 uploads. A mismatch must fail PC-8 rather than drawing a
 fabricated combination.
 
+## Verified source-runtime findings (M44 original trace)
+
+The real source-only cartridge trace, captured at `PC=$0C87`,
+recorded **50 natural IRQs and 54 VBlank events** without
+manipulating the interpreter's execution state. The native
+source-identity probe compared the snapshot against PC-6/PC-7 and
+passed both checks:
+
+- Original M44 pattern VRAM `$0000–$2FFF` **12,288/12,288 match**
+- Original M43 name-table VRAM `$3900–$3EFF`
+  **1,536/1,536 match**
+- VDP register `R0=$26`, `R1=$A0`: **display disabled**
+- All **32 captured CRAM bytes are `$00`**, not a
+  populated original-color game palette
+
+The bounded M44 snapshot therefore proves simultaneous source
+VRAM residency, **not** a visible original Ys title/scene. The
+existing SMS video renderer obeys display-enable state, so its
+checkpoint PPM legitimately shows a blank/solid background.
+No game scene or color scheme can responsibly be inferred from
+this point.
+
 ## Native inspection, not a shipping game-runtime dependency
 
 - `native/pc_vdp_checkpoint.{h,c}`: format, writer, strict
