@@ -57,6 +57,16 @@ jobs:
           ./build-native/ys-native-game --smoke --records "$RUNNER_TEMP/ys-pc-source-records.bin"
           ./build-native/ys-native-game --smoke --smoke-projection --records "$RUNNER_TEMP/ys-pc-source-records.bin"
           ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          python3 native/tools/export_pc_scenes.py --out "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          python3 native/tools/export_pc_scenes.py --verify "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          ./build-native/ys-pc-scenes-tests "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          ./build-native/ys-native-game --smoke --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          ./build-native/ys-native-game --smoke --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin" --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid-scenes.bin"
+          if ./build-native/ys-native-game --smoke --scenes "$RUNNER_TEMP/ys-pc-invalid-scenes.bin"; then
+            echo "Invalid source scene directory was accepted" >&2
+            exit 1
+          fi
           printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid-records.bin"
           if ./build-native/ys-native-game --smoke --records "$RUNNER_TEMP/ys-pc-invalid-records.bin"; then
             echo "Invalid bank7 source record file was accepted" >&2
