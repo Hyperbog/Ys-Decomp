@@ -71,7 +71,10 @@ name-table, camera offset or collision layers are recovered here.
 The original initializer also calls `$1B9B`, performing additional
 conditional object initialization with the second record byte
 (`record[1]`) in A at the `CALL $1B9B` site. The first byte
-(`record[0]`) controls the zero-terminator test and other stored fields. **Those writes are not modeled here**. A native object with
+(`record[0]`) controls the zero-terminator test and other stored fields. **Those writes are separately modeled in
+[PC-4](PC4_OBJECT_TYPE_INITIALIZER.md), using the verified original
+bank-0 ten-byte parameter table.** The PC-3 baseline API still
+projects only the original 11 known work bytes. A native object with
 partially known work fields is not yet a valid in-world NPC/enemy
 instance.
 
