@@ -4,6 +4,17 @@
 
 **Source-byte and boundary verified; map semantics NOT verified.**
 
+The fixed-bank consumer at `$1B3C-$1B60` selects mapper bank 7,
+reads source WRAM `$C181`, masks its low seven bits, rejects
+indices `>= $16`, indexes `$BA3B` via `RST $18`, and reads
+the first record byte until a zero sentinel. It stores record bytes
+into an `IX=$C230`-rooted object work area. This is **ROM-source
+control-flow evidence**, not an emulator-observed map scene.
+
+The PC-2 exporter verifies the exact 37 source opcode bytes from
+independently reconstructed bank 0 and confirms that the first
+byte of each of the 209 nonterminator records is nonzero.
+
 The original Ys SMS fixed-bank source and bank-7 source builder establish a
 22-entry pointer directory at CPU `$BA3B-$BA66`. Each pointer
 indexes a compact group of 4-byte records at `$BA67-$BDBE`.
