@@ -70,6 +70,18 @@ jobs:
           python3 native/tools/export_pc_patterns.py --verify "$RUNNER_TEMP/ys-pc-init-patterns.bin"
           ./build-native/ys-pc-patterns-tests "$RUNNER_TEMP/ys-pc-init-patterns.bin" "$RUNNER_TEMP/ys-pc-init-nt.bin"
           ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-init-patterns.bin"
+          # PC-8: preserve M46/Z80 decomp as REFERENCE tooling only.
+          # Build source-only original cartridge locally; no ROM is shipped.
+          python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-pc8-source.sms"
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --vdp-at-m44 "$RUNNER_TEMP/ys-pc8-m44.vdp"
+          ./build-native/ys-pc-vdp-probe "$RUNNER_TEMP/ys-pc8-m44.vdp" "$RUNNER_TEMP/ys-pc-init-patterns.bin" "$RUNNER_TEMP/ys-pc-init-nt.bin" "$RUNNER_TEMP/ys-pc8-m44.ppm"
+          python3 -c 'import pathlib,os; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc8-m44.ppm"; b=p.read_bytes(); assert b.startswith(b"P6\\n256 192\\n255\\n") and len(b)==147471, (p,len(b)); print("PASS PC-8 source M44 RGB framebuffer:",len(b),"bytes")'
+          ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-init-patterns.bin" --vdp-checkpoint "$RUNNER_TEMP/ys-pc8-m44.vdp"
+          printf 'bad' > "$RUNNER_TEMP/ys-pc8-bad.vdp"
+          if ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-init-patterns.bin" --vdp-checkpoint "$RUNNER_TEMP/ys-pc8-bad.vdp"; then
+            echo "PC-8 corrupt snapshot accepted" >&2
+            exit 1
+          fi
           printf 'broken' > "$RUNNER_TEMP/ys-pc-bad-init-patterns.bin"
           if ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-bad-init-patterns.bin"; then
             echo "Corrupt source pattern asset was accepted" >&2
