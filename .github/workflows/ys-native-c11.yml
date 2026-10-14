@@ -24,12 +24,21 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Install SDL2 development library for native PC build
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libsdl2-dev
       - name: Configure strict C11 runtime
         run: cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Debug
       - name: Compile SMS bus, VDP, sound and bounded Z80
         run: cmake --build build-native --parallel
       - name: Test SMS bus, VDP, sound and Z80
         run: ctest --test-dir build-native --output-on-failure
+      - name: Smoke-test native PC game window and frame loop
+        env:
+          SDL_VIDEODRIVER: dummy
+          SDL_RENDER_DRIVER: software
+        run: |
+          test -x ./build-native/ys-native-game
+          ./build-native/ys-native-game --smoke
       - name: Verify cartridge startup only when explicitly requested
         if: ${{ (github.event_name == 'workflow_dispatch' && inputs.rom_trace) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[rom-check]')) }}
         run: |
