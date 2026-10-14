@@ -160,6 +160,23 @@ mod format, mod loader, editor, original playable Ys scene
 or original-game parity claim in PC-10. Source bank addresses
 remain private importer/provenance details rather than public IDs.
 
+## PC-11 original bank-1 collision route and mapper evidence
+
+[PC-11 source collision-call path](research/PC11_BANK1_COLLISION_ROUTES.md)
+identifies the original **`$4773: LD ($FFFF),A` with `A=4`**
+on the bank-1 `$476C` entry path, the source table at bank-4
+`$8000`, and **three `CALL $807C` sites** using original
+`IX+14`, `IX+14` and `IX+13`. A new native call-route
+adapter independently constructs the source B/C/D/E byte bounds
+from explicit WRAM context, then calls the verified PC-9
+predicate. The adapter fails closed on wrong mapper or unverified
+record indices.
+
+**This is a conditional source control-flow result, not an actual
+playable-area execution trace.** There is still no proven live
+player/world geometry, authentic area, or scene-to-collision
+relationship; PC-10's experimental placeholder room is unchanged.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
