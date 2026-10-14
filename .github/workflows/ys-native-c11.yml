@@ -66,6 +66,19 @@ jobs:
           python3 native/tools/export_pc_nametable.py --verify "$RUNNER_TEMP/ys-pc-init-nt.bin"
           ./build-native/ys-pc-nametable-tests "$RUNNER_TEMP/ys-pc-init-nt.bin"
           ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          python3 native/tools/export_pc_patterns.py --out "$RUNNER_TEMP/ys-pc-init-patterns.bin"
+          python3 native/tools/export_pc_patterns.py --verify "$RUNNER_TEMP/ys-pc-init-patterns.bin"
+          ./build-native/ys-pc-patterns-tests "$RUNNER_TEMP/ys-pc-init-patterns.bin" "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-init-patterns.bin"
+          printf 'broken' > "$RUNNER_TEMP/ys-pc-bad-init-patterns.bin"
+          if ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-bad-init-patterns.bin"; then
+            echo "Corrupt source pattern asset was accepted" >&2
+            exit 1
+          fi
+          if ./build-native/ys-native-game --smoke --patterns "$RUNNER_TEMP/ys-pc-init-patterns.bin"; then
+            echo "Pattern renderer accepted missing name-table provenance" >&2
+            exit 1
+          fi
           ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
           printf 'broken' > "$RUNNER_TEMP/ys-pc-bad-init-nt.bin"
           if ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-bad-init-nt.bin"; then
