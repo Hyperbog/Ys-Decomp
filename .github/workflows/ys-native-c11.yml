@@ -42,6 +42,15 @@ jobs:
           python3 native/tools/export_pc_tiles.py --out "$RUNNER_TEMP/ys-pc-source-tiles.bin"
           python3 native/tools/export_pc_tiles.py --verify "$RUNNER_TEMP/ys-pc-source-tiles.bin"
           ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin"
+          python3 native/tools/export_pc_records.py --out "$RUNNER_TEMP/ys-pc-source-records.bin"
+          python3 native/tools/export_pc_records.py --verify "$RUNNER_TEMP/ys-pc-source-records.bin"
+          ./build-native/ys-native-game --smoke --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid-records.bin"
+          if ./build-native/ys-native-game --smoke --records "$RUNNER_TEMP/ys-pc-invalid-records.bin"; then
+            echo "Invalid bank7 source record file was accepted" >&2
+            exit 1
+          fi
           printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid.bin"
           if ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-invalid.bin"; then
             echo "Invalid tile source was accepted" >&2
