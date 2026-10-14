@@ -23,7 +23,8 @@ static void draw_rect(SDL_Renderer *r,int x,int y,int w,int h,
 static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       SDL_Texture *atlas,bool show_atlas,
                       const YsPcRecords *records,bool show_records,
-                      unsigned group,bool show_projection) {
+                      unsigned group,bool show_projection,
+                      const YsPcObjectTypes *types) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -83,7 +84,8 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
             /* Two scaled object work fields, NOT a recovered world map.
                Both axes are normalized diagnostic register values. */
             YsPcObjectProjection projection;
-            if(ys_pc_project_objects(records,group,&projection)) {
+            if(types ? ys_pc_project_objects_typed(records,group,types,&projection)
+                     : ys_pc_project_objects(records,group,&projection)) {
                 for(unsigned k=0;k<=4u;++k) {
                     int gx=8+(int)k*(WIDTH-16)/4;
                     int gy=12+(int)k*(YS_PC_MAP_H*TILE-24)/4;
@@ -97,7 +99,10 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                     int py=12+(int)((unsigned)slot->value_b*
                                     (YS_PC_MAP_H*TILE-30u)/2048u);
                     draw_rect(r,px-3,py-3,9,9,40,46,66);
-                    draw_rect(r,px-1,py-1,5,5,205,172,106);
+                    if(types && (slot->source[1]&0x80u))
+                        draw_rect(r,px-1,py-1,5,5,104,204,173);
+                    else
+                        draw_rect(r,px-1,py-1,5,5,205,172,106);
                 }
             }
         } else {
@@ -157,6 +162,7 @@ int main(int argc,char **argv) {
     bool smoke_projection=false;
     const char *tile_path=NULL;
     const char *record_path=NULL;
+    const char *object_types_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
         else if(strcmp(argv[i],"--smoke-projection")==0 &&
@@ -165,10 +171,17 @@ int main(int argc,char **argv) {
             tile_path=argv[++i];
         else if(strcmp(argv[i],"--records")==0 && !record_path && i+1<argc)
             record_path=argv[++i];
+        else if(strcmp(argv[i],"--object-types")==0 && !object_types_path &&
+                i+1<argc)
+            object_types_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE]\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE]\n",stderr);
             return EXIT_FAILURE;
         }
+    }
+    if(object_types_path && !record_path) {
+        fputs("--object-types requires --records FILE\n",stderr);
+        return EXIT_FAILURE;
     }
     if(smoke_projection && (!smoke || !record_path)) {
         fputs("--smoke-projection requires --smoke and --records FILE\n",stderr);
@@ -221,6 +234,20 @@ int main(int argc,char **argv) {
         if(!have_records) {
             fprintf(stderr,"PC-2 invalid derived source record data: %s\n",
                     record_path);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
+    YsPcObjectTypes object_types;
+    bool have_object_types=false;
+    if(object_types_path) {
+        FILE *fp=fopen(object_types_path,"rb");
+        have_object_types=fp && ys_pc_object_types_load(fp,&object_types);
+        if(fp) fclose(fp);
+        if(!have_object_types) {
+            fprintf(stderr,"PC-4 invalid source object type table: %s\n",
+                    object_types_path);
             SDL_DestroyTexture(atlas);
             SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
             return EXIT_FAILURE;
@@ -302,10 +329,16 @@ int main(int argc,char **argv) {
         else if(atlas)
             snprintf(title,sizeof(title),
                      "Ys PC placeholder room | F2: authentic bank-3 tile gallery");
+        if(show_records && have_object_types) {
+            size_t length=strlen(title);
+            if(length+13u<sizeof(title))
+                strcat(title," | PC4 types");
+        }
         SDL_SetWindowTitle(w,title);
         draw_game(r,&game,atlas,show_atlas,
                   have_records?&source_records:NULL,show_records,current_group,
-                  show_projection);
+                  show_projection,
+                  have_object_types?&object_types:NULL);
         if(smoke && game.frame>=12u) running=false;
         SDL_Delay(1);
     }
