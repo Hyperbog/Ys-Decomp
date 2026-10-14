@@ -1,6 +1,8 @@
 ## Enhanced native Ys PC port (new track)
 
-The new [PC-0 foundation](native/ENHANCED_PC_PORT.md) introduces
+The new [PC-0 foundation](native/ENHANCED_PC_PORT.md) and
+[PC-1 source-verified tile gallery](native/research/PC1_BANK3_TILE_GALLERY.md)
+introduce
 an independent C11 game-state core and SDL2-native `ys-native-game`
 prototype with keyboard/controller input. Its room, art and combat values
 are **placeholders**, not verified content from Ys. Z80 execution and
