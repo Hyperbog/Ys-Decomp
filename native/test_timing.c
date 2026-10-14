@@ -954,7 +954,25 @@ static void test_m46c_sub_immediate_and_ret_sign(void) {
     assert(cpu.a==0u && cpu.f==(Z80_F_Z|Z80_F_N));
     measured(5u,3u); /* RET M not taken after a zero result */
 }
+
+/* M46c bank-2 $8191: four 4T RRA instructions reduce the high nibble.
+   Also verify carry enters bit 7 and S/Z/PV remain unchanged. */
+static void test_m46c_rra_carry_and_flags(void) {
+    setup();
+    CODE(0,0x1F,0x1F,0x1F,0x1F);
+    cpu.a=0xA0u;cpu.f=(uint8_t)(Z80_F_Z|Z80_F_PV|Z80_F_H|Z80_F_N);
+    measured(4u,1u);measured(4u,2u);
+    measured(4u,3u);measured(4u,4u);
+    assert(cpu.a==0x0Au && cpu.f==(Z80_F_Z|Z80_F_PV|Z80_F_3));
+    assert(cpu.total_tstates==16u);
+    setup();
+    CODE(0,0x1F);
+    cpu.a=0x01u;cpu.f=(uint8_t)(Z80_F_C|Z80_F_S|Z80_F_H|Z80_F_N);
+    measured(4u,1u);
+    assert(cpu.a==0x80u && cpu.f==(Z80_F_S|Z80_F_C));
+}
 int main(void) {
+    test_m46c_rra_carry_and_flags();
     test_m46c_sub_immediate_and_ret_sign();
     test_m46c_source_wait_bridge_entry();
     test_m46b_cb_set_register_and_memory();
