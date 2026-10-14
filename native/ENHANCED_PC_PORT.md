@@ -86,6 +86,19 @@ rendered location or a scene-to-object mapping. The actual
 background name table, loaded palette, actor names, and authentic
 opening scene are still unknown; the gameplay room is unchanged.
 
+## PC-6 authentic initial name-table words (not a game map)
+
+[PC-6 original VRAM name-table reconstruction](research/PC6_INITIAL_NAMETABLE.md)
+adds a source-only bank-5 → intermediate WRAM → staged WRAM
+decoder for the **1,536 authentic bytes** uploaded by original
+Z80 helper `$06C1` to VRAM `$3900–$3EFF` during initialization.
+The native `--nametable FILE` and F8 diagnostic view inspect
+**768 name-table entries (32×24)** with tile indexes/attribute
+bits, **not** actual original tile graphics or CRAM colors.
+The top four name-table rows, later display-time tile residency
+and active scene remain unverified. The placeholder gameplay
+room is untouched.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
