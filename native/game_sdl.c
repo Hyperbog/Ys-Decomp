@@ -175,7 +175,8 @@ int main(int argc,char **argv) {
         double elapsed=(double)(now-prior)/freq;
         prior=now;
         accumulator+=elapsed>0.25?0.25:elapsed;
-        unsigned buttons=read_buttons(pad);
+        unsigned buttons=show_atlas?0u:read_buttons(pad);
+        /* Gallery is a read-only reference. Do not move hidden actors. */
         for(int i=0;accumulator>=1.0/60.0 && i<16;++i) {
             ys_pc_game_tick(&game,buttons);
             accumulator-=1.0/60.0;
