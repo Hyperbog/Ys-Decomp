@@ -48,7 +48,8 @@ bool ys_pc_source_watch_write(FILE *file,const YsPcSourceWatch *watch,
        !reason || (strcmp(reason,"budget")!=0 &&
                    strcmp(reason,"unsupported")!=0 &&
                    strcmp(reason,"halted")!=0 &&
-                   strcmp(reason,"vblank_limit")!=0)) return false;
+                   strcmp(reason,"vblank_limit")!=0 &&
+                   strcmp(reason,"observed")!=0)) return false;
     const YsZ80 *cpu=rt->cpu;
     if(fprintf(file,
        "{\n  \"schema\": \"ys-pc12-source-watch-v1\",\n"
