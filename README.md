@@ -7,6 +7,7 @@ and [PC-4 conditional original object initializer](native/research/PC4_OBJECT_TY
 and [PC-5 verified scene routing](native/research/PC5_SCENE_SELECTORS.md)
 and [PC-6 original name-table initialization data](native/research/PC6_INITIAL_NAMETABLE.md)
 and [PC-7 source-backed graphic composition](native/research/PC7_PATTERN_NAME_PREVIEW.md)
+and [PC-8 actual simultaneous VDP checkpoint](native/research/PC8_SIMULTANEOUS_VDP.md)
 plus [PC-3 source work-field projection](native/research/PC3_OBJECT_WORK_PROJECTION.md)
 introduce
 an independent C11 game-state core and SDL2-native `ys-native-game`
