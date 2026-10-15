@@ -324,12 +324,59 @@ static void test_pc15_sound_rra_nibble(void) {
     assert(cpu.a==0xC0u && !(cpu.f&Z80_F_C) &&
            (cpu.f&Z80_F_Z) && (cpu.f&Z80_F_PV));
 }
+
+/* PC-16: original physical bank-2 $8307: EB (EX DE,HL).
+   Both pairs exchange atomically, with no flags/memory/mapper effects. */
+static void test_pc16_sound_ex_de_hl(void) {
+    setup();
+    LOAD(0,0xEB,0xEB,0x76);
+    cpu.a=0x9Cu; cpu.f=0xFFu;
+    cpu.b=0x36u; cpu.c=0x47u;
+    cpu.d=0xA5u; cpu.e=0x5Au; /* DE=A55A */
+    cpu.h=0x12u; cpu.l=0x34u; /* HL=1234 */
+    cpu.d_alt=0x01u; cpu.e_alt=0x02u;
+    cpu.h_alt=0x03u; cpu.l_alt=0x04u;
+    cpu.sp=0xC800u; cpu.ix=0xBEEFu; cpu.iy=0x00F1u;
+    cpu.iff1=true; cpu.iff2=false;
+    assert(ys_sms_bus_write(&bus,0xC200u,0x75u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.d==0x12u && cpu.e==0x34u);
+    assert(cpu.h==0xA5u && cpu.l==0x5Au);
+    assert(cpu.pc==1u && cpu.steps==1u &&
+           cpu.last_tstates==4u && cpu.total_tstates==4u);
+    assert(cpu.a==0x9Cu && cpu.f==0xFFu &&
+           cpu.b==0x36u && cpu.c==0x47u);
+    assert(cpu.d_alt==1u && cpu.e_alt==2u &&
+           cpu.h_alt==3u && cpu.l_alt==4u);
+    assert(cpu.sp==0xC800u && cpu.ix==0xBEEFu &&
+           cpu.iy==0x00F1u && cpu.iff1 && !cpu.iff2);
+    assert(ys_sms_bus_read(&bus,0xC200u)==0x75u);
+    assert(bus.mapped_bank[1]==1u && bus.mapped_bank[2]==2u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.d==0xA5u && cpu.e==0x5Au &&
+           cpu.h==0x12u && cpu.l==0x34u);
+    assert(cpu.pc==2u && cpu.steps==2u &&
+           cpu.last_tstates==4u && cpu.total_tstates==8u &&
+           cpu.f==0xFFu);
+    setup();
+    LOAD(0,0xEB);
+    cpu.d=0xFFu; cpu.e=0xFFu;
+    cpu.h=0u; cpu.l=0u;
+    cpu.f=Z80_F_C|Z80_F_Z;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.d==0u && cpu.e==0u &&
+           cpu.h==0xFFu && cpu.l==0xFFu &&
+           cpu.f==(Z80_F_C|Z80_F_Z) &&
+           cpu.last_tstates==4u);
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
     test_pc12_source_set_bits();
     test_pc15_sound_sub_immediate();
     test_pc15_sound_rra_nibble();
+    test_pc16_sound_ex_de_hl();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();

@@ -96,6 +96,9 @@ jobs:
           # PC-8: preserve M46/Z80 decomp as REFERENCE tooling only.
           # Build source-only original cartridge locally; no ROM is shipped.
           python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-16: independently match physical bank-2 $8307 EX DE,HL
+          # against the source-only full-cartridge build and Phase4 listing.
+          python3 native/tools/verify_pc16_sound_exchange.py "$RUNNER_TEMP/ys-pc8-source.sms"
           # PC-9: validate authentic bank4 $807C collision predicate,
           # three bank1 candidate callers, and 3968 original Z80 cases.
           python3 native/tools/export_pc_collision.py --out "$RUNNER_TEMP/ys-pc9-collision.bin"

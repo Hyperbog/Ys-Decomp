@@ -171,7 +171,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     if ((opcode&0xC7u)==0xC2u) return 10u; /* JP cc */
     switch(opcode) {
     case 0x00: case 0x07: case 0x08: case 0x0F: case 0x1F:
-    case 0x2F: case 0xD9:
+    case 0x2F: case 0xD9: case 0xEB: /* EX DE,HL */
     case 0xF3: case 0xFB: return 4u;
     case 0xCB: return (sub&7u)==6u ?
         ((sub&0xC0u)==0x40u ? 12u : 15u) : 8u; /* BIT/RES b,r */
@@ -345,6 +345,10 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         exchange(&cpu->a,&cpu->a_alt);
         exchange(&cpu->f,&cpu->f_alt);
         break; /* EX AF,AF' */
+    case 0xEB: /* EX DE,HL: original physical bank 2 $8307. */
+        exchange(&cpu->d,&cpu->h);
+        exchange(&cpu->e,&cpu->l);
+        break; /* 4 T-states; AF, flags, stack and memory untouched. */
     case 0xD9:
         exchange(&cpu->b,&cpu->b_alt); exchange(&cpu->c,&cpu->c_alt);
         exchange(&cpu->d,&cpu->d_alt); exchange(&cpu->e,&cpu->e_alt);
