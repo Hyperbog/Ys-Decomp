@@ -58,7 +58,7 @@ def check():
         if match: rows[int(match[1],16)]=bytes.fromhex(match[2])
     for pc,hexval in fixed.items():
         if pc in rows: assert rows[pc]==bytes.fromhex(hexval),hex(pc)
-    assert all(pc in rows for pc in range(0x26F3,0x270Cu) if pc in fixed)
+    assert all(pc in rows for pc in range(0x26F3,0x270C) if pc in fixed)
     print("PASS PC-15: original $26DA C199 selector bitfields,",
           "separate $275C FF assignment; mapper+producer setup",
           "bank6 $9932 C199 record selector, C210/C211 Y/X origins;",
