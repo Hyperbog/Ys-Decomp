@@ -1,5 +1,13 @@
 ## Enhanced native Ys PC port (new track)
 
+**PC-13 Alpha-path rehearsal:** [Two-room native prototype campaign](native/research/PC13_CAMPAIGN_VERTICAL_SLICE.md)
+is an opt-in source-free progression loop with linked
+canonical scene IDs, full button-input replay tests and
+persistent player HP/defeat count. It is **not** a recovered
+Ys level, a genuine original encounter or a release Alpha.
+Run `ys-native-game --prototype-campaign` to try the
+two-room prototype; the default one-room placeholder is unchanged.
+
 **PC-12 original CPU research:** [Bounded post-M45 collision-call watch](native/research/PC12_RUNTIME_COLLISION_WATCH.md)
 is an opt-in, read-only attempt to observe the actual source
 mapper and IX inputs at original bank-1 collision PCs.
