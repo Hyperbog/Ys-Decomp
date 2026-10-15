@@ -143,8 +143,18 @@ the missing `SUB n` operation (all Z80
 S/Z/H/PV/N/C flags, 7 T-states), with
 `native/test_z80.c` tests for negative/zero,
 signed overflow, positive/negative conditional
-return and timing. This is **reference execution
-tooling**, not the native PC gameplay runtime.
+return and timing. The next observed bounded
+stop was at original bank2 `$8191` after
+**5,625** post-M45 instructions, where source
+Phase4 confirms four consecutive `RRA`
+instructions at `$8191–$8194`. The
+reference CPU now also implements Z80
+`RRA` (4 T-states, rotate through carry,
+unchanged S/Z/PV, clear H/N, source result
+F3/F5), with independent nibble-rotation
+and carry-sensitive tests. This is
+**reference execution tooling**, not the native
+PC gameplay runtime.
 
 ## Verify
 
