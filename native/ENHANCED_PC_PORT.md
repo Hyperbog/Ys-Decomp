@@ -207,6 +207,22 @@ NOT authentic Ys content or an Alpha promotion**; no
 original scene/tiles, actor AI or gameplay transition is
 claimed. The five Alpha gates stay false.
 
+## PC-14 authentic original sprite SAT source (no player identity)
+
+[PC-14 bank-6 sprite SAT reconstruction](research/PC14_ORIGINAL_SPRITE_SAT.md)
+adds **64 original indexed sprite records** and the **source-verified
+$9932 to $DD00/$DD40 to $3F00/$3F80** attribute-table producer
+to native C11. A strict source-only exporter validates all
+192 original-Z80 SAT outputs (three synthetic coordinate origins
+per record); CI independently compares the complete 36,864-byte
+C11 corpus against the frozen original-instruction SHA-256.
+
+`ys-native-game --sprite-records FILE` opens an **F12**
+read-only numeric sprite-placement inspector with PageUp/PageDown.
+It uses synthetic origins, **not** actual original Ys player/NPC
+art, sprite palettes or verified scene positions. The prototype
+campaign and all five real-game Alpha gates remain unchanged.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
