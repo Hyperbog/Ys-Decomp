@@ -45,6 +45,7 @@ target_include_directories(ys_pc_collision_routes PUBLIC "${CMAKE_CURRENT_SOURCE
 target_link_libraries(ys_pc_collision_routes PUBLIC ys_pc_collision)
 add_library(ys_pc_sprite_selector STATIC pc_sprite_selector.c)
 target_include_directories(ys_pc_sprite_selector PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(ys_pc_sprite_selector PUBLIC ys_pc_sprite_sat)
 add_library(ys_pc_sprite_sat STATIC pc_sprite_sat.c)
 target_include_directories(ys_pc_sprite_sat PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 add_library(ys_pc_collision STATIC pc_collision.c)
