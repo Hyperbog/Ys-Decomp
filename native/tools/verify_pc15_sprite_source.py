@@ -39,7 +39,7 @@ def check():
     listing=(ROOT/"Ys/phase6/code.lst").read_text()
     rows={}
     for line in listing.splitlines():
-        match=re.match(r"^[0-9A-F]{5} ([0-9A-F]{4})\\s+((?:[0-9A-F]{2}\\s+)+)",line)
+        match=re.match(r"^[0-9A-F]{5} ([0-9A-F]{4})\s+((?:[0-9A-F]{2}\s+)+)",line)
         if match: rows[int(match[1],16)]=bytes.fromhex(match[2])
     for pc,hexval in fixed.items():
         if pc in rows: assert rows[pc]==bytes.fromhex(hexval),hex(pc)
