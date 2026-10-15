@@ -686,6 +686,77 @@ static void test_pc19_indexed_load_boundaries(void) {
            cpu.last_tstates==19u);
 }
 
+
+/* PC-20: original bank2 $85D3 DD 86 05, indexed ADD A,(IX+5).
+   Genuine opcode, controlled register/WRAM inputs; not source-runtime state. */
+static void test_pc20_indexed_add_sound_event(void) {
+    setup();
+    LOAD(0,0xDD,0x86,0x05,0x21,0x58,0x8A,0x08);
+    cpu.ix=0xC100u;
+    cpu.a=0x7Fu;
+    cpu.f=0xFFu;
+    cpu.d=0xB6u;cpu.e=0x54u;cpu.sp=0xC700u;
+    assert(ys_sms_bus_write(&bus,0xC105u,0x01u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x80u &&
+           cpu.f==(Z80_F_S|Z80_F_H|Z80_F_PV) &&
+           cpu.ix==0xC100u && cpu.d==0xB6u && cpu.e==0x54u &&
+           cpu.pc==3u && cpu.sp==0xC700u &&
+           cpu.last_tstates==19u && cpu.total_tstates==19u &&
+           cpu.steps==1u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.h==0x8Au && cpu.l==0x58u &&
+           cpu.pc==6u && cpu.last_tstates==10u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a_alt==0x80u &&
+           cpu.f_alt==(Z80_F_S|Z80_F_H|Z80_F_PV) &&
+           cpu.pc==7u && cpu.last_tstates==4u &&
+           cpu.total_tstates==33u);
+}
+
+static void test_pc20_indexed_add_flags_and_mapping(void) {
+    static const struct {
+        uint8_t lhs,rhs,result,flags;
+    } cases[]={
+        {0x00u,0x00u,0x00u,Z80_F_Z},
+        {0x0Fu,0x01u,0x10u,Z80_F_H},
+        {0x7Fu,0x01u,0x80u,Z80_F_S|Z80_F_H|Z80_F_PV},
+        {0xFFu,0x01u,0x00u,Z80_F_Z|Z80_F_H|Z80_F_C},
+        {0x88u,0x98u,0x20u,Z80_F_5|Z80_F_H|Z80_F_PV|Z80_F_C},
+        {0x01u,0x07u,0x08u,Z80_F_3}
+    };
+    for(size_t i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
+        setup();
+        LOAD(0,0xFD,0x86,0xFE); /* ADD A,(IY-2) */
+        cpu.iy=0xC102u;
+        cpu.a=cases[i].lhs;
+        cpu.f=0xFFu;
+        assert(ys_sms_bus_write(&bus,0xC100u,cases[i].rhs));
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        assert(cpu.a==cases[i].result && cpu.f==cases[i].flags &&
+               cpu.iy==0xC102u && cpu.pc==3u &&
+               cpu.last_tstates==19u && cpu.total_tstates==19u &&
+               ys_sms_bus_read(&bus,0xC100u)==cases[i].rhs);
+    }
+    setup();
+    LOAD(0,0xDD,0x86,0x01);
+    cpu.ix=0xFFFFu; /* indexed CPU address wraps to $0000 */
+    cpu.a=0x01u;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0xDEu && cpu.f==(Z80_F_S|Z80_F_H) &&
+           cpu.pc==3u && cpu.last_tstates==19u);
+    setup();
+    LOAD(0,0xDD,0x86,0x04);
+    cpu.ix=0x8000u;
+    cpu.a=0x10u;
+    rom[4u*0x4000u+4u]=0x17u;
+    assert(ys_sms_bus_write(&bus,0xFFFFu,4u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x27u && cpu.f==Z80_F_5 &&
+           cpu.ix==0x8000u && bus.mapped_bank[2]==4u &&
+           cpu.pc==3u && cpu.last_tstates==19u);
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -702,6 +773,8 @@ int main(void) {
     test_pc18_indexed_inc_write_guard();
     test_pc19_sound_pointer_loads();
     test_pc19_indexed_load_boundaries();
+    test_pc20_indexed_add_sound_event();
+    test_pc20_indexed_add_flags_and_mapping();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();

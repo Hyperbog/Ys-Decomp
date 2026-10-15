@@ -181,7 +181,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0xE1: return 14u; /* POP IX/IY */
         case 0x21: return 14u; /* LD IX/IY,nn */
         case 0x56: case 0x5E: /* LD D/E,(IX/IY+d): bank2 $84F1 */
-        case 0x7E: case 0x96: case 0xB6: return 19u; /* indexed read/ALU */
+        case 0x7E: case 0x86: case 0x96: case 0xB6: return 19u; /* indexed read/ALU */
         case 0x34: return 23u; /* INC (IX/IY+d): read/modify/write */
         case 0x09: case 0x19: case 0x29: case 0x39:
             return 15u;       /* ADD IX/IY,rr */
@@ -367,9 +367,10 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         } else if(sub==0x21) {
             *index=fetch16(cpu);
         } else if(sub==0x34 || sub==0x56 || sub==0x5E ||
-                  sub==0x7E || sub==0x96 || sub==0xB6) {
+                  sub==0x7E || sub==0x86 || sub==0x96 || sub==0xB6) {
             /* Original bank2: $84F1 LD E,(IX+3), $84F4 LD D,(IX+4),
-               $8947 INC (IX+11), $894D SUB (IX+11),
+               $85D3 ADD A,(IX+5), $8947 INC (IX+11),
+               $894D SUB (IX+11),
                $8A4B LD A,(IX+8), and $8A50 OR (IX+1).
                Signed displacement, wrapping 16-bit effective address,
                live SMS mapper and fail-closed ROM writes. */
@@ -388,6 +389,12 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                 cpu->e=value; /* LD E,(IX/IY+d): no flags changed. */
             } else if(sub==0x7E) {
                 cpu->a=value; /* LD A,(IX/IY+d): flags unchanged. */
+            } else if(sub==0x86) {
+                /* Original bank2 $85D3: ADD A,(IX+5) */
+                uint8_t old=cpu->a;
+                unsigned full=(unsigned)old+value;
+                cpu->a=(uint8_t)full;
+                cpu->f=add8_flags(old,value,cpu->a,full);
             } else if(sub==0x96) {
                 uint8_t old=cpu->a;
                 cpu->a=(uint8_t)(old-value);
