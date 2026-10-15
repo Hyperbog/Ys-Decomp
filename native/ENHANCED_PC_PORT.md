@@ -223,6 +223,24 @@ It uses synthetic origins, **not** actual original Ys player/NPC
 art, sprite palettes or verified scene positions. The prototype
 campaign and all five real-game Alpha gates remain unchanged.
 
+## PC-15 original sprite selector and runtime event qualification
+
+[PC-15 selector/source-run report](research/PC15_SPRITE_SELECTOR_WATCH.md)
+links original fixed-bank `$26DA` **`$C199`** assignments
+to a verified 8×8 conditional `$80–$BF` 64-record index
+and original bank-6 `$9932` producer. The separate
+`$275C` `$FF` assignment is rejected as an unsupported
+directory index rather than silently masked.
+
+`native/pc_sprite_selector.c` implements the conditional
+source byte equation, tested over 4,096 combinations.
+`ys-native-timed-rom --pc15-sprite-watch` passively
+observes the original mapped bank6 call and raw selector/
+origin/VDP state if actually reached from M45. A blocked
+source trace **cannot** identify the player or an
+authentic Ys area. Prototype gameplay and Alpha gates
+are unchanged.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
