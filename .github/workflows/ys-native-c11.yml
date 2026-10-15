@@ -46,6 +46,9 @@ jobs:
           python3 native/tools/export_pc_sprite_sat.py --out "$RUNNER_TEMP/ys-pc14-sprites.bin"
           python3 native/tools/export_pc_sprite_sat.py --verify "$RUNNER_TEMP/ys-pc14-sprites.bin"
           ./build-native/ys-pc-sprite-sat-tests "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          # PC-15: source-derived 8x8 C199 selector feeds the true
+          # 64 record directory with all three Phase19 origin pairs.
+          ./build-native/ys-pc-sprite-selector-tests "$RUNNER_TEMP/ys-pc14-sprites.bin"
           ./build-native/ys-pc-sprite-sat-dump "$RUNNER_TEMP/ys-pc14-sprites.bin" "$RUNNER_TEMP/ys-pc14-sat.bin"
           python3 -c 'import pathlib,hashlib,json,os; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc14-sat.bin"; blob=p.read_bytes(); ledger=json.loads(pathlib.Path("Ys/phase19/execution_report.json").read_text()); assert len(blob)==36864; assert hashlib.sha256(blob).hexdigest()==ledger["concat_sat_sha256"], "PC-14 original-Z80 and native-C11 SAT mismatch"; print("PASS PC-14 original source SAT corpus: 192/192 cases, SHA256",hashlib.sha256(blob).hexdigest())'
           ./build-native/ys-native-game --smoke --sprite-records "$RUNNER_TEMP/ys-pc14-sprites.bin"
