@@ -23,6 +23,21 @@ def check():
            0x2704:"cd3299",0x2707:"2a28c0",
            0x270A:"36d0",
            0x0427:"af",0x0428:"d3bf"}
+    # Conditional 8x8 source sprite directory selector:
+    # $C198 and $C011 gate it; BC is loaded LE from $C210,
+    # then ((C184+C210)&7)<<3 | ((C182+C211)&7) | $80.
+    # $275C also writes $FF to C199 in a different path; this
+    # DOES NOT mean bank6 $9932 can accept that as a 64-way index.
+    fixed.update({
+        0x26B6:"3a98c1",0x26B9:"b7",0x26BA:"2850",
+        0x26BC:"3a11c0",0x26BF:"e640",0x26C1:"2049",
+        0x26C3:"ed4b10c2",0x26C7:"3a84c1",0x26CA:"81",
+        0x26CB:"e607",0x26CD:"07",0x26CE:"07",0x26CF:"07",
+        0x26D0:"5f",0x26D1:"3a82c1",0x26D4:"80",
+        0x26D5:"e607",0x26D7:"b3",0x26D8:"f680",
+        0x26DA:"3299c1",
+        0x275A:"3eff",0x275C:"3299c1",
+    })
     sprite={0x9932:"3a99c1",0x9935:"87",0x9936:"6f",
             0x9937:"2680",0x9939:"7e",0x993A:"2c",
             0x993B:"66",0x993C:"6f",0x993D:"46",
@@ -44,7 +59,8 @@ def check():
     for pc,hexval in fixed.items():
         if pc in rows: assert rows[pc]==bytes.fromhex(hexval),hex(pc)
     assert all(pc in rows for pc in range(0x26F3,0x270Cu) if pc in fixed)
-    print("PASS PC-15: original fixed-bank mapper+producer setup",
+    print("PASS PC-15: original $26DA C199 selector bitfields,",
+          "separate $275C FF assignment; mapper+producer setup",
           "bank6 $9932 C199 record selector, C210/C211 Y/X origins;",
           "real scene identity/runtime entry unverified")
 
