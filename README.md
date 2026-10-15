@@ -1,3 +1,16 @@
+## Full Ys SMS ROM assembly/data reference
+
+The [16-bank master ROM disassembly index](Ys/whole_system/FULL_ROM_DISASSEMBLY.md)
+links to a [single, searchable complete ROM listing](Ys/whole_system/MASTER_ROM_LISTING.txt)
+and to each authoritative per-bank assembly source. It covers the
+entire **262,144-byte** original cartridge in source-backed Z80
+mnemonics or byte-preserving DB/DW directives; **not all bytes
+are semantically decoded Z80 code**.
+
+The committed listing is reusable for future PC-port and decomp
+milestones without rerunning a disassembler. Source consistency is
+checked in CI with `python3 Ys/tools/build_master_rom_listing.py --check`.
+
 ## Enhanced native Ys PC port (new track)
 
 **PC-15 sprite selection provenance:** [Original C199 selector formula and bounded actual CPU watch](native/research/PC15_SPRITE_SELECTOR_WATCH.md)
