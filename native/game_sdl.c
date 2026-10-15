@@ -12,6 +12,7 @@
 #include "pc_patterns.h"
 #include "pc_vdp_checkpoint.h"
 #include "pc_collision.h"
+#include "pc_sprite_sat.h"
 #include "sms_video.h"
 #include <stdbool.h>
 #include <stdio.h>
@@ -38,7 +39,9 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
                       SDL_Texture *pattern_preview,bool show_pattern_preview,
                       SDL_Texture *vdp_preview,bool show_vdp_preview,
                       const YsPcCollisionTable *collisions,
-                      bool show_collision,unsigned collision_index) {
+                      bool show_collision,unsigned collision_index,
+                      const YsPcSpriteRecords *sprite_records,
+                      bool show_sprite_sat,unsigned sprite_index) {
     SDL_SetRenderDrawColor(r,9,13,25,255);
     SDL_RenderClear(r);
     for(int y=0;y<YS_PC_MAP_H;++y)
@@ -234,6 +237,28 @@ static void draw_game(SDL_Renderer *r,const YsPcGame *g,
         }
         draw_rect(r,0,YS_PC_MAP_H*TILE,WIDTH,TILE,15,22,35);
     }
+    if(show_sprite_sat && sprite_records &&
+       sprite_index<YS_PC_SPRITE_RECORDS) {
+        /* Original $9932 producer's Y and X/tile SAT staging, at
+           SYNTHETIC (0,0) origins. Colored squares are numeric
+           record markers, NOT pixel-decoded Ys player sprite art. */
+        YsPcSatBuffer sat;
+        if(ys_pc_sprite_stage(sprite_records,sprite_index,0u,0u,&sat)) {
+            draw_rect(r,0,0,WIDTH,YS_PC_MAP_H*TILE,12,17,27);
+            for(unsigned i=0;i<sat.count;++i) {
+                unsigned sy=((unsigned)sat.y[i]+1u)&255u;
+                unsigned sx=sat.xt[2u*i];
+                unsigned tile=sat.xt[2u*i+1u];
+                if(sy>=192u) continue;
+                int x=(int)sx*2,y=(int)sy*2;
+                draw_rect(r,x,y,8,8,
+                          (Uint8)(65u+(tile&7u)*19u),
+                          (Uint8)(100u+((tile>>3)&7u)*16u),175u);
+                draw_rect(r,x+2,y+2,3,3,240u,238u,220u);
+            }
+            draw_rect(r,0,YS_PC_MAP_H*TILE,WIDTH,TILE,15,22,35);
+        }
+    }
     SDL_RenderPresent(r);
 }
 static unsigned read_buttons(SDL_GameController *pad) {
@@ -272,6 +297,7 @@ int main(int argc,char **argv) {
     const char *pattern_path=NULL;
     const char *vdp_path=NULL;
     const char *collision_path=NULL;
+    const char *sprite_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
         else if(strcmp(argv[i],"--prototype-campaign")==0 && !prototype_campaign)
@@ -299,8 +325,11 @@ int main(int argc,char **argv) {
         else if(strcmp(argv[i],"--collision")==0 && !collision_path &&
                 i+1<argc)
             collision_path=argv[++i];
+        else if(strcmp(argv[i],"--sprite-records")==0 && !sprite_path &&
+                i+1<argc)
+            sprite_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE] [--patterns FILE] [--vdp-checkpoint FILE] [--collision FILE] [--prototype-campaign]\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE] [--patterns FILE] [--vdp-checkpoint FILE] [--collision FILE] [--sprite-records FILE] [--prototype-campaign]\n",stderr);
             return EXIT_FAILURE;
         }
     }
@@ -510,7 +539,26 @@ int main(int argc,char **argv) {
             return EXIT_FAILURE;
         }
     }
-    bool show_collision=have_collision;
+    YsPcSpriteRecords sprite_records;
+    bool have_sprite_records=false;
+    if(sprite_path) {
+        FILE *fp=fopen(sprite_path,"rb");
+        have_sprite_records=fp &&
+            ys_pc_sprite_records_load(fp,&sprite_records);
+        if(fp) fclose(fp);
+        if(!have_sprite_records) {
+            fprintf(stderr,"PC-14 invalid source sprite-record data: %s\n",
+                    sprite_path);
+            SDL_DestroyTexture(vdp_preview);
+            SDL_DestroyTexture(pattern_preview);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
+    bool show_sprite_sat=have_sprite_records;
+    unsigned sprite_index=0u;
+    bool show_collision=have_collision && !show_sprite_sat;
     unsigned collision_index=0u;
     bool show_vdp_preview=vdp_preview!=NULL && !show_collision;
     bool show_pattern_preview=pattern_preview!=NULL && !show_vdp_preview;
@@ -564,6 +612,9 @@ int main(int argc,char **argv) {
                    ev.key.keysym.sym==SDLK_F9 ||
                    ev.key.keysym.sym==SDLK_F10)
                     show_collision=false;
+                if(ev.key.keysym.sym>=SDLK_F2 &&
+                   ev.key.keysym.sym<=SDLK_F11)
+                    show_sprite_sat=false;
                 if(have_collision && ev.key.keysym.sym==SDLK_F11) {
                     show_collision=!show_collision;
                     if(show_collision) {
@@ -575,6 +626,20 @@ int main(int argc,char **argv) {
                         show_vdp_preview=false;
                     }
                 }
+                if(have_sprite_records && ev.key.keysym.sym==SDLK_F12) {
+                    show_sprite_sat=!show_sprite_sat;
+                    if(show_sprite_sat) {
+                        show_collision=false;
+                        show_atlas=false;show_records=false;
+                        show_scenes=false;show_name_table=false;
+                        show_pattern_preview=false;show_vdp_preview=false;
+                    }
+                }
+                if(show_sprite_sat && ev.key.keysym.sym==SDLK_PAGEUP)
+                    sprite_index=(sprite_index+YS_PC_SPRITE_RECORDS-1u)%
+                                  YS_PC_SPRITE_RECORDS;
+                if(show_sprite_sat && ev.key.keysym.sym==SDLK_PAGEDOWN)
+                    sprite_index=(sprite_index+1u)%YS_PC_SPRITE_RECORDS;
                 if(show_collision && ev.key.keysym.sym==SDLK_PAGEUP)
                     collision_index=(collision_index+YS_PC_COLLISION_BOXES-1u)%
                                     YS_PC_COLLISION_BOXES;
@@ -642,7 +707,7 @@ int main(int argc,char **argv) {
         double elapsed=(double)(now-prior)/freq;
         prior=now;
         accumulator+=elapsed>0.25?0.25:elapsed;
-        unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table || show_pattern_preview || show_vdp_preview || show_collision)?0u:read_buttons(pad);
+        unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table || show_pattern_preview || show_vdp_preview || show_collision || show_sprite_sat)?0u:read_buttons(pad);
         /* Gallery is a read-only reference. Do not move hidden actors. */
         for(int i=0;accumulator>=1.0/60.0 && i<16;++i) {
             if(prototype_campaign) ys_pc_campaign_tick(&campaign,buttons);
@@ -665,7 +730,16 @@ int main(int argc,char **argv) {
             snprintf(title,sizeof(title),
                      "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
                      active->hp,active->foe_hp,mode);
-        if(show_collision && have_collision) {
+        if(show_sprite_sat && have_sprite_records) {
+            YsPcSatBuffer sat;
+            unsigned count=ys_pc_sprite_stage(&sprite_records,sprite_index,
+                                              0u,0u,&sat)?sat.count:0u;
+            snprintf(title,sizeof(title),
+                     "PC14 BANK6 record %u/64 | %u SAT Y/X/tile markers"
+                     " | origins 0,0 SYNTHETIC | NOT player art"
+                     " | PgUp/PgDn F12",
+                     sprite_index+1u,count);
+        } else if(show_collision && have_collision) {
             const YsPcCollisionBox *box=&collision_table.boxes[collision_index];
             snprintf(title,sizeof(title),
                      "BANK4 $807C source hitbox %u/31 | raw Y:%u+%u X:%u+%u"
@@ -721,7 +795,9 @@ int main(int argc,char **argv) {
                   pattern_preview,show_pattern_preview,
                   vdp_preview,show_vdp_preview,
                   have_collision?&collision_table:NULL,
-                  show_collision,collision_index);
+                  show_collision,collision_index,
+                  have_sprite_records?&sprite_records:NULL,
+                  show_sprite_sat,sprite_index);
         if(smoke && active->frame>=12u) running=false;
         SDL_Delay(1);
     }
