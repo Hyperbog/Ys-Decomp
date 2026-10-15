@@ -743,7 +743,7 @@ static void test_pc20_indexed_add_flags_and_mapping(void) {
     cpu.ix=0xFFFFu; /* indexed CPU address wraps to $0000 */
     cpu.a=0x01u;
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
-    assert(cpu.a==0xDEu && cpu.f==(Z80_F_S|Z80_F_H) &&
+    assert(cpu.a==0xDEu && cpu.f==(Z80_F_S|Z80_F_3) &&
            cpu.pc==3u && cpu.last_tstates==19u);
     setup();
     LOAD(0,0xDD,0x86,0x04);
