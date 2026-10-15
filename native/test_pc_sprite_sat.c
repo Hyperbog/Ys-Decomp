@@ -112,9 +112,6 @@ static void check_source(const char *path) {
         if(sat.count>max)max=sat.count;
         assert(sat.y[sat.count]==0xD0u);
         elems+=sat.count;
-        for(unsigned k=0;k<sat.count;++k) {
-            assert(sat.y[k]!=(uint8_t)0xFFu || true);
-        }
     }
     assert(min==27u && max==38u && elems==2086u);
     printf("PASS PC-14 original source: 64 counted SAT layouts,"
