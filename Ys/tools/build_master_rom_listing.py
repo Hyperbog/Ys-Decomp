@@ -13,8 +13,13 @@ import json
 from pathlib import Path
 import sys
 
-from build_sms_phase14 import ROOT, EXPECTED_SHA
-from semantic_debt_m13 import make_report
+try:
+    from .build_sms_phase14 import ROOT, EXPECTED_SHA
+    from .semantic_debt_m13 import make_report
+except ImportError:
+    # Also support the standalone invocation from within the Ys/ directory.
+    from build_sms_phase14 import ROOT, EXPECTED_SHA
+    from semantic_debt_m13 import make_report
 
 SIZE = 0x4000
 COUNT = 16
