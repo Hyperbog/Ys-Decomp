@@ -15,6 +15,7 @@ and [PC-11 conditional original bank-1 collision-call routes](research/PC11_BANK
 and [PC-12 bounded original CPU collision call observation](research/PC12_RUNTIME_COLLISION_WATCH.md)
 and [PC-13 native two-room prototype campaign replay](research/PC13_CAMPAIGN_VERTICAL_SLICE.md)
 and [PC-14 original bank-6 sprite SAT producer and 192-case Z80 oracle](research/PC14_ORIGINAL_SPRITE_SAT.md)
+and [PC-15 source-backed C199 sprite selector and passive original runtime watch](research/PC15_SPRITE_SELECTOR_WATCH.md)
 and [PC-3 source object-work projection](research/PC3_OBJECT_WORK_PROJECTION.md) describe
 the new SDL2 `ys-native-game` placeholder-room prototype, native
 fixed-tick gameplay core and tests. It does not execute the original ROM.
