@@ -464,6 +464,146 @@ static void test_pc17_add_immediate_flags(void) {
     }
 }
 
+
+/* PC-18 exact original bank2 $8947-$8952 instruction bytes.
+   Bounded synthetic RAM fixture; no claim of original Ys scene/audio. */
+static void test_pc18_indexed_sound_counter_prefix(void) {
+    setup();
+    LOAD(0,0xDD,0x34,0x0B,  /* $8947 INC (IX+11) */
+           0xDD,0x7E,0x0A,  /* $894A LD A,(IX+10) */
+           0xDD,0x96,0x0B,  /* $894D SUB (IX+11) */
+           0xCC,0xF1,0x84); /* $8950 CALL Z,$84F1 */
+    cpu.ix=0xC100u;
+    cpu.sp=0xC300u;
+    cpu.a=0x55u;
+    cpu.f=Z80_F_C|Z80_F_N;
+    assert(ys_sms_bus_write(&bus,0xC10Bu,0x7Fu));
+    assert(ys_sms_bus_write(&bus,0xC10Au,0x90u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC10Bu)==0x80u);
+    assert(cpu.a==0x55u && cpu.ix==0xC100u &&
+           cpu.f==(Z80_F_S|Z80_F_PV|Z80_F_C) &&
+           cpu.pc==3u && cpu.last_tstates==23u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x90u && cpu.pc==6u && cpu.last_tstates==19u &&
+           cpu.f==(Z80_F_S|Z80_F_PV|Z80_F_C));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x10u && cpu.pc==9u && cpu.last_tstates==19u &&
+           cpu.f==Z80_F_N && ys_sms_bus_read(&bus,0xC10Bu)==0x80u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==12u && cpu.sp==0xC300u &&
+           cpu.last_tstates==10u && cpu.total_tstates==71u &&
+           cpu.steps==4u);
+    /* Source CALL Z is taken only for a genuine zero result. */
+    setup();
+    LOAD(0,0xDD,0x34,0x0B,0xDD,0x7E,0x0A,
+           0xDD,0x96,0x0B,0xCC,0xF1,0x84);
+    cpu.ix=0xC100u;
+    cpu.sp=0xC300u;
+    assert(ys_sms_bus_write(&bus,0xC10Bu,0xFFu));
+    assert(ys_sms_bus_write(&bus,0xC10Au,0x00u));
+    run(9u,3u);
+    assert(cpu.a==0 && cpu.f==(Z80_F_Z|Z80_F_N) &&
+           ys_sms_bus_read(&bus,0xC10Bu)==0 &&
+           cpu.total_tstates==61u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==0x84F1u && cpu.sp==0xC2FEu &&
+           cpu.last_tstates==17u && cpu.total_tstates==78u &&
+           ys_sms_bus_read(&bus,0xC2FEu)==0x0Cu &&
+           ys_sms_bus_read(&bus,0xC2FFu)==0x00u);
+}
+
+/* Independent boundary expectations for indexed INC flags and timing. */
+static void test_pc18_indexed_inc_flags(void) {
+    static const struct {
+        uint8_t old, next, flags;
+    } cases[]={
+        {0x00u,0x01u,0u},
+        {0x07u,0x08u,Z80_F_3},
+        {0x0Fu,0x10u,Z80_F_H},
+        {0x1Fu,0x20u,Z80_F_H|Z80_F_5},
+        {0x7Fu,0x80u,Z80_F_S|Z80_F_PV},
+        {0xFFu,0x00u,Z80_F_H|Z80_F_Z}
+    };
+    for(size_t i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
+        for(unsigned carry=0;carry<=1u;++carry) {
+            setup();
+            LOAD(0,0xFD,0x34,0xFE); /* INC (IY-2) */
+            cpu.iy=0xC102u;
+            cpu.a=0xE2u;
+            cpu.f=(uint8_t)(Z80_F_N|Z80_F_PV|Z80_F_H|Z80_F_C);
+            if(!carry) cpu.f=(uint8_t)(cpu.f&~Z80_F_C);
+            assert(ys_sms_bus_write(&bus,0xC100u,cases[i].old));
+            assert(ys_z80_step(&cpu)==Z80_RUNNING);
+            assert(ys_sms_bus_read(&bus,0xC100u)==cases[i].next);
+            assert(cpu.f==(uint8_t)(cases[i].flags|
+                       (carry?Z80_F_C:0u)) &&
+                   cpu.a==0xE2u && cpu.iy==0xC102u &&
+                   cpu.pc==3u && cpu.last_tstates==23u &&
+                   cpu.total_tstates==23u && cpu.steps==1u);
+        }
+    }
+}
+
+/* Indexed SUB flags are independent of prior carry, including borrow,
+   half-borrow, signed overflow, and undocumented result bits 3/5. */
+static void test_pc18_indexed_sub_flags(void) {
+    static const struct {
+        uint8_t a,rhs,result,flags;
+    } cases[]={
+        {0x80u,0x01u,0x7Fu,
+         Z80_F_5|Z80_F_3|Z80_F_H|Z80_F_PV|Z80_F_N},
+        {0x7Fu,0xFFu,0x80u,Z80_F_S|Z80_F_PV|Z80_F_N|Z80_F_C},
+        {0x00u,0x00u,0x00u,Z80_F_Z|Z80_F_N},
+        {0x00u,0x01u,0xFFu,
+         Z80_F_S|Z80_F_5|Z80_F_3|Z80_F_H|Z80_F_N|Z80_F_C}
+    };
+    for(size_t i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
+        setup();
+        LOAD(0,0xFD,0x96,0xFE); /* SUB (IY-2), negative offset */
+        cpu.iy=0xC102u;
+        cpu.a=cases[i].a;
+        cpu.f=0xFFu;
+        assert(ys_sms_bus_write(&bus,0xC100u,cases[i].rhs));
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        assert(cpu.a==cases[i].result && cpu.f==cases[i].flags &&
+               ys_sms_bus_read(&bus,0xC100u)==cases[i].rhs &&
+               cpu.iy==0xC102u && cpu.pc==3u &&
+               cpu.last_tstates==19u && cpu.total_tstates==19u);
+    }
+}
+
+/* ROM-write rejection must leave flags and memory unchanged; no clocks
+   or instructions are committed. Also verify indexed address wrap. */
+static void test_pc18_indexed_inc_write_guard(void) {
+    setup();
+    LOAD(0,0xDD,0x34,0x01);
+    cpu.ix=0xFFFFu; /* IX+1 -> ROM CPU $0000 */
+    cpu.f=Z80_F_C|Z80_F_Z|Z80_F_N;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.fault_pc==0u && cpu.pc==0u && cpu.ix==0xFFFFu &&
+           cpu.f==(Z80_F_C|Z80_F_Z|Z80_F_N) &&
+           rom[0]==0xDDu && cpu.steps==0u &&
+           cpu.last_tstates==0u && cpu.total_tstates==0u);
+    setup();
+    LOAD(0,0xFD,0x34,0xFF);
+    cpu.iy=0x8000u; /* IY-1 -> ROM CPU $7FFF */
+    cpu.f=0xFFu;
+    rom[0x7FFFu]=0x10u;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0 && cpu.fault_pc==0 && cpu.f==0xFFu &&
+           rom[0x7FFFu]==0x10u && cpu.steps==0u);
+    setup();
+    LOAD(0,0xDD,0x34,0x01);
+    cpu.ix=0xBFFFu; /* IX+1 -> WRAM CPU $C000 */
+    cpu.f=Z80_F_C;
+    assert(ys_sms_bus_write(&bus,0xC000u,0xFEu));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC000u)==0xFFu &&
+           cpu.pc==3u && cpu.last_tstates==23u &&
+           cpu.f==(Z80_F_C|Z80_F_S|Z80_F_5|Z80_F_3));
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -474,6 +614,10 @@ int main(void) {
     test_pc17_original_psg_instruction_path();
     test_pc17_indexed_displacements();
     test_pc17_add_immediate_flags();
+    test_pc18_indexed_sound_counter_prefix();
+    test_pc18_indexed_inc_flags();
+    test_pc18_indexed_sub_flags();
+    test_pc18_indexed_inc_write_guard();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();

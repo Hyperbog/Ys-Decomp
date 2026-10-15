@@ -180,7 +180,8 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0xE5: return 15u; /* PUSH IX/IY */
         case 0xE1: return 14u; /* POP IX/IY */
         case 0x21: return 14u; /* LD IX/IY,nn */
-        case 0x7E: case 0xB6: return 19u; /* LD A,(IX/IY+d), OR (IX/IY+d) */
+        case 0x7E: case 0x96: case 0xB6: return 19u; /* indexed read/ALU */
+        case 0x34: return 23u; /* INC (IX/IY+d): read/modify/write */
         case 0x09: case 0x19: case 0x29: case 0x39:
             return 15u;       /* ADD IX/IY,rr */
         case 0xCB: return 20u;/* BIT b,(IX/IY+d) */
@@ -364,15 +365,27 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             *index=pop16(cpu);
         } else if(sub==0x21) {
             *index=fetch16(cpu);
-        } else if(sub==0x7E || sub==0xB6) {
-            /* Original bank-2 PSG $8A4B DD 7E 08 and
-               $8A50 DD B6 01. Displacement is signed; address
-               arithmetic wraps at 16 bits, bank mapping remains live. */
+        } else if(sub==0x34 || sub==0x7E ||
+                  sub==0x96 || sub==0xB6) {
+            /* Original bank2: $8947 INC (IX+11), $894D SUB (IX+11),
+               $8A4B LD A,(IX+8), and $8A50 OR (IX+1).
+               Signed displacement, wrapping 16-bit effective address,
+               live SMS mapper and fail-closed ROM writes. */
             int8_t displacement=(int8_t)fetch(cpu);
             uint16_t addr=(uint16_t)(*index+displacement);
             uint8_t value=ys_sms_bus_read(cpu->bus,addr);
-            if(sub==0x7E) {
-                cpu->a=value; /* LD A,(IX/IY+d) preserves all flags. */
+            if(sub==0x34) {
+                /* INC (IX/IY+d) keeps carry; update flags only after
+                   a successful write (ROM is never patched). */
+                uint8_t next=(uint8_t)(value+1u);
+                if(!store(cpu,addr,next)) goto fail;
+                cpu->f=inc_flags(value,next,cpu->f&Z80_F_C);
+            } else if(sub==0x7E) {
+                cpu->a=value; /* LD A,(IX/IY+d): flags unchanged. */
+            } else if(sub==0x96) {
+                uint8_t old=cpu->a;
+                cpu->a=(uint8_t)(old-value);
+                cpu->f=sub_flags(old,value,cpu->a);
             } else {
                 cpu->a=(uint8_t)(cpu->a|value);
                 cpu->f=(uint8_t)(sz53(cpu->a)|
