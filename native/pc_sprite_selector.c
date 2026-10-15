@@ -15,3 +15,21 @@ bool ys_pc_sprite_selector_index(uint8_t raw_c199,unsigned *index) {
     *index=effective>>1u;
     return *index<64u;
 }
+
+bool ys_pc_sprite_stage_source_state(
+    const YsPcSpriteRecords *records,const YsPcSpriteSelectorInput *state,
+    YsPcSatBuffer *out,uint8_t *raw_c199,unsigned *directory_index) {
+    if(!records || !state || !out || !raw_c199 || !directory_index)
+        return false;
+    uint8_t selected=0u;
+    unsigned index=0u;
+    YsPcSatBuffer staged;
+    if(!ys_pc_sprite_selector_source(state,&selected) ||
+       !ys_pc_sprite_selector_index(selected,&index) ||
+       !ys_pc_sprite_stage(records,index,state->c210,state->c211,&staged))
+        return false;
+    *out=staged;
+    *raw_c199=selected;
+    *directory_index=index;
+    return true;
+}
