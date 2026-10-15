@@ -3,6 +3,7 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include "pc_game.h"
+#include "pc_campaign.h"
 #include "pc_tiles.h"
 #include "pc_records.h"
 #include "pc_objects.h"
@@ -262,6 +263,7 @@ static unsigned read_buttons(SDL_GameController *pad) {
 int main(int argc,char **argv) {
     bool smoke=false;
     bool smoke_projection=false;
+    bool prototype_campaign=false;
     const char *tile_path=NULL;
     const char *record_path=NULL;
     const char *object_types_path=NULL;
@@ -272,6 +274,8 @@ int main(int argc,char **argv) {
     const char *collision_path=NULL;
     for(int i=1;i<argc;++i) {
         if(strcmp(argv[i],"--smoke")==0 && !smoke) smoke=true;
+        else if(strcmp(argv[i],"--prototype-campaign")==0 && !prototype_campaign)
+            prototype_campaign=true;
         else if(strcmp(argv[i],"--smoke-projection")==0 &&
                 !smoke_projection) smoke_projection=true;
         else if(strcmp(argv[i],"--tiles")==0 && !tile_path && i+1<argc)
@@ -296,7 +300,7 @@ int main(int argc,char **argv) {
                 i+1<argc)
             collision_path=argv[++i];
         else {
-            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE] [--patterns FILE] [--vdp-checkpoint FILE] [--collision FILE]\n",stderr);
+            fputs("usage: ys-native-game [--smoke] [--tiles FILE] [--records FILE] [--object-types FILE] [--scenes FILE] [--nametable FILE] [--patterns FILE] [--vdp-checkpoint FILE] [--collision FILE] [--prototype-campaign]\n",stderr);
             return EXIT_FAILURE;
         }
     }
@@ -525,6 +529,21 @@ int main(int argc,char **argv) {
         }
     YsPcGame game;
     ys_pc_game_reset(&game);
+    YsPcCampaign campaign;
+    if(prototype_campaign) {
+        YsPcContentCatalog demo_catalog;
+        if(!ys_pc_campaign_prototype_catalog(&demo_catalog) ||
+           !ys_pc_campaign_init(&campaign,&demo_catalog,
+                                "prototype.scene.test_room")) {
+            fputs("PC-13 invalid ROM-free two-room prototype content\n",stderr);
+            if(pad) SDL_GameControllerClose(pad);
+            SDL_DestroyTexture(vdp_preview);
+            SDL_DestroyTexture(pattern_preview);
+            SDL_DestroyTexture(atlas);
+            SDL_DestroyRenderer(r);SDL_DestroyWindow(w);SDL_Quit();
+            return EXIT_FAILURE;
+        }
+    }
     bool running=true;
     Uint64 prior=SDL_GetPerformanceCounter();
     const double freq=(double)SDL_GetPerformanceFrequency();
@@ -626,17 +645,26 @@ int main(int argc,char **argv) {
         unsigned buttons=(show_atlas || show_records || show_scenes || show_name_table || show_pattern_preview || show_vdp_preview || show_collision)?0u:read_buttons(pad);
         /* Gallery is a read-only reference. Do not move hidden actors. */
         for(int i=0;accumulator>=1.0/60.0 && i<16;++i) {
-            ys_pc_game_tick(&game,buttons);
+            if(prototype_campaign) ys_pc_campaign_tick(&campaign,buttons);
+            else ys_pc_game_tick(&game,buttons);
             accumulator-=1.0/60.0;
         }
+        const YsPcGame *active=prototype_campaign?&campaign.game:&game;
         char title[160];
-        const char *mode=game.stage==YS_PC_TITLE?"Enter: start":
-                         game.stage==YS_PC_PLAY?"Move: WASD/arrows | Esc: quit":
-                         game.stage==YS_PC_CLEAR?"Room clear! Enter: restart":
+        const char *mode=active->stage==YS_PC_TITLE?"Enter: start":
+                         active->stage==YS_PC_PLAY?"Move: WASD/arrows | Esc: quit":
+                         active->stage==YS_PC_CLEAR?"Room clear! Enter: restart":
                                                   "Defeated! Enter: restart";
-        snprintf(title,sizeof(title),
-                 "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
-                 game.hp,game.foe_hp,mode);
+        if(prototype_campaign)
+            snprintf(title,sizeof(title),
+                     "TWO-ROOM PROTOTYPE (NOT Ys) | scene %u/2 | HP %d"
+                     " | foe %d | defeats %d | %s",
+                     campaign.completed_scenes+1u,active->hp,
+                     active->foe_hp,active->defeats,mode);
+        else
+            snprintf(title,sizeof(title),
+                     "Ys PC prototype (placeholder) | HP %d | enemy %d | %s",
+                     active->hp,active->foe_hp,mode);
         if(show_collision && have_collision) {
             const YsPcCollisionBox *box=&collision_table.boxes[collision_index];
             snprintf(title,sizeof(title),
@@ -675,7 +703,7 @@ int main(int argc,char **argv) {
         else if(atlas && show_atlas)
             snprintf(title,sizeof(title),
                      "Ys bank-3 source tiles (176) | grayscale PREVIEW | F2: room");
-        else if(atlas)
+        else if(atlas && !prototype_campaign)
             snprintf(title,sizeof(title),
                      "Ys PC placeholder room | F2: authentic bank-3 tile gallery");
         if(show_records && have_object_types) {
@@ -684,7 +712,7 @@ int main(int argc,char **argv) {
                 strcat(title," | PC4 types");
         }
         SDL_SetWindowTitle(w,title);
-        draw_game(r,&game,atlas,show_atlas,
+        draw_game(r,active,atlas,show_atlas,
                   have_records?&source_records:NULL,show_records,current_group,
                   show_projection,
                   have_object_types?&object_types:NULL,
@@ -694,7 +722,7 @@ int main(int argc,char **argv) {
                   vdp_preview,show_vdp_preview,
                   have_collision?&collision_table:NULL,
                   show_collision,collision_index);
-        if(smoke && game.frame>=12u) running=false;
+        if(smoke && active->frame>=12u) running=false;
         SDL_Delay(1);
     }
     if(pad) SDL_GameControllerClose(pad);
