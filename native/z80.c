@@ -180,6 +180,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0xE5: return 15u; /* PUSH IX/IY */
         case 0xE1: return 14u; /* POP IX/IY */
         case 0x21: return 14u; /* LD IX/IY,nn */
+        case 0x7E: case 0xB6: return 19u; /* LD A,(IX/IY+d), OR (IX/IY+d) */
         case 0x09: case 0x19: case 0x29: case 0x39:
             return 15u;       /* ADD IX/IY,rr */
         case 0xCB: return 20u;/* BIT b,(IX/IY+d) */
@@ -191,7 +192,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0x0B: case 0x1B: case 0x2B: return 6u;
     case 0x22: case 0x2A: return 16u;
     case 0x32: case 0x3A: return 13u;
-    case 0xD6: case 0xE6: case 0xF6: case 0xFE: return 7u;
+    case 0xC6: case 0xD6: case 0xE6: case 0xF6: case 0xFE: return 7u;
     case 0xC3: return 10u;
     case 0xE9: return 4u;
     case 0xC9: return 10u;
@@ -363,6 +364,20 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             *index=pop16(cpu);
         } else if(sub==0x21) {
             *index=fetch16(cpu);
+        } else if(sub==0x7E || sub==0xB6) {
+            /* Original bank-2 PSG $8A4B DD 7E 08 and
+               $8A50 DD B6 01. Displacement is signed; address
+               arithmetic wraps at 16 bits, bank mapping remains live. */
+            int8_t displacement=(int8_t)fetch(cpu);
+            uint16_t addr=(uint16_t)(*index+displacement);
+            uint8_t value=ys_sms_bus_read(cpu->bus,addr);
+            if(sub==0x7E) {
+                cpu->a=value; /* LD A,(IX/IY+d) preserves all flags. */
+            } else {
+                cpu->a=(uint8_t)(cpu->a|value);
+                cpu->f=(uint8_t)(sz53(cpu->a)|
+                                 (parity(cpu->a)?Z80_F_PV:0));
+            }
         } else if(sub==0x09 || sub==0x19 || sub==0x29 || sub==0x39) {
             uint16_t rhs=sub==0x09?pair(cpu->b,cpu->c):
                          sub==0x19?pair(cpu->d,cpu->e):
@@ -424,6 +439,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     case 0xF6: cpu->a=(uint8_t)(cpu->a | fetch(cpu));
         cpu->f=(uint8_t)(sz53(cpu->a)|(parity(cpu->a)?Z80_F_PV:0));
         break;
+    case 0xC6: { /* ADD A,n. Original bank2 PSG $8A53: C6 10. */
+        uint8_t rhs=fetch(cpu), old=cpu->a;
+        unsigned full=(unsigned)old+rhs;
+        cpu->a=(uint8_t)full;
+        cpu->f=add8_flags(old,rhs,cpu->a,full);
+        break;
+    }
     case 0xD6: { /* SUB n. Original bank2 $8204: D6 81;
                      original Z80 S flag controls RET M at $8206. */
         uint8_t rhs=fetch(cpu),old=cpu->a;

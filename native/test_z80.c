@@ -370,6 +370,100 @@ static void test_pc16_sound_ex_de_hl(void) {
            cpu.last_tstates==4u);
 }
 
+
+/* PC-17: exact source opcodes at original bank2 $8A4B-$8A57.
+   PSG emission uses a controlled RAM fixture; it is NOT a real game frame. */
+static void test_pc17_original_psg_instruction_path(void) {
+    setup();
+    YsSmsSound sound;
+    ys_sms_sound_reset(&sound);
+    ys_z80_attach_sound(&cpu,&sound);
+    LOAD(0,0xDD,0x7E,0x08, /* LD A,(IX+8) */
+           0xE6,0x0F,      /* AND $0F */
+           0xDD,0xB6,0x01, /* OR (IX+1) */
+           0xC6,0x10,      /* ADD A,$10 */
+           0xD3,0x7F,      /* OUT ($7F),A */
+           0xC9);          /* RET */
+    cpu.ix=0xC100u;
+    cpu.sp=0xC300u;
+    cpu.f=0xFFu;
+    assert(ys_sms_bus_write(&bus,0xC108u,0xA7u));
+    assert(ys_sms_bus_write(&bus,0xC101u,0x20u));
+    assert(ys_sms_bus_write(&bus,0xC300u,0x00u));
+    assert(ys_sms_bus_write(&bus,0xC301u,0x20u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0xA7u && cpu.f==0xFFu &&
+           cpu.pc==3u && cpu.last_tstates==19u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x07u && cpu.pc==5u &&
+           cpu.last_tstates==7u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x27u && cpu.pc==8u &&
+           cpu.last_tstates==19u &&
+           cpu.f==(Z80_F_5|Z80_F_PV));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x37u && cpu.pc==10u &&
+           cpu.last_tstates==7u && cpu.f==Z80_F_5);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(sound.psg_write_count==1u &&
+           sound.psg_prefix[0]==0x37u &&
+           cpu.last_tstates==11u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==0x2000u && cpu.sp==0xC302u &&
+           cpu.ix==0xC100u && cpu.steps==6u &&
+           cpu.last_tstates==10u && cpu.total_tstates==73u);
+    assert(ys_sms_bus_read(&bus,0xC108u)==0xA7u);
+    assert(ys_sms_bus_read(&bus,0xC101u)==0x20u);
+}
+
+/* Indexed reads respect signed displacement, slot mapping and 16-bit wrap.
+   On LD A,(IX/IY+d), flags are never recomputed from loaded data. */
+static void test_pc17_indexed_displacements(void) {
+    setup();
+    LOAD(0,0xFD,0x7E,0xFE, /* LD A,(IY-2) */
+           0xDD,0x7E,0xFF);/* LD A,(IX-1) */
+    cpu.iy=0xC110u;
+    cpu.ix=0x8000u;
+    cpu.f=Z80_F_S|Z80_F_C|Z80_F_N;
+    assert(ys_sms_bus_write(&bus,0xC10Eu,0x4Cu));
+    rom[0x7FFFu]=0xA3u; /* physical bank1 $7FFF */
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x4Cu && cpu.pc==3u &&
+           cpu.last_tstates==19u && cpu.iy==0xC110u &&
+           cpu.f==(Z80_F_S|Z80_F_C|Z80_F_N));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0xA3u && cpu.pc==6u &&
+           cpu.last_tstates==19u && cpu.total_tstates==38u &&
+           cpu.ix==0x8000u && cpu.f==(Z80_F_S|Z80_F_C|Z80_F_N));
+    setup();
+    LOAD(0,0xDD,0x7E,0x01);
+    cpu.ix=0xFFFFu; /* $FFFF+1 wraps to CPU $0000. */
+    cpu.f=Z80_F_Z;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0xDDu && cpu.pc==3u &&
+           cpu.last_tstates==19u && cpu.f==Z80_F_Z);
+}
+
+static void test_pc17_add_immediate_flags(void) {
+    static const struct {
+        uint8_t prior, result, flags;
+    } cases[]={
+        {0x0Fu,0x10u,Z80_F_H},
+        {0x7Fu,0x80u,Z80_F_S|Z80_F_H|Z80_F_PV},
+        {0xFFu,0x00u,Z80_F_Z|Z80_F_H|Z80_F_C}
+    };
+    for(size_t i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
+        setup();
+        LOAD(0,0xC6,0x01);
+        cpu.a=cases[i].prior;
+        cpu.f=0xFFu;
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        assert(cpu.a==cases[i].result && cpu.f==cases[i].flags &&
+               cpu.pc==2u && cpu.steps==1u &&
+               cpu.last_tstates==7u && cpu.total_tstates==7u);
+    }
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -377,6 +471,9 @@ int main(void) {
     test_pc15_sound_sub_immediate();
     test_pc15_sound_rra_nibble();
     test_pc16_sound_ex_de_hl();
+    test_pc17_original_psg_instruction_path();
+    test_pc17_indexed_displacements();
+    test_pc17_add_immediate_flags();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
