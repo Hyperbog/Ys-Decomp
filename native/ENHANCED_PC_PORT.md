@@ -241,18 +241,20 @@ source trace **cannot** identify the player or an
 authentic Ys area. Prototype gameplay and Alpha gates
 are unchanged.
 
-## PC-16 / PC-17 original sound instruction continuation (reference only)
+## PC-16–PC-18 original sound instruction continuation (reference only)
 
-[PC-16 EX DE,HL](research/PC16_SOUND_EXCHANGE_CHECKPOINT.md) and
-[PC-17 indexed PSG execution](research/PC17_INDEXED_PSG_CHECKPOINT.md)
-extend the *bounded original-source Z80 interpreter*, not the native
-PC game engine. PC-17 verifies the original bank-2 `$8A4B-$8A57` PSG
-routine's instruction bytes and tests the new indexed loads, indexed
-OR and immediate ADD. Natural continuation from M45 now stops at
-physical bank-2 `$8947` (`INC (IX+11)`) after **6,009** original
-post-M45 steps with **0** observed original collision or bank6 sprite
-producer calls. These are source-execution diagnostics, not
-authentic Ys gameplay. All Alpha gates remain false.
+[PC-16 EX DE,HL](research/PC16_SOUND_EXCHANGE_CHECKPOINT.md),
+[PC-17 indexed PSG](research/PC17_INDEXED_PSG_CHECKPOINT.md), and
+[PC-18 indexed sound counter](research/PC18_INDEXED_SOUND_COUNTER_CHECKPOINT.md)
+extend the **bounded original-source Z80 reference interpreter**,
+not the native PC game engine. These milestones successively
+advance a passive original ROM continuation from verified M45
+PC=$0C92. At PC-18, authentic source execution stops at physical
+bank2 **$84F1** (`LD E,(IX+3)`) after **6,013** post-M45
+instructions, 57 accepted IRQs, and 61 VBlanks. Neither original
+bank1 collision callers nor mapped bank6 $9932 sprite production
+was witnessed. No authentic gameplay room, actor, controls,
+native PSG playback or original-game Alpha gate is verified.
 
 ## Build and run
 
