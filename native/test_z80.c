@@ -257,10 +257,50 @@ static void test_pc12_source_set_bits(void) {
     assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
     assert(cpu.fault_pc==3u && cpu.pc==3u);
 }
+/* PC-15: original bank2 $8204 D6 81; $8206 F8 (RET M).
+   Test signed return boundary, half borrow and overflow/carry,
+   preserving genuine source opcode bytes and 7/5/11 T-state costs. */
+static void test_pc15_sound_sub_immediate(void) {
+    setup();
+    LOAD(0,0x3E,0x80,0xD6,0x81,0xF8,0x76);
+    run(2,1);
+    assert(cpu.a==0x80u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0xFFu && cpu.pc==4u &&
+           (cpu.f&Z80_F_S) && (cpu.f&Z80_F_N) &&
+           (cpu.f&Z80_F_H) && (cpu.f&Z80_F_C) &&
+           !(cpu.f&Z80_F_Z) && !(cpu.f&Z80_F_PV) &&
+           cpu.last_tstates==7u);
+    cpu.sp=0xC100u;
+    assert(ys_sms_bus_write(&bus,0xC100u,0x25u));
+    assert(ys_sms_bus_write(&bus,0xC101u,0x00u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==0x0025u && cpu.sp==0xC102u &&
+           cpu.last_tstates==11u);
+
+    setup();
+    LOAD(0,0x3E,0x81,0xD6,0x81,0xF8,0x76);
+    run(2,1);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0 && (cpu.f&Z80_F_Z) && (cpu.f&Z80_F_N) &&
+           !(cpu.f&Z80_F_S) && !(cpu.f&Z80_F_C) &&
+           cpu.last_tstates==7u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==5u && cpu.last_tstates==5u);
+
+    setup();
+    LOAD(0,0x3E,0x00,0xD6,0x81);
+    run(2,1);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x7Fu && (cpu.f&Z80_F_PV) &&
+           (cpu.f&Z80_F_C) && (cpu.f&Z80_F_N) &&
+           !(cpu.f&Z80_F_S));
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
     test_pc12_source_set_bits();
+    test_pc15_sound_sub_immediate();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
