@@ -22,6 +22,9 @@ typedef struct {
     uint8_t cells[YS_PC_MAP_H][YS_PC_MAP_W];
     YsPcActorSpawn player, foe;
     uint8_t movement_ticks;
+    /* Empty => terminal scene; otherwise next canonical symbolic scene ID.
+       This is experimental native in-memory content, NOT original Ys data. */
+    char next_scene_id[YS_PC_CONTENT_ID_SIZE];
 } YsPcSceneContent;
 
 typedef enum {
@@ -33,7 +36,8 @@ typedef enum {
     YS_PC_CONTENT_BAD_SPAWN,
     YS_PC_CONTENT_CONFLICT,
     YS_PC_CONTENT_NOT_FOUND,
-    YS_PC_CONTENT_FULL
+    YS_PC_CONTENT_FULL,
+    YS_PC_CONTENT_BAD_LINK
 } YsPcContentStatus;
 typedef struct {
     size_t count;
@@ -43,6 +47,9 @@ typedef struct {
 /* Recreates the ORIGINAL PC-0 PLACEHOLDER, not a faithful Ys map. */
 void ys_pc_content_placeholder(YsPcSceneContent *out);
 YsPcContentStatus ys_pc_content_validate(const YsPcSceneContent *scene);
+/* A scene must have a traversable route to its foe and goal (potentially
+   after defeating foe). This is prototype geometry, not Ys wall data. */
+bool ys_pc_content_route_ok(const YsPcSceneContent *scene);
 char ys_pc_content_cell(const YsPcSceneContent *scene,int x,int y);
 /* add/replace by NAMESPACED symbolic scene ID, deterministic sorted
    order. Fails before mutation on invalid/duplicate/missing/full. */
