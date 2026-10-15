@@ -56,6 +56,10 @@ YsPcContentStatus ys_pc_content_validate(const YsPcSceneContent *s) {
     if(!id_ok(s->id)||!id_ok(s->player.id)||!id_ok(s->foe.id)||
        strcmp(s->player.id,s->foe.id)==0)
         return YS_PC_CONTENT_BAD_ID;
+    if(s->next_scene_id[0]!=0 &&
+       (!id_ok(s->next_scene_id) ||
+        strcmp(s->next_scene_id,s->id)==0))
+        return YS_PC_CONTENT_BAD_LINK;
     unsigned goal_count=0u;
     for(unsigned y=0;y<YS_PC_MAP_H;++y)
         for(unsigned x=0;x<YS_PC_MAP_W;++x) {
@@ -78,6 +82,35 @@ YsPcContentStatus ys_pc_content_validate(const YsPcSceneContent *s) {
        ys_pc_content_cell(s,s->foe.x,s->foe.y)!=YS_PC_FLOOR)
         return YS_PC_CONTENT_BAD_SPAWN;
     return YS_PC_CONTENT_OK;
+}
+bool ys_pc_content_route_ok(const YsPcSceneContent *scene) {
+    if(ys_pc_content_validate(scene)!=YS_PC_CONTENT_OK) return false;
+    bool visited[YS_PC_MAP_H][YS_PC_MAP_W]={0};
+    uint8_t queue_x[YS_PC_MAP_W*YS_PC_MAP_H];
+    uint8_t queue_y[YS_PC_MAP_W*YS_PC_MAP_H];
+    unsigned front=0u,back=0u;
+    const unsigned px=scene->player.x,py=scene->player.y;
+    visited[py][px]=true;
+    queue_x[back]=(uint8_t)px;queue_y[back]=(uint8_t)py;++back;
+    bool goal=false,foe=false;
+    while(front<back) {
+        unsigned x=queue_x[front],y=queue_y[front];++front;
+        if(x==scene->foe.x && y==scene->foe.y) foe=true;
+        if(scene->cells[y][x]==YS_PC_GOAL) goal=true;
+        static const int8_t dx[4]={-1,1,0,0};
+        static const int8_t dy[4]={0,0,-1,1};
+        for(unsigned dir=0;dir<4u;++dir) {
+            int xx=(int)x+dx[dir],yy=(int)y+dy[dir];
+            if(xx<0 || yy<0 || xx>=YS_PC_MAP_W ||
+               yy>=YS_PC_MAP_H || visited[yy][xx] ||
+               scene->cells[yy][xx]==YS_PC_WALL) continue;
+            visited[yy][xx]=true;
+            queue_x[back]=(uint8_t)xx;
+            queue_y[back]=(uint8_t)yy;
+            ++back;
+        }
+    }
+    return goal && foe;
 }
 void ys_pc_catalog_init(YsPcContentCatalog *catalog) {
     if(catalog) memset(catalog,0,sizeof(*catalog));
