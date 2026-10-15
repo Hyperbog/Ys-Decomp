@@ -289,12 +289,13 @@ static void test_pc15_sound_sub_immediate(void) {
     assert(cpu.pc==5u && cpu.last_tstates==5u);
 
     setup();
-    LOAD(0,0x3E,0x00,0xD6,0x81);
+    /* +127 - (-1) => signed overflow, wrapped $80 and borrow. */
+    LOAD(0,0x3E,0x7F,0xD6,0xFF);
     run(2,1);
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
-    assert(cpu.a==0x7Fu && (cpu.f&Z80_F_PV) &&
+    assert(cpu.a==0x80u && (cpu.f&Z80_F_PV) &&
            (cpu.f&Z80_F_C) && (cpu.f&Z80_F_N) &&
-           !(cpu.f&Z80_F_S));
+           (cpu.f&Z80_F_S));
 }
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
