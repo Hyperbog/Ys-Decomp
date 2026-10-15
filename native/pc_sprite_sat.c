@@ -42,7 +42,7 @@ bool ys_pc_sprite_records_load(FILE *file,YsPcSpriteRecords *out) {
         if(p<0x8080u || p>=0x9932u) return false;
         unsigned start=p-0x8080u;
         unsigned count=value.stream[start];
-        if(count==0u || count>64u ||
+        if(count==0u || count>=64u ||
            start+1u+3u*count>YS_PC_SPRITE_STREAM_BYTES)
             return false;
         unsigned size=1u+3u*count;
