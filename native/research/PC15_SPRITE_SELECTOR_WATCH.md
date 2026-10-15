@@ -167,6 +167,35 @@ and carry-sensitive tests. This is
 **reference execution tooling**, not the native
 PC gameplay runtime.
 
+## Actual original-source watch result
+
+The continuous bounded execution from the independently checked
+M45 `PC=$0C92` produced the following **real** result after
+adding only the original `SUB $81` and four `RRA` reference
+opcodes. The [passing native workflow](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38723432391)
+reached:
+
+| Property | Actual result |
+| --- | --- |
+| Post-M45 native source-interpreter steps | **5,850** |
+| Stop PC | **`$8307` in bank-2 sound command code** |
+| Mapped CPU slot 1 | **physical bank 1** |
+| Mapped CPU slot 2 | **physical bank 2** |
+| Natural accepted IRQs | **57** |
+| Natural VBlank events | **61** |
+| Mapped bank6 `$9932` producer events | **0** |
+| Source sprite record index `$C199` at producer | **UNOBSERVED** |
+| Stop reason | Unsupported next original reference opcode |
+
+The independent `verify_pc15_sprite_source.py` static
+audit passed, as did the no-ROM passive watcher and
+versioned JSON validator. This result is explicitly
+**BLOCKED for active Ys gameplay**, even though source
+bytes and the 64-way selector computation are proven.
+The trace uses an unpressed controller and is still
+inside bank-2 sound setup. Original sprite-selection
+identity and scene contents remain unknown.
+
 ## Verify
 
 ```sh
