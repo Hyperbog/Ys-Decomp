@@ -241,6 +241,19 @@ source trace **cannot** identify the player or an
 authentic Ys area. Prototype gameplay and Alpha gates
 are unchanged.
 
+## PC-16 / PC-17 original sound instruction continuation (reference only)
+
+[PC-16 EX DE,HL](research/PC16_SOUND_EXCHANGE_CHECKPOINT.md) and
+[PC-17 indexed PSG execution](research/PC17_INDEXED_PSG_CHECKPOINT.md)
+extend the *bounded original-source Z80 interpreter*, not the native
+PC game engine. PC-17 verifies the original bank-2 `$8A4B-$8A57` PSG
+routine's instruction bytes and tests the new indexed loads, indexed
+OR and immediate ADD. Natural continuation from M45 now stops at
+physical bank-2 `$8947` (`INC (IX+11)`) after **6,009** original
+post-M45 steps with **0** observed original collision or bank6 sprite
+producer calls. These are source-execution diagnostics, not
+authentic Ys gameplay. All Alpha gates remain false.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
