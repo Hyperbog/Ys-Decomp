@@ -111,6 +111,18 @@ This is a **C11 internal prototype extension point**, not
 an original Ys world map or an external serialized mod-pack
 compatibility format. Official Alpha gates remain unpassed.
 
+## PC-14 original sprite attribute producer
+
+[PC-14](research/PC14_ORIGINAL_SPRITE_SAT.md) adds native
+C11 source-only import of all **64 original bank-6 SAT
+records** and deterministic Y/X/tile staging with a
+192-case original Z80 output oracle. The record indices
+remain **original source provenance**, not canonical
+player/enemy IDs, nor a verified sprite-art or scene
+resource in the modding interface. The F12 viewer is
+diagnostic only; actual original sprite identities and
+frame residency still require a live game-state trace.
+
 ## Next gates
 
 1. Recover a verified authentic original Ys playable scene and
