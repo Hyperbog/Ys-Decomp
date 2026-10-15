@@ -5,6 +5,7 @@
 #include "sms_video.h"
 #include "pc_vdp_checkpoint.h"
 #include "pc_source_watch.h"
+#include "pc_sprite_watch.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -198,9 +199,10 @@ int main(int argc,char **argv) {
     if (!(argc==2 || (argc==4 &&
           (strcmp(argv[2],"--frame")==0 ||
            strcmp(argv[2],"--vdp-at-m44")==0 ||
-           strcmp(argv[2],"--pc12-watch")==0)))) {
-        fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json]\n"
-              "Default stops at source $0C92; --pc12-watch continues bounded original execution without controller input (not gameplay proof).\n",
+           strcmp(argv[2],"--pc12-watch")==0 ||
+           strcmp(argv[2],"--pc15-sprite-watch")==0)))) {
+        fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
+              "Default stops at source $0C92; --pc12-watch/--pc15-sprite-watch continue bounded source execution without controller input (not gameplay proof).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1629,8 +1631,54 @@ int main(int argc,char **argv) {
             puts("OBSERVED PC-12: original mapped bank1 collision PC"
                  " reached; inspect JSON for mapper/WRAM/IX context;"
                  " still not proof of a playable scene");
+    } else if(argc==4 && strcmp(argv[2],"--pc15-sprite-watch")==0) {
+        /* PC-15: original CPU CONTINUATION from identical verified
+           M45 state. No mapper, controller, VDP or RAM injections.
+           First source bank6 $9932 entry is qualified by physical
+           bank6 present in slot2, not its CPU address alone. */
+        enum { PC15_STEPS=150000u,PC15_EXTRA_VBLANKS=90u };
+        YsPcSpriteWatch watch={0};
+        const uint64_t start_blank=runtime.clock.vblank_events;
+        const char *why="budget";
+        unsigned long steps=0ul;
+        for(;steps<PC15_STEPS;++steps) {
+            if(!ys_pc_sprite_watch_sample(&watch,&runtime)) {
+                fputs("PC-15 invalid original sprite source sampler\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            if(watch.seen[3]) {why="observed";break;}
+            if(runtime.clock.vblank_events-start_blank>=PC15_EXTRA_VBLANKS) {
+                why="vblank_limit";break;
+            }
+            Z80Status result=ys_sms_runtime_step_auto(&runtime);
+            if(result!=Z80_RUNNING && result!=Z80_HALTED) {
+                why="unsupported";break;
+            }
+        }
+        FILE *file=fopen(argv[3],"wb");
+        bool ok=file &&
+            ys_pc_sprite_watch_write(file,&watch,&runtime,why,steps);
+        if(file && fclose(file)!=0) ok=false;
+        if(!ok) {
+            fputs("PC-15 cannot write source sprite watch report\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        printf("PC-15 source sprite watch: reason=%s steps=%lu"
+               " PC=$%04X slot2=%u $9932_hits=%u"
+               " IRQ=%llu VBlank=%llu\n",
+               why,steps,cpu.pc,(unsigned)bus->mapped_bank[2],
+               watch.counts[3],
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+        if(watch.seen[3])
+            puts("OBSERVED PC-15: actual mapped bank6 sprite producer"
+                 " entered; JSON records raw selector/origins;"
+                 " sprite and scene identities UNVERIFIED");
+        else
+            puts("BLOCKED PC-15: no original mapped bank6 sprite"
+                 " producer observed; no original player/scene proof");
     } else {
-    puts("Stop before source $0C92 video setup, not playable.");
+        puts("Stop before source $0C92 video setup, not playable.");
     }
 
 
