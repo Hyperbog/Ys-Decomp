@@ -20,22 +20,32 @@ release evidence, not the age of the project.
 
 ## Current baseline
 
-- **Checkpoint:** M45 — original-ROM execution reaches
-  CPU `PC=$0C92` after **430,886** Z80 instructions,
-  **50** naturally accepted interrupts and **54** generated VBlanks.
-  A separate host reference decoder verifies **12,288** original
-  four-row graphics bytes at their actual interleaved VRAM addresses.
-  This is still Development, not playable native Ys.
-- **Available executables:** `ys-native-info`, `ys-native-probe`,
-  `ys-native-trace`, `ys-native-preview`, `ys-native-frames`, `ys-native-timing`, `ys-native-timed-rom`. These are CLI **diagnostic tools**,
-  including a stateless video preview, not a PC game.
+- **Reference CPU checkpoint:** M45 source execution reaches
+  `PC=$0C92`; PC-12's bounded original continuation reached
+  bank-2 sound code at `$8204` without observing original gameplay
+  collision callers. These are **reference diagnostics**, not native Ys
+  gameplay execution.
+- **Native PC prototype checkpoint:** PC-13 provides a C11/SDL2
+  `ys-native-game` target, a working placeholder room and an optional
+  ROM-free two-room linked campaign with a deterministic full playthrough.
+  This still has **no authenticated original Ys area/actor behavior**,
+  so the release channel remains Development.
+- **Available executables:** reference-only diagnostics including
+  `ys-native-info`, `ys-native-probe`, `ys-native-trace`,
+  `ys-native-preview`, `ys-native-frames`, `ys-native-timing`,
+  `ys-native-timed-rom`, plus the separate interactive
+  `ys-native-game` **C11/SDL2 prototype** where SDL2 is installed.
+  The prototype requires no game ROM; its gameplay is synthetic.
 - **Available Development diagnostics:** nominal Z80-timed NTSC/PAL
   scanline/VBlank scheduler, source-ROM bounded frame execution,
   256×192 PPM renderer and Windows native GDI test window.
-  **Not yet available:** actual game-driven live desktop window,
-  live Ys gameplay input, native audio playback or a playable
-  `ys-native-game` executable. These capabilities do not yet
-  satisfy the Alpha video/controls/interactive gates.
+  The separate SDL2 prototype supports a native moving player,
+  keyboard/controller input, placeholder collision/combat, and
+  optional two-room linked progression.
+  **Not yet available:** authenticated original Ys game-world rendering,
+  actual Ys player/collision behavior, title-to-game progression or
+  native music playback. Prototype controls/frames alone cannot pass
+  the original-game Alpha video/controls/interactive gates.
 - **Promotion record:** `native/release/gates.json`. Each gate starts
   `passed: false` with empty `evidence`. A promotion requires
   `passed: true` plus a nonempty link or path to evidence (test log,
@@ -51,11 +61,13 @@ release evidence, not the age of the project.
 | `live_controls` | `content_parity` | |
 | `interactive_gameplay` | `no_blocking_bugs` | |
 
-**Code-level guard:** Even if every Alpha gate is marked passed, the
-packager refuses to create an Alpha/Beta/Final bundle unless it finds a
-compiled **`ys-native-game` executable**. The current CMake project does
-not have that target. This prevents a trace-only binary from being
-published as an Alpha.
+**Code-level guard:** The packager checks that a compiled
+**`ys-native-game` executable** exists before creating Alpha/Beta/Final
+bundles. That target now **exists** for the prototype when SDL2 is found.
+Its existence is **necessary but not sufficient** for promotion:
+`native/release/gates.json` still has all five Alpha gates
+`passed:false` and requires authentic-game evidence. A synthetic
+two-room campaign does **not** satisfy that requirement.
 
 The evidence fields are reviewable project records, **not automated gameplay
 proof**. Updating them should follow the stated tests; they are not a
@@ -140,9 +152,12 @@ message when a *new execution boundary* needs verification.
    needed for title and gameplay, with reproducible checkpoint tests.
 2. **Development / first frame:** event-driven frame clock and display,
    keyboard/controller polling, memory banking, visible startup.
-3. **Development / playable loop:** movement, map transition, menus,
-   collisions and battle state; expose `ys-native-game` and promote to
-   **Alpha** after reproducible interactive testing.
+3. **Development / playable loop:** the native `ys-native-game`
+   prototype already has movement, a goal, a provisional encounter,
+   and (optionally) linked room transitions. Replace those with
+   **verified authentic Ys scene data, player mechanics and first real
+   encounter**, then promote to Alpha only after independently
+   reproducible hands-on gameplay tests and all five formal gates.
 4. **Alpha → Beta:** finish the campaign, inventory/save systems, all maps,
    bosses, PSG/FM playback, and eliminate blocking regressions.
 5. **Beta → Final:** compare reference game behavior and content, run
