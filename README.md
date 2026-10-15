@@ -1,5 +1,12 @@
 ## Enhanced native Ys PC port (new track)
 
+**PC-15 sprite selection provenance:** [Original C199 selector formula and bounded actual CPU watch](native/research/PC15_SPRITE_SELECTOR_WATCH.md)
+establishes the source-verified 8×8 mapping into all 64
+bank6 SAT records and adds passive original mapper/WRAM/
+VDP observations. This is source evidence and diagnostic
+tooling **not** identification of a live original player
+sprite or playable scene. All genuine Alpha gates remain false.
+
 **PC-14 sprite integration:** [Original 64-record bank-6 SAT source pipeline](native/research/PC14_ORIGINAL_SPRITE_SAT.md)
 is reproduced independently in native C11 and checked against
 192 original-Z80 SAT hash cases. F12 displays a read-only
