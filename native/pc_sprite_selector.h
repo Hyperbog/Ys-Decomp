@@ -2,6 +2,7 @@
 #define YS_PC_SPRITE_SELECTOR_H
 #include <stdbool.h>
 #include <stdint.h>
+#include "pc_sprite_sat.h"
 
 /* Original bank0 $26B6-$26DA is a conditional SOURCE computation,
    not a verified live Ys scene/sprite identity. Byte input names
@@ -20,4 +21,10 @@ bool ys_pc_sprite_selector_source(const YsPcSpriteSelectorInput *in,
    canonical 0..63 directory. Other raw bytes may point outside the
    64 verified entries (e.g. $FF -> 127); reject rather than guess. */
 bool ys_pc_sprite_selector_index(uint8_t raw_c199,unsigned *index);
+/* SOURCE state -> indexed bank6 SAT composition in native C11.
+   Reproduce selection and two-origin original producer, but NOT
+   claim state occurs in playable Ys. All outputs preserved on failure. */
+bool ys_pc_sprite_stage_source_state(
+    const YsPcSpriteRecords *records,const YsPcSpriteSelectorInput *state,
+    YsPcSatBuffer *out,uint8_t *raw_c199,unsigned *directory_index);
 #endif
