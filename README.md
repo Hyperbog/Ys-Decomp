@@ -1,5 +1,11 @@
 ## Enhanced native Ys PC port (new track)
 
+**PC-14 sprite integration:** [Original 64-record bank-6 SAT source pipeline](native/research/PC14_ORIGINAL_SPRITE_SAT.md)
+is reproduced independently in native C11 and checked against
+192 original-Z80 SAT hash cases. F12 displays a read-only
+sprite-coordinate marker diagnostic; **no original playable
+scene, player sprite identity, palette or Alpha gate is claimed**.
+
 **PC-13 Alpha-path rehearsal:** [Two-room native prototype campaign](native/research/PC13_CAMPAIGN_VERTICAL_SLICE.md)
 is an opt-in source-free progression loop with linked
 canonical scene IDs, full button-input replay tests and
