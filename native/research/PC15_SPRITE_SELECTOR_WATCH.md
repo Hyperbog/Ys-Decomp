@@ -84,6 +84,17 @@ API**, not a public mod record namespace.
 **4,096 original-source bitfield combinations**
 plus every unique 0–63 target, unsigned wrap,
 skip paths, invalid values and immutable outputs.
+The new `ys_pc_sprite_stage_source_state`
+**composes** the source `$C199` construction,
+fail-closed 64-way directory index and the
+existing original bank6 native SAT producer
+with the actual `$C210/$C211` origin bytes.
+The tests also drive all **192** combinations
+of source-computed indices and Phase-19 origin
+pairs against the recovered 64-record package.
+This is a complete original **source arithmetic
+pipeline** under controlled C inputs, **not**
+an observed original gameplay sprite selection.
 `native/tools/verify_pc15_sprite_source.py`
 checks all source opcode sites through the
 original independently rebuilt bank0/bank6
