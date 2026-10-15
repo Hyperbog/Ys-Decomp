@@ -103,6 +103,8 @@ jobs:
           python3 native/tools/verify_pc17_psg_source.py "$RUNNER_TEMP/ys-pc8-source.sms"
           # PC-18: authentic bank2 $8947 indexed sound counter instruction bytes.
           python3 native/tools/verify_pc18_sound_counter.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-19: original bank2 $84F1 indexed D/E pointer load provenance.
+          python3 native/tools/verify_pc19_sound_pointer.py "$RUNNER_TEMP/ys-pc8-source.sms"
           # PC-9: validate authentic bank4 $807C collision predicate,
           # three bank1 candidate callers, and 3968 original Z80 cases.
           python3 native/tools/export_pc_collision.py --out "$RUNNER_TEMP/ys-pc9-collision.bin"
