@@ -190,6 +190,23 @@ limit or an observed original call. **A blocked run is not
 proof of any playable gameplay state.** The PC-10
 placeholder remains untouched.
 
+## PC-13 prototype campaign vertical-slice rehearsal (NOT authentic Ys)
+
+[PC-13 end-to-end native campaign rehearsal](research/PC13_CAMPAIGN_VERTICAL_SLICE.md)
+connects canonical `prototype.*` scene IDs to an actual
+**two-room, source-free playable campaign**. A deterministic
+input-driven test reaches an enemy in each room, defeats it,
+crosses an unlocked door, retains HP/defeats between rooms,
+completes the final room and restarts. Initialization rejects
+missing/cyclic scene links and unreachable foes or exits.
+
+To try it in SDL2: `./build-native/ys-native-game --prototype-campaign`.
+The default command still opens the unchanged PC-0
+one-room placeholder. This is **Alpha-path infrastructure,
+NOT authentic Ys content or an Alpha promotion**; no
+original scene/tiles, actor AI or gameplay transition is
+claimed. The five Alpha gates stay false.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
