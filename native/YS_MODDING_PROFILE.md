@@ -100,6 +100,17 @@ It does **not** populate the canonical scene registry,
 define authentic object/resource IDs, or grant support
 for external mod packs, saves, editor or real gameplay.
 
+## PC-13 experimental linked scenes
+
+[PC-13](research/PC13_CAMPAIGN_VERTICAL_SLICE.md)
+extends the native in-memory **prototype** scene contract
+with a symbolic `next_scene_id` and adds deterministic,
+validated campaign link traversal. All links and walkable
+prototype encounter/goal positions are checked before play.
+This is a **C11 internal prototype extension point**, not
+an original Ys world map or an external serialized mod-pack
+compatibility format. Official Alpha gates remain unpassed.
+
 ## Next gates
 
 1. Recover a verified authentic original Ys playable scene and
