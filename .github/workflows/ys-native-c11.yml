@@ -39,6 +39,9 @@ jobs:
         run: |
           test -x ./build-native/ys-native-game
           ./build-native/ys-native-game --smoke
+          # PC-13: optional two-room native prototype, NOT a real Ys stage.
+          ./build-native/ys-native-game --smoke --prototype-campaign
+          ./build-native/ys-pc-campaign-tests
           python3 native/tools/export_pc_tiles.py --out "$RUNNER_TEMP/ys-pc-source-tiles.bin"
           python3 native/tools/export_pc_tiles.py --verify "$RUNNER_TEMP/ys-pc-source-tiles.bin"
           ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin"
