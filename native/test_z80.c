@@ -482,11 +482,11 @@ static void test_pc18_indexed_sound_counter_prefix(void) {
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
     assert(ys_sms_bus_read(&bus,0xC10Bu)==0x80u);
     assert(cpu.a==0x55u && cpu.ix==0xC100u &&
-           cpu.f==(Z80_F_S|Z80_F_PV|Z80_F_C) &&
+           cpu.f==(Z80_F_S|Z80_F_H|Z80_F_PV|Z80_F_C) &&
            cpu.pc==3u && cpu.last_tstates==23u);
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
     assert(cpu.a==0x90u && cpu.pc==6u && cpu.last_tstates==19u &&
-           cpu.f==(Z80_F_S|Z80_F_PV|Z80_F_C));
+           cpu.f==(Z80_F_S|Z80_F_H|Z80_F_PV|Z80_F_C));
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
     assert(cpu.a==0x10u && cpu.pc==9u && cpu.last_tstates==19u &&
            cpu.f==Z80_F_N && ys_sms_bus_read(&bus,0xC10Bu)==0x80u);
@@ -522,7 +522,7 @@ static void test_pc18_indexed_inc_flags(void) {
         {0x07u,0x08u,Z80_F_3},
         {0x0Fu,0x10u,Z80_F_H},
         {0x1Fu,0x20u,Z80_F_H|Z80_F_5},
-        {0x7Fu,0x80u,Z80_F_S|Z80_F_PV},
+        {0x7Fu,0x80u,Z80_F_S|Z80_F_H|Z80_F_PV},
         {0xFFu,0x00u,Z80_F_H|Z80_F_Z}
     };
     for(size_t i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
