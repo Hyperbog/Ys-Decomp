@@ -45,6 +45,12 @@ jobs:
           test "$(stat -c%s "$RUNNER_TEMP/ys-rebuilt.sms")" -eq 262144
           echo "02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9  $RUNNER_TEMP/ys-rebuilt.sms" | sha256sum -c -
 
+      - name: Verify complete searchable original-ROM assembly/data reference
+        working-directory: Ys
+        run: |
+          python3 tools/build_master_rom_listing.py --check
+          python3 -m unittest -v tests_master_rom_listing
+
       - name: Verify Milestone 14 Bank 13 asset inventory
         working-directory: Ys
         run: python3 tools/bank13_rle_m14.py --check
