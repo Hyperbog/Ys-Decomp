@@ -297,11 +297,39 @@ static void test_pc15_sound_sub_immediate(void) {
            (cpu.f&Z80_F_C) && (cpu.f&Z80_F_N) &&
            (cpu.f&Z80_F_S));
 }
+static void test_pc15_sound_rra_nibble(void) {
+    setup();
+    /* Original bank2 $818F AND $F0, $8191-$8194 RRA x4.
+       Z80 RRA is THROUGH carry, unlike RRCA. */
+    LOAD(0,0x3E,0xA7,0xE6,0xF0,
+         0x1F,0x1F,0x1F,0x1F,0x76);
+    run(4,2);
+    assert(cpu.a==0xA0u && !(cpu.f&Z80_F_C));
+    for(unsigned i=0;i<4u;++i) {
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        assert(cpu.last_tstates==4u);
+    }
+    assert(cpu.a==0x0Au && cpu.pc==8u &&
+           !(cpu.f&Z80_F_C) && !(cpu.f&Z80_F_H) &&
+           !(cpu.f&Z80_F_N) && (cpu.f&Z80_F_PV));
+    setup();
+    LOAD(0,0x1F,0x1F);
+    cpu.a=0x01u;
+    cpu.f=Z80_F_C|Z80_F_Z|Z80_F_PV;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x80u && (cpu.f&Z80_F_C) &&
+           (cpu.f&Z80_F_Z) && (cpu.f&Z80_F_PV) &&
+           !(cpu.f&Z80_F_S)); /* old S, not new bit7 */
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0xC0u && !(cpu.f&Z80_F_C) &&
+           (cpu.f&Z80_F_Z) && (cpu.f&Z80_F_PV));
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
     test_pc12_source_set_bits();
     test_pc15_sound_sub_immediate();
+    test_pc15_sound_rra_nibble();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
