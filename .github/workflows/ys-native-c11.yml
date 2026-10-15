@@ -41,6 +41,23 @@ jobs:
           ./build-native/ys-native-game --smoke
           # PC-13: optional two-room native prototype, NOT a real Ys stage.
           ./build-native/ys-native-game --smoke --prototype-campaign
+          # PC-14: source-only physical bank6 records. Independently
+          # check 192 original-Z80 SAT hashes and native C11 SAT bytes.
+          python3 native/tools/export_pc_sprite_sat.py --out "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          python3 native/tools/export_pc_sprite_sat.py --verify "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          ./build-native/ys-pc-sprite-sat-tests "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          ./build-native/ys-pc-sprite-sat-dump "$RUNNER_TEMP/ys-pc14-sprites.bin" "$RUNNER_TEMP/ys-pc14-sat.bin"
+          python3 -c 'import pathlib,hashlib,json,os; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc14-sat.bin"; blob=p.read_bytes(); ledger=json.loads(pathlib.Path("Ys/phase19/execution_report.json").read_text()); assert len(blob)==36864; assert hashlib.sha256(blob).hexdigest()==ledger["concat_sat_sha256"], "PC-14 original-Z80 and native-C11 SAT mismatch"; print("PASS PC-14 original source SAT corpus: 192/192 cases, SHA256",hashlib.sha256(blob).hexdigest())'
+          ./build-native/ys-native-game --smoke --sprite-records "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc14-invalid.bin"
+          if ./build-native/ys-native-game --smoke --sprite-records "$RUNNER_TEMP/ys-pc14-invalid.bin"; then
+            echo "PC-14 SDL accepted corrupt original sprite records" >&2
+            exit 1
+          fi
+          if ./build-native/ys-pc-sprite-sat-dump "$RUNNER_TEMP/ys-pc14-invalid.bin" "$RUNNER_TEMP/ys-pc14-invalid-sat.bin"; then
+            echo "PC-14 decoder accepted corrupt source records" >&2
+            exit 1
+          fi
           ./build-native/ys-pc-campaign-tests
           python3 native/tools/export_pc_tiles.py --out "$RUNNER_TEMP/ys-pc-source-tiles.bin"
           python3 native/tools/export_pc_tiles.py --verify "$RUNNER_TEMP/ys-pc-source-tiles.bin"
