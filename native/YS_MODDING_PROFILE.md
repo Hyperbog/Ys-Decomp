@@ -123,6 +123,19 @@ resource in the modding interface. The F12 viewer is
 diagnostic only; actual original sprite identities and
 frame residency still require a live game-state trace.
 
+## PC-15 original sprite directory selector provenance
+
+[PC-15](research/PC15_SPRITE_SELECTOR_WATCH.md)
+recovers the conditional `$C199` bitfield formula
+for all 64 original sprite-record directory indexes,
+with explicit original WRAM inputs. An independent
+native C11 function and bounded source-only runtime
+watch validate the source expression and any actual
+bank6 entry. Neither raw `$C199` nor numbered
+original record indexes are promoted into public
+`base.*` scene/actor IDs without a verified real
+gameplay frame and player identity.
+
 ## Next gates
 
 1. Recover a verified authentic original Ys playable scene and
