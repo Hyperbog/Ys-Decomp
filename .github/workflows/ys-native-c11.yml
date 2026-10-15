@@ -109,6 +109,13 @@ jobs:
           # synthesize a scene or assume an unreachable collision event.
           ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc12-watch "$RUNNER_TEMP/ys-pc12-watch.json"
           python3 native/tools/verify_pc12_watch.py "$RUNNER_TEMP/ys-pc12-watch.json"
+          # PC-15: source-only bank6 sprite producer opcode provenance.
+          # Continue real unchanged original CPU/VDP/IRQ state after M45
+          # and record C199/C210/C211 ONLY if physical bank6 is mapped.
+          python3 native/tools/verify_pc15_sprite_source.py
+          ./build-native/ys-pc-sprite-watch-tests
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc15-sprite-watch "$RUNNER_TEMP/ys-pc15-watch.json"
+          python3 native/tools/verify_pc15_sprite_watch.py "$RUNNER_TEMP/ys-pc15-watch.json"
           python3 -c 'import json,os,pathlib; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc12-watch.json"; v=json.loads(p.read_text()); print("PC-12 bounded result:", v["stop_reason"], "PC", v["stop_pc"], "calls", v["observed_collision_calls"])'
           ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin"
           ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin" --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin"
