@@ -2193,7 +2193,7 @@ int main(int argc,char **argv) {
                    pc44.same[0],pc44.same[1],
                    pc44.changed[0],pc44.changed[1],
                    pc44.aliases[0],pc44.aliases[1],
-                   (unsigned)ys_sms_bus_read(bus,0xC198u));
+                   (unsigned)bus->wram[0x0198u]);
         }
         if(pc39_mode) {
             FILE *strobe=fopen(argv[9],"wb");
