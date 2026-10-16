@@ -70,7 +70,7 @@ static void ei_delay_and_im1_irq(void) {
     assert(cpu.ei_delay==0 && ys_z80_irq(&cpu));
     assert(cpu.pc==0x0038 && cpu.sp==0xDFEE &&
            ys_sms_bus_read(&bus,0xDFEE)==0x03);
-    assert(!cpu.iff1 && cpu.iff2);
+    assert(!cpu.iff1 && !cpu.iff2);
     until(0x003A,2); /* RETI starts at $003A, after EI and NOP. */
     assert(cpu.iff1 && cpu.ei_delay==0);
     until(0x0003,1);
