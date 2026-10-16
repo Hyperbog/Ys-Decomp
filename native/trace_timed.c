@@ -1974,12 +1974,16 @@ int main(int argc,char **argv) {
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
         }
         printf("PC-27 source-armed controller experiment:"
-               " reason=%s steps=%lu selector=%u->%u"
-               " wait=%u sampled_edges_bit4=%u pressed=%u released=%u"
-               " IRQ=%llu VBlank=%llu collisions=%u\n",
-               why,steps,(unsigned)start_selector,
+               " reason=%s steps=%lu PC=$%04X fault=$%04X status=%u"
+               " selector=%u->%u arm_hits=%u"
+               " edge_bit4=%u mode_write_hits=%u mode2=%u"
+               " pressed=%u released=%u IRQ=%llu VBlank=%llu"
+               " collisions=%u\n",
+               why,steps,cpu.pc,cpu.fault_pc,(unsigned)cpu.status,
+               (unsigned)start_selector,
                (unsigned)ys_sms_bus_read(bus,0xC01Fu),
-               arm_hits,edge_10_hits,(unsigned)pressed,(unsigned)released,
+               arm_hits,edge_10_hits,hits_mode_write,(unsigned)saw_mode2,
+               (unsigned)pressed,(unsigned)released,
                (unsigned long long)runtime.recognized_irqs,
                (unsigned long long)runtime.clock.vblank_events,
                collision.observed_collision_calls);
