@@ -172,7 +172,8 @@ static bool timed_condition(uint8_t opcode, uint8_t f) {
 }
 static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
                               uint8_t sub, uint8_t f_before,
-                              uint8_t b_before, uint16_t start) {
+                              uint8_t b_before, uint16_t start,
+                              uint8_t indexed_cb_operation) {
     if (opcode>=0x40u && opcode<=0x7Fu)
         return opcode==0x76u ? 4u :
                (opcode&7u)==6u || ((opcode>>3)&7u)==6u ? 7u : 4u;
@@ -211,7 +212,10 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0x36: return 19u; /* LD (IX/IY+d),n */
         case 0x09: case 0x19: case 0x29: case 0x39:
             return 15u;       /* ADD IX/IY,rr */
-        case 0xCB: return 20u;/* BIT b,(IX/IY+d) */
+        case 0xCB:
+            /* DD/FD CB d xx: BIT=20 T, successful RES/SET=23 T.
+               Final operation was latched BEFORE any mapper write. */
+            return (indexed_cb_operation&0xC0u)==0x40u?20u:23u;
         default: return 0u;
         }
     case 0x02: case 0x0A: case 0x12: case 0x1A: return 7u;
@@ -271,6 +275,11 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     uint8_t timing_sub=(opcode==0xCBu || opcode==0xDDu ||
                         opcode==0xFDu || opcode==0xEDu) ?
                         ys_sms_bus_read(cpu->bus,cpu->pc) : 0u;
+    /* Index-prefix CB disp operation can modify a mapper register.
+       Capture last byte BEFORE execution, never read it afterward. */
+    uint8_t indexed_cb_operation=
+        (opcode==0xDDu || opcode==0xFDu) && timing_sub==0xCBu ?
+        ys_sms_bus_read(cpu->bus,(uint16_t)(cpu->pc+2u)) : 0u;
     if (opcode >= 0x40u && opcode <= 0x7Fu) {
         if (opcode == 0x76u) cpu->status = Z80_HALTED;
         else if (!w8(cpu, (opcode >> 3) & 7u, r8(cpu, opcode & 7u)))
@@ -550,14 +559,30 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         } else if(sub==0xCB) {
             int8_t displacement=(int8_t)fetch(cpu);
             uint8_t operation=fetch(cpu);
-            if ((operation&0xC7u)!=0x46u) {
+            uint16_t addr=(uint16_t)(*index+displacement);
+            if ((operation&0xC0u)==0x40u) {
+                /* Indexed BIT b,(IX/IY+d): F3/F5 are from address
+                   HIGH byte; no bus write or register copy. */
+                uint8_t value=ys_sms_bus_read(cpu->bus,addr);
+                cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,
+                                  (uint8_t)(addr>>8));
+            } else if((operation&0xC0u)==0x80u ||
+                      (operation&0xC0u)==0xC0u) {
+                /* Original bank0 $1AC4 DD CB 01 C6: SET 0,(IX+1).
+                   RES/SET b,(IX/IY+d),r are read/modify/write.
+                   Undocumented r!=6 opcodes ALSO load the result
+                   into ordinary B/C/D/E/H/L/A, never IXH/IYL.
+                   Successful SET/RES preserve ALL flags. */
+                uint8_t value=ys_sms_bus_read(cpu->bus,addr);
+                uint8_t mask=(uint8_t)(1u<<((operation>>3)&7u));
+                uint8_t result=(operation&0x40u)?
+                    (uint8_t)(value|mask):(uint8_t)(value&~mask);
+                if(!store(cpu,addr,result)) goto fail;
+                unsigned reg=operation&7u;
+                if(reg!=6u && !w8(cpu,reg,result)) goto fail;
+            } else {
                 cpu->status=Z80_UNSUPPORTED;goto fail;
             }
-            uint16_t addr=(uint16_t)(*index+displacement);
-            uint8_t value=ys_sms_bus_read(cpu->bus,addr);
-            /* On indexed BIT, undocumented F3/F5 come from address high. */
-            cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,
-                              (uint8_t)(addr>>8));
         } else {
             cpu->status=Z80_UNSUPPORTED;goto fail;
         }
@@ -890,7 +915,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     default: cpu->status=Z80_UNSUPPORTED;goto fail;
     }
     cpu->last_tstates=opcode_tstates(cpu,opcode,timing_sub,f_before,
-                                      b_before,start);
+                                      b_before,start,indexed_cb_operation);
     cpu->total_tstates+=cpu->last_tstates;
     ++cpu->steps;
     if (cpu->ei_delay) --cpu->ei_delay;
