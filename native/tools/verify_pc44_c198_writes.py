@@ -15,7 +15,7 @@ KEYS={"schema","stop_reason","continued_steps","final_pc",
       "final_value","count","phase_counts","same","changed",
       "aliases","events"}
 EVENT_KEYS={"phase","iteration","cpu_step","logical","physical",
-            "pc","bank","hl","de","bc","before","after","a","f","selector",
+            "pc","bank","hl","de","bc","before","after","a","f","source_at_hl","selector",
             "slot2","irq"}
 
 def strict(path):
@@ -76,7 +76,7 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
     for e in w["events"]:
         assert type(e) is dict and set(e)==EVENT_KEYS
         for k in ("phase","iteration","cpu_step","bank","before",
-                  "after","a","f","selector","slot2","irq"):
+                  "after","a","f","source_at_hl","selector","slot2","irq"):
             nat(e[k])
         assert e["phase"] in (0,1)
         assert e["phase"]>=phase
@@ -98,7 +98,7 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
         assert e["logical"] in ("C198","E198")
         assert e["bank"] in (*range(16),254,255)
         assert e["irq"] in (0,1)
-        for k in ("before","after","a","f","selector","slot2"):
+        for k in ("before","after","a","f","source_at_hl","selector","slot2"):
             nat(e[k],255)
         # Because the hook observes every *successful physical WRAM*
         # store, the before byte must equal the previous after byte.
@@ -113,6 +113,13 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
             assert e["bank"]==0 and e["irq"]==0
             assert e["de"]==e["logical"]
             assert int(e["bc"],16)>0
+            assert e["source_at_hl"]==e["after"]
+        if e["pc"]=="2041":
+            # $203B XOR A; $203C BIT 7,(HL); conditional INC A
+            # sets the copied sprite flag to bit7 of the ROM record.
+            assert e["hl"]=="258D"
+            assert e["source_at_hl"]==raw[0x258D]
+            assert e["after"]==(e["source_at_hl"]>>7)
         if e["pc"] in ("2041","2281"):
             assert e["bank"]==0 and e["irq"]==0
             assert e["logical"]=="C198"
@@ -148,6 +155,11 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
                     e["before"],e["after"],e["a"],e["irq"])
                    for e in w["events"])
     assert observed==measured,(observed,measured)
+    assert tuple((e["hl"],e["de"],e["bc"]) for e in w["events"])==(
+        ("C197","C198","1CC8"),
+        ("C197","C198","0068"),
+        ("258D","C601","0001"))
+    assert tuple(e["source_at_hl"] for e in w["events"][:2])==(0,0)
     print("PASS PC-44 source physical C198 writes: reset=%d post=%d"
           " same=%s changed=%s aliases=%s final=%d" % (
           w["phase_counts"][0],w["phase_counts"][1],w["same"],
@@ -155,10 +167,11 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
     for e in w["events"]:
         print("  phase=%d iteration=%d cpu_step=%d pc=$%s bank=%d"
               " logical=$%s before=%d after=%d A=%d"
-              " HL=$%s DE=$%s BC=$%s irq=%d" % (
+              " HL=$%s DE=$%s BC=$%s source_at_HL=%d irq=%d" % (
                e["phase"],e["iteration"],e["cpu_step"],e["pc"],
                e["bank"],e["logical"],e["before"],e["after"],
-               e["a"],e["hl"],e["de"],e["bc"],e["irq"]))
+               e["a"],e["hl"],e["de"],e["bc"],
+               e["source_at_hl"],e["irq"]))
 
 if __name__=="__main__":
     try:
