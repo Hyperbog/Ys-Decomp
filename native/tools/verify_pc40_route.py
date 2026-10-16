@@ -123,7 +123,7 @@ def verify(rom_path,source_json,route_json,pc34_json,milestone='pc40'):
         else:
             assert event["first_step"]==event["last_step"]==0
             assert event["first_selector"]==event["first_slot2"]==0
-    assert milestone in ("pc40","pc41")
+    assert milestone in ("pc40","pc41","pc42")
     if milestone=="pc40":
         # Fixed, SHA-gated original Ys source golden after PC-40 opcode
         # completion. The source Z80 stops at its *next real unsupported*
@@ -142,7 +142,7 @@ def verify(rom_path,source_json,route_json,pc34_json,milestone='pc40'):
         # PC-41 must execute strictly beyond the original PC-40
         # UNSUPPORTED $1A0A boundary, which is separately checked
         # *during the source execution* by the C11 PC41 checkpoint.
-        assert 525358<r["continued_steps"]<=600000
+        assert (531478 if milestone=="pc42" else 525358)<r["continued_steps"]<=600000
         assert r["events"][12]["hits"]>=1   # $26B6 bank 0
         assert r["events"][20]["hits"]>=1   # $4773 physical bank 1
         assert a["observed_collision_calls"]>=0
