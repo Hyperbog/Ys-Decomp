@@ -1761,6 +1761,35 @@ static void test_pc42_refresh_ld_a_r_and_irq(void) {
     puts("PASS PC-42: 512 LD A,R combinations, bit7 wrap, prefixes,"
          " HALT M1, IM1 IFF1/IFF2 and RETN");
 }
+static void test_pc42_original_xor_immediate(void) {
+    /* Original source $13F5 EE 80; exhaustive independent truth table
+       for immediate XOR including all 8-bit accumulator and operands. */
+    setup();
+    LOAD(0x100u,0xEEu,0x00u);
+    for(unsigned a=0;a<256u;++a)
+        for(unsigned rhs=0;rhs<256u;++rhs) {
+            rom[0x101u]=(uint8_t)rhs;
+            cpu.status=Z80_RUNNING;cpu.pc=0x100u;
+            cpu.a=(uint8_t)a;cpu.f=0xFFu;
+            uint8_t result=(uint8_t)(a^rhs);
+            unsigned odd=0u;
+            for(unsigned bit=0u;bit<8u;++bit) odd+=(result>>bit)&1u;
+            uint8_t expected=(uint8_t)((result&0xA8u)|
+                (result==0u?Z80_F_Z:0u)|
+                ((odd&1u)==0u?Z80_F_PV:0u));
+            assert(ys_z80_step(&cpu)==Z80_RUNNING);
+            assert(cpu.a==result && cpu.f==expected);
+            assert(cpu.pc==0x102u && cpu.last_tstates==7u);
+            assert(cpu.instruction_pc==0x100u);
+        }
+    setup();
+    LOAD(0x13F5u,0xEEu,0x80u);
+    cpu.pc=0x13F5u;cpu.a=0x80u;cpu.f=0xFFu;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0u && cpu.f==(Z80_F_Z|Z80_F_PV));
+    assert(cpu.pc==0x13F7u && cpu.last_tstates==7u);
+    puts("PASS PC-42: 65536 independent XOR n vectors plus original $13F5");
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1808,6 +1837,7 @@ int main(void) {
     test_pc41_alu_oracle_exhaustive();
     test_pc41_original_indexed_set_res();
     test_pc42_refresh_ld_a_r_and_irq();
+    test_pc42_original_xor_immediate();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
