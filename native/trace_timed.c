@@ -1945,6 +1945,22 @@ int main(int argc,char **argv) {
             }
             if(execute_release) release_sampled=true;
         }
+        /* PC-33-only evidence fields; the PC-27 JSON schema is unchanged.
+           Two different clocks exist: cpu.steps is absolute since reset,
+           but continued_steps starts after the verified M45 checkpoint. */
+        char extra[256]="";
+        if(postrelease) {
+            int written=snprintf(extra,sizeof(extra),
+                ",\n  \"release_sampled\":%s,"
+                "\n  \"sprite_counts\":[%u,%u,%u,%u,%u]",
+                release_sampled?"true":"false",
+                sprite.counts[0],sprite.counts[1],sprite.counts[2],
+                sprite.counts[3],sprite.counts[4]);
+            if(written<0 || (size_t)written>=sizeof(extra)) {
+                fputs("PC-33 cannot serialize passive event counts\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+        }
         FILE *output=fopen(argv[3],"wb");
         bool ok=output &&
             fprintf(output,
@@ -1964,7 +1980,7 @@ int main(int argc,char **argv) {
              "  \"mode2_step\":%llu,\n"
              "  \"port_dc\":%u,\"port_dd\":%u,\n"
              "  \"input_reads_dc\":%llu,\"input_reads_dd\":%llu,\n"
-             "  \"observed_collision_calls\":%u\n}\n",
+             "  \"observed_collision_calls\":%u%s\n}\n",
              postrelease?"ys-pc33-postrelease-source-watch-v1":
                          "ys-pc27-original-button-probe-v1",
              (unsigned)start_selector,why,steps,cpu.pc,
@@ -1981,7 +1997,7 @@ int main(int argc,char **argv) {
              (unsigned)input.dc,(unsigned)input.dd,
              (unsigned long long)input.reads_dc,
              (unsigned long long)input.reads_dd,
-             collision.observed_collision_calls)>0;
+             collision.observed_collision_calls,extra)>0;
         if(output && fclose(output)!=0) ok=false;
         if(!ok) {
             fputs("PC-27 cannot write original controller experiment\n",stderr);

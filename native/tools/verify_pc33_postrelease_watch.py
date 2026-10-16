@@ -15,7 +15,7 @@ FIELDS={
  "mode_write_hits","mode2_seen","pressed","released",
  "press_pc","release_pc","press_step","release_step","mode2_step",
  "port_dc","port_dd","input_reads_dc","input_reads_dd",
- "observed_collision_calls"
+ "observed_collision_calls","release_sampled","sprite_counts"
 }
 def check(path):
     value=json.loads(path.read_text(encoding="utf-8"))
@@ -31,13 +31,19 @@ def check(path):
     int(value["stop_pc"],16)
     for key in FIELDS-{
         "schema","start_pc","stop_reason","stop_pc","mode2_seen",
-        "pressed","released","press_pc","release_pc"}:
+        "pressed","released","release_sampled","sprite_counts",
+        "press_pc","release_pc"}:
         assert type(value[key]) is int and value[key]>=0,key
-    for key in ("mode2_seen","pressed","released"):
+    for key in ("mode2_seen","pressed","released","release_sampled"):
         assert type(value[key]) is bool and value[key],key
+    assert isinstance(value["sprite_counts"],list) and len(value["sprite_counts"])==5
+    assert all(type(n) is int and 0<=n<=value["continued_steps"]
+               for n in value["sprite_counts"])
     assert value["press_pc"]=="0773" and value["release_pc"]=="0773"
     assert value["press_step"]>0 and value["release_step"]>value["press_step"]
-    assert value["continued_steps"]>value["release_step"]+1
+    # DO NOT compare post-M45 continued_steps with absolute cpu.steps.
+    # The explicit release_sampled flag is set only AFTER the source
+    # Z80 executed the authentic release port IN at $0773.
     assert value["arm_hits"]>0 and value["edge_bit4_hits"]>0
     assert value["mode_write_hits"]>0 and value["stop_selector"]>=0
     assert value["mode2_step"]>=value["press_step"]
@@ -53,6 +59,7 @@ def check(path):
           " release_step={release_step} readsDC={input_reads_dc}"
           " IRQ={stop_irq} VBlank={stop_vblank}"
           " collision_calls={observed_collision_calls}"
+          " sprite_counts={sprite_counts}"
           .format(**value))
 
 if __name__=="__main__":
