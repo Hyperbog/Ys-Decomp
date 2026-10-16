@@ -132,6 +132,22 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
             latest=e["after"]
         assert latest==gate_event["c198_entry"],(t,latest,gate_event)
         assert gate_event["c198_entry"]==gate_event["c198_gate"]==0
+    # Independent original-ROM source CI run 38982392227 provided
+    # this measured 3-store WRAM bus golden before HL/DE expansion.
+    # Enforce actual physical writes, including identical-value stores,
+    # and which recovered bank0 instructions were truly executed.
+    assert w["count"]==3
+    assert w["phase_counts"]==[1,2]
+    assert w["same"]==[1,2] and w["changed"]==[0,0]
+    assert w["aliases"]==[0,0] and w["final_value"]==0
+    measured=((0,0,8632,"00B4","C198",0,0,0,128,0),
+              (1,90782,521668,"0B1A","C198",0,0,0,104,0),
+              (1,420484,851370,"2041","C198",0,0,0,0,0))
+    observed=tuple((e["phase"],e["iteration"],e["cpu_step"],
+                    e["pc"],e["logical"],e["bank"],
+                    e["before"],e["after"],e["a"],e["irq"])
+                   for e in w["events"])
+    assert observed==measured,(observed,measured)
     print("PASS PC-44 source physical C198 writes: reset=%d post=%d"
           " same=%s changed=%s aliases=%s final=%d" % (
           w["phase_counts"][0],w["phase_counts"][1],w["same"],
