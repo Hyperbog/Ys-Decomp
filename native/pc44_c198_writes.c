@@ -66,7 +66,7 @@ bool ys_pc44_write_report(FILE *out,const YsPc44Writer *w,
        "\"same\":[%u,%u],\"changed\":[%u,%u],"
        "\"aliases\":[%u,%u],\"events\":[\n",
        reason,steps,rt->cpu->pc,
-       (unsigned)ys_sms_bus_read(rt->cpu->bus,0xC198u),
+       (unsigned)rt->cpu->bus->wram[0x0198u],
        w->count,w->phase_counts[0],w->phase_counts[1],
        w->same[0],w->same[1],w->changed[0],w->changed[1],
        w->aliases[0],w->aliases[1])<0) return false;
