@@ -1881,7 +1881,7 @@ int main(int argc,char **argv) {
            Deliver active-low DC bit4 at first subsequent ORIGINAL
            IN A,($DC) at $0773. Release at NEXT $0773 sampling.
            Never edit Z80 PC, WRAM, mapper, timing, or IRQ state. */
-        enum { PC27_STEPS=150000u,PC27_EXTRA_VBLANKS=90u };
+        /* Separate 150k (PC27/33) and 300k (PC34) source budgets. */
         const uint64_t start_blank=runtime.clock.vblank_events;
         YsPcSourceWatch collision={0};
         YsPcSpriteWatch sprite={0};
