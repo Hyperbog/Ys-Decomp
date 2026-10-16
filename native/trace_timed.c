@@ -1872,7 +1872,7 @@ int main(int argc,char **argv) {
     } else if(argc==4 && strcmp(argv[2],"--pc27-button-probe")==0) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
-           reaches PC $0CBD (Phase5 wait loop) with C01F==$01.
+           reaches PC $0CD1 (observed Phase5 C01C edge test) with C01F==$01.
            Deliver active-low DC bit4 at first subsequent ORIGINAL
            IN A,($DC) at $0773. Release at NEXT $0773 sampling.
            Never edit Z80 PC, WRAM, mapper, timing, or IRQ state. */
@@ -1884,7 +1884,7 @@ int main(int argc,char **argv) {
         unsigned long steps=0ul;
         bool armed=false,pressed=false,released=false;
         bool saw_mode_write=false,saw_mode2=false;
-        unsigned hits_wait=0u,hits_edge=0u,hits_mode_write=0u;
+        unsigned arm_hits=0u,hits_edge=0u,hits_mode_write=0u;
         uint8_t last_edge=0u;
         uint64_t press_step=0u,release_step=0u,mode2_step=0u;
         unsigned edge_10_hits=0u;
@@ -1894,9 +1894,9 @@ int main(int argc,char **argv) {
                 free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
             }
             const uint8_t selector=ys_sms_bus_read(bus,0xC01Fu);
-            if(cpu.pc==0x0CBDu && selector==0x01u) {
+            if(cpu.pc==0x0CD1u && selector==0x01u) {
                 armed=true;
-                if(hits_wait!=UINT32_MAX) ++hits_wait;
+                if(arm_hits!=UINT32_MAX) ++arm_hits;
             }
             if(cpu.pc==0x0CD1u) {
                 last_edge=ys_sms_bus_read(bus,0xC01Cu);
@@ -1943,7 +1943,7 @@ int main(int argc,char **argv) {
              "  \"stop_pc\":\"%04X\",\"stop_selector\":%u,\n"
              "  \"stop_slot1\":%u,\"stop_slot2\":%u,\n"
              "  \"stop_irq\":%llu,\"stop_vblank\":%llu,\n"
-             "  \"wait_hits\":%u,\"edge_check_hits\":%u,\n"
+             "  \"arm_hits\":%u,\"edge_check_hits\":%u,\n"
              "  \"edge_bit4_hits\":%u,\"last_edge\":%u,\n"
              "  \"mode_write_hits\":%u,\"mode2_seen\":%s,\n"
              "  \"pressed\":%s,\"released\":%s,\n"
@@ -1958,7 +1958,7 @@ int main(int argc,char **argv) {
              (unsigned)bus->mapped_bank[1],(unsigned)bus->mapped_bank[2],
              (unsigned long long)runtime.recognized_irqs,
              (unsigned long long)runtime.clock.vblank_events,
-             hits_wait,hits_edge,edge_10_hits,(unsigned)last_edge,
+             arm_hits,hits_edge,edge_10_hits,(unsigned)last_edge,
              hits_mode_write,saw_mode2?"true":"false",
              pressed?"true":"false",released?"true":"false",
              (unsigned long long)press_step,
@@ -1979,7 +1979,7 @@ int main(int argc,char **argv) {
                " IRQ=%llu VBlank=%llu collisions=%u\n",
                why,steps,(unsigned)start_selector,
                (unsigned)ys_sms_bus_read(bus,0xC01Fu),
-               hits_wait,edge_10_hits,(unsigned)pressed,(unsigned)released,
+               arm_hits,edge_10_hits,(unsigned)pressed,(unsigned)released,
                (unsigned long long)runtime.recognized_irqs,
                (unsigned long long)runtime.clock.vblank_events,
                collision.observed_collision_calls);

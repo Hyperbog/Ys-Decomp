@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PC-27 verified source wait-loop edge logic + opt-in controller trial.
+"""PC-27 verified observed source $0CD1 rising-edge logic + opt-in controller trial.
 
 A user-like controller stimulus is imposed experimentally; any real source
 branch observed is NOT independently validated against title/gameplay timing.
@@ -34,7 +34,7 @@ def verify(rompath,reportpath):
     obj=json.loads(reportpath.read_text(encoding="utf-8"))
     keys={"schema","start_pc","start_selector","stop_reason",
           "continued_steps","stop_pc","stop_selector","stop_slot1",
-          "stop_slot2","stop_irq","stop_vblank","wait_hits",
+          "stop_slot2","stop_irq","stop_vblank","arm_hits",
           "edge_check_hits","edge_bit4_hits","last_edge",
           "mode_write_hits","mode2_seen","pressed","released",
           "press_pc","release_pc","press_step","release_step",
@@ -63,7 +63,7 @@ def verify(rompath,reportpath):
     assert obj["edge_bit4_hits"]<=obj["edge_check_hits"]
     assert obj["mode_write_hits"]>0 if obj["mode2_seen"] else True
     assert obj["press_step"]>0 if obj["pressed"] else obj["press_step"]==0
-    assert obj["wait_hits"]>0 if obj["pressed"] else True
+    assert obj["arm_hits"]>0 if obj["pressed"] else True
     if obj["released"]:
         assert obj["pressed"] and obj["release_step"]>obj["press_step"]
     if obj["mode2_seen"]:
@@ -77,7 +77,7 @@ def verify(rompath,reportpath):
           " selector store independently matched source ROM")
     print("PC-27 experimental controller result: reason={stop_reason}"
           " steps={continued_steps} mode={start_selector}->{stop_selector}"
-          " armed_wait={wait_hits} pressed={pressed} released={released}"
+          " armed_wait={arm_hits} pressed={pressed} released={released}"
           " checked_edges={edge_check_hits} bit4_checks={edge_bit4_hits}"
           " mode2_seen={mode2_seen} collisions={observed_collision_calls}"
           .format(**obj))
