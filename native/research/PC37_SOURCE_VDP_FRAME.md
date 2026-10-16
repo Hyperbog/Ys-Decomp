@@ -29,6 +29,28 @@ player identity, authentic gameplay location and original sprite
 production remain unproven. The original bank-6 `$9932` producer and
 original bank-1 collision path were still not seen during PC-36.
 
+## Independently gated result
+
+The first full source-ROM GitHub Actions run for PC-37 passed all three
+existing workflows, including **31/31 native CTest cases**. The original
+PC-34/35/36 input schedule remained unchanged and produced:
+
+| Source-backed measurement | Value |
+| --- | ---: |
+| Completed 192-byte SAT uploads | 27 |
+| Uploads at a Mode-4 display-enabled CPU boundary | **26** |
+| Selected last display-enabled upload (steps after M45) | **162,573** |
+| Native 256×192 RGB CRC32 | **`9FB8BB1E`** |
+| Original bank6 `$9932` producer calls | 0 |
+| Original bank1 collision calls | 0 |
+
+The source bytes are protected by existing ROM SHA/listing checks;
+the PC-37 checker also pins the observed 26/162,573/CRC fingerprint
+so a self-consistent but changed native renderer cannot silently pass.
+These values were observed in [native CI run 38850229114](
+https://github.com/Hyperbog/Ys-Decomp/actions/runs/38850229114).
+No third-party framebuffer comparison is claimed.
+
 ## Local reproduction
 
 From the repository root after building the complete original ROM
