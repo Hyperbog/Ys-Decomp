@@ -48,6 +48,12 @@ def verify(rom_path,source_json,route_json,pc34_json):
                  r"\s+".join(hexbytes.split())+
                  r"\s+"+re.escape(mnemonic)+r"\s*$")
         assert len(re.findall(pattern,listing,re.I|re.M))==1,hex(pc)
+    # Physical bank 2 is mapped into CPU $8000-$BFFF. The natural
+    # PC-40 $87C6 stop was DD 35 09 = DEC (IX+9), not a bank-0 call.
+    assert rom[2*0x4000+0x07C6:2*0x4000+0x07C9]==bytes.fromhex("DD 35 09")
+    bank2=(Path(__file__).resolve().parents[2]/
+           "Ys/src/wholebank02/bank02_complete.asm").read_text(encoding="utf-8")
+    assert bank2.count("    dec (ix+9)")>=1
     a=json.loads(Path(source_json).read_text(encoding="utf-8"))
     r=json.loads(Path(route_json).read_text(encoding="utf-8"))
     b=json.loads(Path(pc34_json).read_text(encoding="utf-8"))
