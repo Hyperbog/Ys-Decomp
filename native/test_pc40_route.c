@@ -108,6 +108,7 @@ int main(void) {
     watch.seen_iterations=531478ul;
     cpu.pc=0x141Au;
     rt.recognized_irqs=133u;rt.clock.vblank_events=137u;
+    cpu.r=0x7Cu;cpu.iff2=true;
     exact[4]=41u;
     watch.events[1][7].hits=1u;
     watch.events[1][8].hits=2u;
@@ -118,6 +119,11 @@ int main(void) {
     assert(!ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
     source_rom[0x141Au]=0xEDu;source_rom[0x141Bu]=0x5Fu;
     assert(ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
+    cpu.r=0x7Du;
+    assert(!ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
+    cpu.r=0x7Cu;cpu.iff2=false;
+    assert(!ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
+    cpu.iff2=true;
     assert(!ys_pc42_historical_checkpoint(&watch,&rt,531479ul,exact,0u));
     exact[4]=40u;
     assert(!ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
