@@ -219,6 +219,9 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0xD3: case 0xDB: return 11u;
     case 0xED:
         if (sub==0x56u) return 8u; /* IM 1 */
+        if (sub==0x44u) return 8u; /* NEG */
+        if ((sub&0xCFu)==0x42u) return 15u; /* SBC HL,rr */
+        if (sub==0x4Bu) return 20u; /* LD BC,(nn) */
         if (sub==0x45u || sub==0x4Du) return 14u; /* RETN/RETI */
         if (sub==0x43u || sub==0x53u ||
             sub==0x73u || sub==0x7Bu)
@@ -644,6 +647,47 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         if (sub==0x45 || sub==0x4D) {
             cpu->pc=pop16(cpu);
             if(sub==0x45) cpu->iff1=cpu->iff2; /* RETN */
+            break;
+        }
+        if (sub==0x44u) {
+            /* PC-40 original bank0 $267E ED 44: NEG == 0-A.
+               Compute all documented S/Z/H/PV/N/C, 3/5 flags. */
+            uint8_t original=cpu->a;
+            cpu->a=(uint8_t)(0u-original);
+            cpu->f=sub_flags(0u,original,cpu->a);
+            break;
+        }
+        if ((sub&0xCFu)==0x42u) {
+            /* PC-40 original $2693 ED 52 SBC HL,DE.
+               Generic ED 42/52/62/72: 16-bit result and all flags,
+               including borrow across bit 11 and signed overflow. */
+            uint16_t prior=pair(cpu->h,cpu->l);
+            unsigned rr=(sub>>4u)&3u;
+            uint16_t source=rr==0u?pair(cpu->b,cpu->c):
+                            rr==1u?pair(cpu->d,cpu->e):
+                            rr==2u?prior:cpu->sp;
+            unsigned carry=cpu->f&Z80_F_C;
+            unsigned rhs=(unsigned)source+carry;
+            uint16_t result=(uint16_t)((unsigned)prior-rhs);
+            split(result,&cpu->h,&cpu->l);
+            cpu->f=(uint8_t)((((result>>8u)&(Z80_F_3|Z80_F_5))) |
+                (result&0x8000u?Z80_F_S:0u) |
+                (result==0u?Z80_F_Z:0u) |
+                ((prior&0x0FFFu)<((source&0x0FFFu)+carry)?
+                 Z80_F_H:0u) |
+                (((prior^source)&(prior^result)&0x8000u)?
+                 Z80_F_PV:0u) |
+                Z80_F_N |
+                ((unsigned)prior<rhs?Z80_F_C:0u));
+            break;
+        }
+        if (sub==0x4Bu) {
+            /* Original bank0 $26C3 ED 4B 10 C2:
+               LD BC,(nn) little-endian mapped source, no flags. */
+            uint16_t address=fetch16(cpu);
+            uint8_t lo=ys_sms_bus_read(cpu->bus,address);
+            uint8_t hi=ys_sms_bus_read(cpu->bus,(uint16_t)(address+1u));
+            cpu->b=hi;cpu->c=lo;
             break;
         }
         if (sub==0x7Bu) {
