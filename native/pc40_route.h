@@ -35,6 +35,11 @@ bool ys_pc41_historical_checkpoint(const YsPc40Route *watch,
                                     unsigned long iteration,
                                     const uint32_t sprite_counts[5],
                                     uint32_t collisions);
+bool ys_pc42_historical_checkpoint(const YsPc40Route *watch,
+                                   const YsSmsRuntime *rt,
+                                   unsigned long iteration,
+                                   const uint32_t sprite_counts[5],
+                                   uint32_t collisions);
 bool ys_pc40_route_write(FILE *file,const YsPc40Route *watch,
                           const YsSmsRuntime *rt,const char *reason,
                           unsigned long executed);
