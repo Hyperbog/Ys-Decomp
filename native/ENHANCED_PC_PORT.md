@@ -241,20 +241,22 @@ source trace **cannot** identify the player or an
 authentic Ys area. Prototype gameplay and Alpha gates
 are unchanged.
 
-## PC-16–PC-19 original sound instruction continuation (reference only)
+## PC-16–PC-25 original Z80 execution (reference only)
 
-[PC-16 EX DE,HL](research/PC16_SOUND_EXCHANGE_CHECKPOINT.md),
-[PC-17 indexed PSG](research/PC17_INDEXED_PSG_CHECKPOINT.md),
-[PC-18 sound counter](research/PC18_INDEXED_SOUND_COUNTER_CHECKPOINT.md),
-and [PC-19 indexed D/E source pointer](research/PC19_INDEXED_SOUND_POINTER_CHECKPOINT.md)
-extend only the **bounded original-source Z80 reference interpreter**.
-The latest authentic M45-state continuation reaches physical bank-2
-`$85D3` (`ADD A,(IX+5)`) after **6,027** post-M45 steps, 57
-recognized IRQs and 61 VBlanks. Original bank-1 collision callers,
-mapped bank-6 `$9932` sprite producer and active player or scene
-remain **unobserved**. No native gameplay, source-player identity,
-audio playback or original-game Alpha gate is proven by these
-diagnostics; M45 remains the verified Development release.
+The [PC-20–PC-25 original source execution audit](research/PC20_PC25_SOUND_SOURCE_CONTINUATION.md)
+records source-backed Z80 sound/fixed-bank instruction work and
+an optional larger collision observation horizon. **All 30 native
+C11 tests pass.** The authentic unpressed-input source reference
+continues for 150,000 steps in the legacy watch and for **300,000
+steps** in the separate PC-25 collision watch, ending at `$81E1`
+with 106 accepted IRQs and 110 VBlanks. Both stop because of
+**budget**, not an unsupported opcode; neither observes original
+bank-1 collision calls. PC-15 sprite research only watched 150k
+steps; bank6 source sprite production **beyond 150k is unknown**.
+Source `$0DCC` offers a possible static bank1 entry but no
+natural runtime entry has been authenticated. **No original
+gameplay, live controls, native audio or Alpha gate is proven**.
+M45 is still the verified Development release, PR #3 remains draft.
 
 ## Build and run
 
