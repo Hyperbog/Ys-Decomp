@@ -1324,6 +1324,78 @@ static void test_pc32_bank0_store_bc_boundaries(void) {
            cpu.last_tstates==20u);
 }
 
+/* PC-40 original bank0 $267E/$2693/$26C3 opcode semantics.
+   ROM-free synthetic fixtures; source bytes independently SHA-gated. */
+static void test_pc40_original_neg_and_flags(void) {
+    static const struct {uint8_t a,result,flags;} cases[]={
+        {0x00u,0x00u,0x42u},{0x01u,0xFFu,0xBBu},
+        {0x80u,0x80u,0x87u},{0x7Fu,0x81u,0x93u}
+    };
+    for(unsigned i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
+        setup();
+        LOAD(0x267Eu,0xEDu,0x44u);
+        cpu.pc=0x267Eu;cpu.a=cases[i].a;cpu.f=0xFFu;
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        assert(cpu.a==cases[i].result && cpu.f==cases[i].flags);
+        assert(cpu.pc==0x2680u && cpu.last_tstates==8u);
+        assert(cpu.steps==1u && cpu.instruction_pc==0x267Eu);
+    }
+}
+static void test_pc40_sbc_hl_16bit_carry_overflow(void) {
+    static const struct {
+        uint16_t lhs,rhs,result;
+        uint8_t carry,flags;
+    } cases[]={
+        {0x0000u,0x0000u,0x0000u,0u,0x42u},
+        {0x0000u,0x0000u,0xFFFFu,1u,0xBBu},
+        {0x8000u,0x0001u,0x7FFFu,0u,0x3Eu},
+        {0x7FFFu,0xFFFFu,0x8000u,0u,0x87u}
+    };
+    for(unsigned i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
+        setup();
+        LOAD(0x2693u,0xEDu,0x52u); /* original SBC HL,DE */
+        cpu.pc=0x2693u;
+        cpu.h=(uint8_t)(cases[i].lhs>>8u);cpu.l=(uint8_t)cases[i].lhs;
+        cpu.d=(uint8_t)(cases[i].rhs>>8u);cpu.e=(uint8_t)cases[i].rhs;
+        cpu.f=cases[i].carry?Z80_F_C:0u;
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        assert(((uint16_t)cpu.h<<8u|cpu.l)==cases[i].result);
+        assert(cpu.f==cases[i].flags);
+        assert(cpu.last_tstates==15u && cpu.pc==0x2695u);
+    }
+    /* All four documented rr forms, including HL-HL-C and stack. */
+    for(unsigned i=0;i<4u;++i) {
+        setup();
+        LOAD(0x100u,0xEDu,0x42u);rom[0x101u]=(uint8_t)(0x42u+0x10u*i);
+        cpu.pc=0x100u;cpu.h=0x33u;cpu.l=0x44u;cpu.b=0x01u;cpu.c=0x02u;
+        cpu.d=0x02u;cpu.e=0x03u;cpu.sp=0x0304u;
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        uint16_t rhs=i==0u?0x0102u:i==1u?0x0203u:
+                     i==2u?0x3344u:0x0304u;
+        assert(((uint16_t)cpu.h<<8u|cpu.l)==(uint16_t)(0x3344u-rhs));
+        assert(cpu.last_tstates==15u);
+    }
+}
+static void test_pc40_original_ld_bc_indirect(void) {
+    setup();
+    LOAD(0x26C3u,0xEDu,0x4Bu,0x10u,0xC2u);
+    assert(ys_sms_bus_write(&bus,0xC210u,0xB5u));
+    assert(ys_sms_bus_write(&bus,0xC211u,0x3Fu));
+    cpu.pc=0x26C3u;cpu.b=0xFFu;cpu.c=0xFFu;cpu.f=0xA7u;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==0x26C7u && cpu.b==0x3Fu && cpu.c==0xB5u);
+    assert(cpu.f==0xA7u && cpu.last_tstates==20u);
+    /* Mapped ROM read crosses 0x9000 in slot 2, never writes memory. */
+    setup();
+    LOAD(0x110u,0xEDu,0x4Bu,0x00u,0x90u);
+    bus.mapped_bank[2]=6u;
+    rom[6u*YS_ROM_BANK_BYTES+0x1000u]=0x79u;
+    rom[6u*YS_ROM_BANK_BYTES+0x1001u]=0x28u;
+    cpu.pc=0x110u;cpu.f=0xFFu;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.b==0x28u && cpu.c==0x79u && cpu.f==0xFFu);
+    assert(cpu.last_tstates==20u);
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1361,6 +1433,9 @@ int main(void) {
     test_pc31_store_de_mapper_and_rom_guard();
     test_pc32_original_pointer_save_pair();
     test_pc32_bank0_store_bc_boundaries();
+    test_pc40_original_neg_and_flags();
+    test_pc40_sbc_hl_16bit_carry_overflow();
+    test_pc40_original_ld_bc_indirect();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
