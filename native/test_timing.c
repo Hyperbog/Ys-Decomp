@@ -205,7 +205,7 @@ static void test_pending_vblank_reenters_after_ei_ret(void) {
            runtime.recognized_irqs==0u);
     assert(ys_sms_runtime_step_auto(&runtime)==Z80_RUNNING);
     assert(cpu.pc==0x0038u && cpu.sp==0xDFF0u &&
-           cpu.ei_delay==0u && !cpu.iff1 && cpu.iff2 &&
+           cpu.ei_delay==0u && !cpu.iff1 && !cpu.iff2 &&
            runtime.recognized_irqs==1u &&
            cpu.total_tstates==27u); /* EI 4 + RET 10 + IM1 13. */
     assert(ys_sms_bus_read(&bus,cpu.sp)==0x64u);

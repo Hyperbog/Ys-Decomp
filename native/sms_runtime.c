@@ -43,6 +43,10 @@ Z80Status ys_sms_runtime_step_auto(YsSmsRuntime *rt) {
     if(cpu->status==Z80_HALTED) {
         /* HALT refresh cycles proceed until a maskable interrupt is accepted.
            The PC already points one byte beyond HALT. */
+        /* HALT M1 happens BEFORE the clock advance may accept an IM1
+           interrupt. Counting afterward would lose the refresh if
+           the IRQ changes status from HALTED to RUNNING. */
+        ys_z80_refresh_halt(cpu);
         if(!ys_sms_runtime_advance(rt,4u,NULL)) return Z80_UNSUPPORTED;
         cpu->total_tstates+=4u;
         cpu->last_tstates=4u;

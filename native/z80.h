@@ -26,6 +26,7 @@ typedef struct {
     uint8_t instruction_bank;
     bool irq_write_active;
     uint8_t a, f, b, c, d, e, h, l, interrupt_mode;
+    uint8_t r; /* Z80 refresh: M1 increments low seven bits, preserves bit 7. */
     uint8_t a_alt, f_alt, b_alt, c_alt, d_alt, e_alt, h_alt, l_alt;
     uint8_t ei_delay; /* Interrupt recognition blocked until after following instruction. */
     bool iff1, iff2;
@@ -37,6 +38,8 @@ void ys_z80_reset(YsZ80 *cpu, YsSmsBus *bus);
 void ys_z80_attach_vdp(YsZ80 *cpu, YsSmsVdp *vdp);
 void ys_z80_attach_sound(YsZ80 *cpu, YsSmsSound *sound);
 void ys_z80_attach_input(YsZ80 *cpu, YsSmsInput *input);
+/* Called only for 4T HALT M1 refresh cycles, not completed opcodes. */
+void ys_z80_refresh_halt(YsZ80 *cpu);
 /* Successful steps record documented instruction T-states (no bus waits). */
 Z80Status ys_z80_step(YsZ80 *cpu);
 /* External caller provides the VBlank/IRQ event; no timing is synthesized. */
