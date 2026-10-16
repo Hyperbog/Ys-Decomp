@@ -76,6 +76,23 @@ static uint8_t add8_flags(uint8_t lhs, uint8_t rhs, uint8_t result,
         (full_result > 0xFFu ? Z80_F_C : 0u));
 }
 
+/* Z80 carry-aware 8-bit ADC/SBC. Bit 3 and bit 5 derive from the
+   eight-bit result, not the untruncated intermediate. Carry-in is
+   included in half-borrow and full-borrow; N is set only for SBC. */
+static uint8_t adc8_flags(uint8_t lhs,uint8_t rhs,unsigned carry,
+                          uint8_t result,unsigned full) {
+    return (uint8_t)(sz53(result) |
+        (((lhs&15u)+(rhs&15u)+carry)>15u?Z80_F_H:0u) |
+        (((~(lhs^rhs)&(lhs^result))&0x80u)?Z80_F_PV:0u) |
+        (full>255u?Z80_F_C:0u));
+}
+static uint8_t sbc8_flags(uint8_t lhs,uint8_t rhs,unsigned carry,
+                          uint8_t result) {
+    return (uint8_t)(sz53(result)|Z80_F_N |
+        ((lhs&15u)<((rhs&15u)+carry)?Z80_F_H:0u) |
+        (((lhs^rhs)&(lhs^result)&0x80u)?Z80_F_PV:0u) |
+        ((unsigned)lhs<(unsigned)rhs+carry?Z80_F_C:0u));
+}
 static uint8_t bit_flags(uint8_t flags, uint8_t value, unsigned bit,
                          uint8_t undocumented) {
     bool set=(value & (1u<<bit))!=0;
@@ -203,7 +220,8 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0x0B: case 0x1B: case 0x2B: return 6u;
     case 0x22: case 0x2A: return 16u;
     case 0x32: case 0x3A: return 13u;
-    case 0xC6: case 0xD6: case 0xE6: case 0xF6: case 0xFE: return 7u;
+    case 0xC6: case 0xCE: case 0xD6: case 0xDE:
+    case 0xE6: case 0xF6: case 0xFE: return 7u;
     case 0xC3: return 10u;
     case 0xE9: return 4u;
     case 0xC9: return 10u;
@@ -272,6 +290,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     } else if (opcode>=0xB8u && opcode<=0xBFu) {
         uint8_t rhs=r8(cpu,opcode&7u);
         cpu->f=sub_flags(cpu->a,rhs,(uint8_t)(cpu->a-rhs));
+    } else if (opcode>=0x98u && opcode<=0x9Fu) {
+        /* PC-41: SBC A,r and SBC A,(HL); correct carry-in and
+           half-borrow, signed overflow, S/Z/N/F3/F5. */
+        uint8_t rhs=r8(cpu,opcode&7u),prior=cpu->a;
+        unsigned carry=cpu->f&Z80_F_C;
+        cpu->a=(uint8_t)((unsigned)prior-rhs-carry);
+        cpu->f=sbc8_flags(prior,rhs,carry,cpu->a);
     } else if (opcode>=0x90u && opcode<=0x97u) {
         /* SUB r (including (HL)): full Z80 S/Z/H/PV/N/C and F3/F5. */
         uint8_t rhs=r8(cpu,opcode&7u);
@@ -290,6 +315,14 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         cpu->a=(uint8_t)(cpu->a | r8(cpu,opcode&7u));
         cpu->f=(uint8_t)(sz53(cpu->a)|
                          (parity(cpu->a)?Z80_F_PV:0));
+    } else if (opcode>=0x88u && opcode<=0x8Fu) {
+        /* PC-41 source bank0 $1A0A: 88 = ADC A,B.
+           General ADC A,r/(HL) shares the same Z80 ALU flags. */
+        uint8_t rhs=r8(cpu,opcode&7u),prior=cpu->a;
+        unsigned carry=cpu->f&Z80_F_C;
+        unsigned full=(unsigned)prior+rhs+carry;
+        cpu->a=(uint8_t)full;
+        cpu->f=adc8_flags(prior,rhs,carry,cpu->a,full);
     } else if (opcode>=0x80u && opcode<=0x87u) {
         uint8_t rhs=r8(cpu,opcode&7u);
         uint8_t old=cpu->a;
@@ -569,6 +602,21 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         unsigned full=(unsigned)old+rhs;
         cpu->a=(uint8_t)full;
         cpu->f=add8_flags(old,rhs,cpu->a,full);
+        break;
+    }
+    case 0xCE: { /* ADC A,n, 7 T-states; both carry states. */
+        uint8_t rhs=fetch(cpu),prior=cpu->a;
+        unsigned carry=cpu->f&Z80_F_C;
+        unsigned full=(unsigned)prior+rhs+carry;
+        cpu->a=(uint8_t)full;
+        cpu->f=adc8_flags(prior,rhs,carry,cpu->a,full);
+        break;
+    }
+    case 0xDE: { /* SBC A,n, 7 T-states; full borrow flags. */
+        uint8_t rhs=fetch(cpu),prior=cpu->a;
+        unsigned carry=cpu->f&Z80_F_C;
+        cpu->a=(uint8_t)((unsigned)prior-rhs-carry);
+        cpu->f=sbc8_flags(prior,rhs,carry,cpu->a);
         break;
     }
     case 0xD6: { /* SUB n. Original bank2 $8204: D6 81;
