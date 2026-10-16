@@ -227,7 +227,8 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
             sub==0x73u || sub==0x7Bu)
             return 20u; /* LD (nn),BC/DE/SP; LD SP,(nn) */
         if (sub==0x6Fu) return 18u; /* RLD */
-        if (sub==0xA0u || sub==0xA3u || sub==0xABu) return 16u;
+        if (sub==0xA0u || sub==0xA8u ||
+            sub==0xA3u || sub==0xABu) return 16u;
         if (sub==0xB0u) return cpu->pc==start ? 21u : 16u; /* LDIR */
         if ((sub&0xC7u)==0x41u && sub!=0x71u) return 12u;
         return 0u;
@@ -741,12 +742,17 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                               (parity(cpu->a)?Z80_F_PV:0));
             break;
         }
-        if (sub==0xA0) { /* LDI: preserve S,Z,C; update PV and 3/5. */
+        if (sub==0xA0u || sub==0xA8u) {
+            /* PC-40 original bank0 $2AFC ED A0 LDI, $2AFE ED A8 LDD
+               (also $2B49/$2B4B). Both copy one byte and decrement BC;
+               LDD decrements HL/DE while LDI increments them. */
             uint16_t hl=pair(cpu->h,cpu->l),de=pair(cpu->d,cpu->e);
             uint8_t value=ys_sms_bus_read(cpu->bus,hl);
             if (!store(cpu,de,value)) goto fail;
-            split((uint16_t)(hl+1u),&cpu->h,&cpu->l);
-            split((uint16_t)(de+1u),&cpu->d,&cpu->e);
+            uint16_t next_hl=(uint16_t)(sub==0xA0u?hl+1u:hl-1u);
+            uint16_t next_de=(uint16_t)(sub==0xA0u?de+1u:de-1u);
+            split(next_hl,&cpu->h,&cpu->l);
+            split(next_de,&cpu->d,&cpu->e);
             uint16_t bc=(uint16_t)(pair(cpu->b,cpu->c)-1u);
             split(bc,&cpu->b,&cpu->c);
             uint8_t u=(uint8_t)(cpu->a+value);
