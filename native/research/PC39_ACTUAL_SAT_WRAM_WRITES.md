@@ -33,6 +33,46 @@ same-value/changed-value counts, Y versus X/tile WRAM targets,
 WRAM mirror aliases, touched-offset counts and bounded distinct
 source sites.
 
+## Measured source-only original ROM result
+
+[Passing native original-ROM run 38855605003](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38855605003)
+executed the unchanged cartridge from reset, then continued the
+same controlled PC-34 input sequence. Native C11 passed **33/33
+CTest cases**, the complete original ROM rebuild and PC-34/35/36/37/38
+regressions. The three bank-qualified observed sites are:
+
+| Source opcode site | Phase | Successful WRAM stores | Same-value | Changed-value |
+| --- | --- | ---: | ---: | ---: |
+| Fixed bank 0 `$00B4` — `LDIR` | Reset → M45 | 192 | 192 | 0 |
+| Fixed bank 0 `$0AA1` — `LD ($DD00),A` | Reset → M45 | 1 | 0 | 1 |
+| Fixed bank 0 `$0AA1` — `LD ($DD00),A` | Post-M45 | 1 | 1 | 0 |
+
+All 192 source byte offsets are written during initialization.
+The initial boot phase records **193 total writes**: 65 to the Y
+region and 128 to the X/tile region, 192 identical-to-existing
+values and one changed value. The post-M45 300k-iteration run
+records **one same-value store** to the Y region; no X/tile
+store or changed value. **No physical WRAM mirror alias or IRQ
+stack write** targeted the SAT source during either observed phase.
+
+This specifically resolves PC-38's blind spot: the post-M45
+SAT source buffer was rewritten once *without* changing value.
+All 27 SAT uploads remain byte-identical. The full original
+`$00B4` `LDIR` initialization is NOT an animated sprite
+producer: its source context is `LD HL,$C010`,
+`LD DE,$C011`, `LD BC,$1E4F`, `LD (HL),$00`,
+then `LDIR`. The subsequent `$0AA1` source opcode is
+`32 00 DD` = `LD ($DD00),A`. The independent PC-39 checker
+now verifies the original **262,144-byte ROM SHA-256**, fixed
+bank-0 opcode bytes, the independently committed Phase6 listing,
+and the bank-0 assembly source before asserting these three
+site/count golden values.
+
+Nothing in this trace establishes original player animation,
+world movement, map traversal, or the source bank-6 `$9932`
+producer. A trusted independent emulator/hardware execution
+remains necessary to authenticate a playable original Ys frame.
+
 ## Implemented files
 
 - `native/sms_bus.{h,c}`: optional synchronous read-only write
@@ -62,7 +102,7 @@ ROM using the existing project SHA-verified ROM-independent tools:
     /tmp/pc34.json /tmp/pc35.json /tmp/pc36.json \
     /tmp/pc37.ppm /tmp/pc37.json /tmp/pc38.json /tmp/pc39.json
 python3 native/tools/verify_pc39_sat_strobes.py \
-    /tmp/pc39.json /tmp/pc34.json /tmp/pc36.json \
+    /tmp/ys-source.sms /tmp/pc39.json /tmp/pc34.json /tmp/pc36.json \
     /tmp/pc37.json /tmp/pc38.json
 ```
 
