@@ -14,7 +14,7 @@ typedef struct {
     unsigned long iteration;
     uint64_t cpu_step;
     uint16_t logical,pc,hl,de,bc;
-    uint8_t bank, before,after,a,f,selector,slot2,irq;
+    uint8_t bank, before,after,a,f,selector,slot2,irq,source_at_hl;
 } YsPc44Write;
 typedef struct {
     YsZ80 *cpu;
