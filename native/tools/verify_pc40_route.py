@@ -54,6 +54,12 @@ def verify(rom_path,source_json,route_json,pc34_json):
     bank2=(Path(__file__).resolve().parents[2]/
            "Ys/src/wholebank02/bank02_complete.asm").read_text(encoding="utf-8")
     assert bank2.count("    dec (ix+9)")>=1
+    # Physical bank1 maps CPU $4000-$7FFF. CB 3F at $61B1
+    # naturally stopped the previous source experiment.
+    assert rom[1*0x4000+0x21B1:1*0x4000+0x21B3]==bytes.fromhex("CB 3F")
+    bank1=(Path(__file__).resolve().parents[2]/
+           "Ys/src/wholebank01/bank01_complete.asm").read_text(encoding="utf-8")
+    assert "    srl a" in bank1
     a=json.loads(Path(source_json).read_text(encoding="utf-8"))
     r=json.loads(Path(route_json).read_text(encoding="utf-8"))
     b=json.loads(Path(pc34_json).read_text(encoding="utf-8"))
