@@ -455,7 +455,7 @@ int main(int argc,char **argv) {
         handler_steps>20u && runtime.recognized_irqs==2u &&
         runtime.clock.vblank_events==6u &&
         cpu.sp==interrupted.sp && !cpu.iff1 &&
-        cpu.iff2 && (vdp->status&0x80u)!=0u &&
+        !cpu.iff2 && (vdp->status&0x80u)!=0u &&
         same_registers(&cpu,&interrupted) &&
         bus->mapper_control==control_before &&
         bus->mapped_bank[2]==slot2_before &&
