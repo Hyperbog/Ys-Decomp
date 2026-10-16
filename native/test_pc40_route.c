@@ -59,6 +59,13 @@ int main(void) {
     FILE *f=tmpfile();assert(f);
     assert(!ys_pc40_route_write(f,&watch,&rt,"untrusted",300001ul));
     assert(ys_pc40_route_write(f,&watch,&rt,"unsupported",300001ul));
+    /* Natural break immediately after sampling iteration 300000:
+       observed 300001 boundaries, loop counter still 300000. */
+    FILE *early=tmpfile();assert(early);
+    assert(ys_pc40_route_write(early,&watch,&rt,
+                               "collision_observed",300000ul));
+    assert(!ys_pc40_route_write(early,&watch,&rt,"budget",300000ul));
+    fclose(early);
     rewind(f);
     char output[7000]={0};
     size_t n=fread(output,1,sizeof(output)-1u,f);
