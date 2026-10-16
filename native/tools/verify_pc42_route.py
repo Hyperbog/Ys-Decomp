@@ -10,6 +10,7 @@ def check(rom,source_path,route_path,pc34):
     source=json.loads(Path(source_path).read_text(encoding="utf-8"))
     route=json.loads(Path(route_path).read_text(encoding="utf-8"))
     assert Path(rom).read_bytes()[0x141A:0x141E]==bytes.fromhex("ED 5F E6 0F")
+    assert Path(rom).read_bytes()[0x13F5:0x13F7]==bytes.fromhex("EE 80")
     assert route["continued_steps"]>531478
     assert route["stop_reason"] in ("budget","unsupported","vblank_limit","collision_observed")
     assert source["observed_collision_calls"]>=0
