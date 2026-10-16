@@ -1267,6 +1267,63 @@ static void test_pc31_store_de_mapper_and_rom_guard(void) {
            cpu.pc==4u);
 }
 
+
+/* PC-32: original fixed bank0 $2657/$265B LD (nn),DE/BC.
+   Both writes are executed in a controlled WRAM source prefix. */
+static void test_pc32_original_pointer_save_pair(void) {
+    setup();
+    LOAD(0,0xED,0x53,0x84,0xC1,0xED,0x43,0x10,0xC2,0xC9);
+    cpu.b=0x91u;cpu.c=0x72u;
+    cpu.d=0xB8u;cpu.e=0x21u;
+    cpu.sp=0xC300u;cpu.a=0xCAu;cpu.f=0xFFu;
+    assert(ys_sms_bus_write(&bus,0xC300u,0x00u));
+    assert(ys_sms_bus_write(&bus,0xC301u,0x20u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC184u)==0x21u &&
+           ys_sms_bus_read(&bus,0xC185u)==0xB8u &&
+           cpu.pc==4u && cpu.last_tstates==20u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC210u)==0x72u &&
+           ys_sms_bus_read(&bus,0xC211u)==0x91u &&
+           cpu.b==0x91u && cpu.c==0x72u &&
+           cpu.d==0xB8u && cpu.e==0x21u &&
+           cpu.a==0xCAu && cpu.f==0xFFu &&
+           cpu.sp==0xC300u && cpu.pc==8u &&
+           cpu.last_tstates==20u && cpu.total_tstates==40u &&
+           cpu.steps==2u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==0x2000u && cpu.sp==0xC302u &&
+           cpu.last_tstates==10u && cpu.total_tstates==50u);
+}
+static void test_pc32_bank0_store_bc_boundaries(void) {
+    setup();
+    LOAD(0,0xED,0x43,0xFF,0xDF); /* $DFFF -> $E000 */
+    cpu.b=0xEDu;cpu.c=0x17u;cpu.f=Z80_F_S|Z80_F_C;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xDFFFu)==0x17u &&
+           ys_sms_bus_read(&bus,0xE000u)==0xEDu &&
+           cpu.f==(Z80_F_S|Z80_F_C) &&
+           cpu.pc==4u && cpu.last_tstates==20u);
+    setup();
+    LOAD(0,0xED,0x43,0x01,0x80);
+    cpu.b=0x11u;cpu.c=0xFFu;cpu.f=0xFFu;
+    rom[2u*0x4000u+1u]=0x3Du;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0u && cpu.fault_pc==0u &&
+           cpu.f==0xFFu && cpu.b==0x11u && cpu.c==0xFFu &&
+           rom[2u*0x4000u+1u]==0x3Du &&
+           cpu.steps==0u && cpu.total_tstates==0u);
+    setup();
+    LOAD(0,0xED,0x43,0x20,0x90);
+    cpu.b=0x3Au;cpu.c=0xD1u;cpu.f=0x00u;
+    assert(ys_sms_bus_write(&bus,0xFFFCu,0x08u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0x9020u)==0xD1u &&
+           ys_sms_bus_read(&bus,0x9021u)==0x3Au &&
+           cpu.f==0u && cpu.pc==4u &&
+           cpu.last_tstates==20u);
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1302,6 +1359,8 @@ int main(void) {
     test_pc30_rr_register_memory_and_guard();
     test_pc31_original_bank8_pointer_store();
     test_pc31_store_de_mapper_and_rom_guard();
+    test_pc32_original_pointer_save_pair();
+    test_pc32_bank0_store_bc_boundaries();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
