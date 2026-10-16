@@ -190,7 +190,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0x70: case 0x71: case 0x72: case 0x73:
         case 0x74: case 0x75: case 0x77: /* indexed register stores */
         case 0x7E: case 0x86: case 0x96: case 0xB6: return 19u; /* indexed memory */
-        case 0x34: return 23u; /* INC (IX/IY+d): read/modify/write */
+        case 0x34: case 0x35: return 23u; /* INC/DEC (IX/IY+d) */
         case 0x36: return 19u; /* LD (IX/IY+d),n */
         case 0x09: case 0x19: case 0x29: case 0x39:
             return 15u;       /* ADD IX/IY,rr */
@@ -219,12 +219,16 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0xD3: case 0xDB: return 11u;
     case 0xED:
         if (sub==0x56u) return 8u; /* IM 1 */
+        if (sub==0x44u) return 8u; /* NEG */
+        if ((sub&0xCFu)==0x42u) return 15u; /* SBC HL,rr */
+        if (sub==0x4Bu || sub==0x5Bu) return 20u; /* LD BC/DE,(nn) */
         if (sub==0x45u || sub==0x4Du) return 14u; /* RETN/RETI */
         if (sub==0x43u || sub==0x53u ||
             sub==0x73u || sub==0x7Bu)
             return 20u; /* LD (nn),BC/DE/SP; LD SP,(nn) */
         if (sub==0x6Fu) return 18u; /* RLD */
-        if (sub==0xA0u || sub==0xA3u || sub==0xABu) return 16u;
+        if (sub==0xA0u || sub==0xA8u ||
+            sub==0xA3u || sub==0xABu) return 16u;
         if (sub==0xB0u) return cpu->pc==start ? 21u : 16u; /* LDIR */
         if ((sub&0xC7u)==0x41u && sub!=0x71u) return 12u;
         return 0u;
@@ -359,6 +363,17 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             cpu->f=(uint8_t)(sz53(result) |
                 (parity(result)?Z80_F_PV:0u) |
                 ((prior&1u)?Z80_F_C:0u));
+        } else if ((operation&0xF8u)==0x38u) {
+            /* PC-40 native original bank1 $61B1 CB 3F: SRL A.
+               General Z80 SRL r/(HL): shift in zero, bit 0 to C;
+               S/Z/PV/3/5 from result, H/N cleared, fail-closed. */
+            unsigned reg=operation&7u;
+            uint8_t prior=r8(cpu,reg);
+            uint8_t result=(uint8_t)(prior>>1u);
+            if(!w8(cpu,reg,result)) goto fail;
+            cpu->f=(uint8_t)(sz53(result) |
+                (parity(result)?Z80_F_PV:0u) |
+                ((prior&1u)?Z80_F_C:0u));
         } else if ((operation&0xC0u)==0x40u) {
             uint8_t value=r8(cpu,operation&7u);
             cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,value);
@@ -421,7 +436,8 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             uint8_t data=fetch(cpu);
             uint16_t at=(uint16_t)(*index+displacement);
             if(!store(cpu,at,data)) goto fail;
-        } else if(sub==0x34 || sub==0x46 || sub==0x4E ||
+        } else if(sub==0x34 || sub==0x35 ||
+                  sub==0x46 || sub==0x4E ||
                   sub==0x56 || sub==0x5E || sub==0x66 ||
                   sub==0x6E || sub==0x70 || sub==0x71 ||
                   sub==0x72 || sub==0x73 || sub==0x74 ||
@@ -451,6 +467,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                 uint8_t next=(uint8_t)(value+1u);
                 if(!store(cpu,addr,next)) goto fail;
                 cpu->f=inc_flags(value,next,cpu->f&Z80_F_C);
+            } else if(sub==0x35) {
+                /* PC-40 natural original bank2 $87C6 DD 35 09:
+                   DEC (IX+9). Signed d; flags update only on a
+                   successful SMS memory write. Prior carry kept. */
+                uint8_t next=(uint8_t)(value-1u);
+                if(!store(cpu,addr,next)) goto fail;
+                cpu->f=dec_flags(value,next,cpu->f&Z80_F_C);
             } else if(sub==0x46) {
                 cpu->b=value; /* LD B,(IX/IY+d): flags unchanged. */
             } else if(sub==0x4E) {
@@ -646,6 +669,50 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             if(sub==0x45) cpu->iff1=cpu->iff2; /* RETN */
             break;
         }
+        if (sub==0x44u) {
+            /* PC-40 original bank0 $267E ED 44: NEG == 0-A.
+               Compute all documented S/Z/H/PV/N/C, 3/5 flags. */
+            uint8_t original=cpu->a;
+            cpu->a=(uint8_t)(0u-original);
+            cpu->f=sub_flags(0u,original,cpu->a);
+            break;
+        }
+        if ((sub&0xCFu)==0x42u) {
+            /* PC-40 original $2693 ED 52 SBC HL,DE.
+               Generic ED 42/52/62/72: 16-bit result and all flags,
+               including borrow across bit 11 and signed overflow. */
+            uint16_t prior=pair(cpu->h,cpu->l);
+            unsigned rr=(sub>>4u)&3u;
+            uint16_t source=rr==0u?pair(cpu->b,cpu->c):
+                            rr==1u?pair(cpu->d,cpu->e):
+                            rr==2u?prior:cpu->sp;
+            unsigned carry=cpu->f&Z80_F_C;
+            unsigned rhs=(unsigned)source+carry;
+            uint16_t result=(uint16_t)((unsigned)prior-rhs);
+            split(result,&cpu->h,&cpu->l);
+            cpu->f=(uint8_t)((((result>>8u)&(Z80_F_3|Z80_F_5))) |
+                (result&0x8000u?Z80_F_S:0u) |
+                (result==0u?Z80_F_Z:0u) |
+                ((prior&0x0FFFu)<((source&0x0FFFu)+carry)?
+                 Z80_F_H:0u) |
+                (((prior^source)&(prior^result)&0x8000u)?
+                 Z80_F_PV:0u) |
+                Z80_F_N |
+                ((unsigned)prior<rhs?Z80_F_C:0u));
+            break;
+        }
+        if (sub==0x4Bu || sub==0x5Bu) {
+            /* Original bank0 $26C3 ED 4B 10 C2 loads BC.
+               PC-40 natural bank1 $62DD ED 5B A1 C1 loads DE.
+               Both read low/high from the current mapped SMS bus,
+               wrap the source address and leave flags unchanged. */
+            uint16_t address=fetch16(cpu);
+            uint8_t lo=ys_sms_bus_read(cpu->bus,address);
+            uint8_t hi=ys_sms_bus_read(cpu->bus,(uint16_t)(address+1u));
+            if(sub==0x4Bu) {cpu->b=hi;cpu->c=lo;}
+            else {cpu->d=hi;cpu->e=lo;}
+            break;
+        }
         if (sub==0x7Bu) {
             /* PC-28: original fixed bank0 $0CC2 ED 7B 2E C0.
                LD SP,(nn): fetch 16-bit pointer, read through SMS bus.
@@ -697,12 +764,17 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                               (parity(cpu->a)?Z80_F_PV:0));
             break;
         }
-        if (sub==0xA0) { /* LDI: preserve S,Z,C; update PV and 3/5. */
+        if (sub==0xA0u || sub==0xA8u) {
+            /* PC-40 original bank0 $2AFC ED A0 LDI, $2AFE ED A8 LDD
+               (also $2B49/$2B4B). Both copy one byte and decrement BC;
+               LDD decrements HL/DE while LDI increments them. */
             uint16_t hl=pair(cpu->h,cpu->l),de=pair(cpu->d,cpu->e);
             uint8_t value=ys_sms_bus_read(cpu->bus,hl);
             if (!store(cpu,de,value)) goto fail;
-            split((uint16_t)(hl+1u),&cpu->h,&cpu->l);
-            split((uint16_t)(de+1u),&cpu->d,&cpu->e);
+            uint16_t next_hl=(uint16_t)(sub==0xA0u?hl+1u:hl-1u);
+            uint16_t next_de=(uint16_t)(sub==0xA0u?de+1u:de-1u);
+            split(next_hl,&cpu->h,&cpu->l);
+            split(next_de,&cpu->d,&cpu->e);
             uint16_t bc=(uint16_t)(pair(cpu->b,cpu->c)-1u);
             split(bc,&cpu->b,&cpu->c);
             uint8_t u=(uint8_t)(cpu->a+value);
