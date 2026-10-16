@@ -180,6 +180,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0xE5: return 15u; /* PUSH IX/IY */
         case 0xE1: return 14u; /* POP IX/IY */
         case 0x21: return 14u; /* LD IX/IY,nn */
+        case 0x23: case 0x2B: return 10u; /* INC/DEC IX/IY */
         case 0x46: case 0x4E: /* LD B/C,(IX/IY+d) */
         case 0x56: case 0x5E: /* LD D/E,(IX/IY+d): bank2 $84F1 */
         case 0x66: case 0x6E: /* LD H/L,(IX/IY+d), not index halves */
@@ -371,6 +372,12 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             *index=pop16(cpu);
         } else if(sub==0x21) {
             *index=fetch16(cpu);
+        } else if(sub==0x23) {
+            /* Original bank0 $0DB2 FD 23: INC IY, flags unchanged. */
+            *index=(uint16_t)(*index+1u);
+        } else if(sub==0x2B) {
+            /* DEC IX/IY: 16-bit wrap, Z80 flags unaffected. */
+            *index=(uint16_t)(*index-1u);
         } else if(sub==0x36) {
             /* Original bank2 $88FF DD 36 07 00.
                Index displacement precedes immediate data.

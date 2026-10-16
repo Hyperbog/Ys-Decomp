@@ -947,6 +947,52 @@ static void test_pc23_indexed_immediate_boundary(void) {
            cpu.f==0xFFu && rom[0x7FFFu]==0x90u);
 }
 
+
+/* PC-24: source fixed-bank $0DB2 FD 23 INC IY. All flags unaffected;
+   the control flow may later enter original bank1 collision callers,
+   but this independent fixture does not claim that runtime entry. */
+static void test_pc24_indexed_inc_dec_16(void) {
+    setup();
+    LOAD(0,0xFD,0x23,0xFD,0x2B,0xDD,0x23,0xDD,0x2B);
+    cpu.iy=0xFFFFu;cpu.ix=0x0000u;
+    cpu.f=0xFFu;cpu.a=0x55u;cpu.h=0xC2u;cpu.l=0x06u;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.iy==0u && cpu.ix==0u &&
+           cpu.pc==2u && cpu.f==0xFFu &&
+           cpu.last_tstates==10u && cpu.total_tstates==10u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.iy==0xFFFFu && cpu.f==0xFFu &&
+           cpu.pc==4u && cpu.last_tstates==10u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.ix==1u && cpu.iy==0xFFFFu &&
+           cpu.pc==6u && cpu.last_tstates==10u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.ix==0u && cpu.iy==0xFFFFu &&
+           cpu.h==0xC2u && cpu.l==0x06u &&
+           cpu.a==0x55u && cpu.f==0xFFu &&
+           cpu.pc==8u && cpu.steps==4u &&
+           cpu.last_tstates==10u && cpu.total_tstates==40u);
+}
+
+static void test_pc24_original_fixedbank_pointer_loop_step(void) {
+    setup();
+    /* Exact bytes from bank0 $0DAA onward (source cycle fragment):
+       LD A,(IY+0); ADD A,D; LD (IY+0),A; INC HL; INC IY. */
+    LOAD(0,0xFD,0x7E,0x00,0x82,0xFD,0x77,0x00,
+           0x23,0xFD,0x23);
+    cpu.iy=0xC160u;cpu.h=0xB8u;cpu.l=0x20u;
+    cpu.d=3u;cpu.f=Z80_F_C|Z80_F_Z;
+    assert(ys_sms_bus_write(&bus,0xC160u,0x21u));
+    run(10u,5u);
+    assert(cpu.a==0x24u &&
+           ys_sms_bus_read(&bus,0xC160u)==0x24u &&
+           cpu.iy==0xC161u && cpu.h==0xB8u && cpu.l==0x21u &&
+           cpu.pc==10u && cpu.last_tstates==10u &&
+           cpu.total_tstates==58u);
+    /* Unmodified ROM and untouched neighboring WRAM. */
+    assert(ys_sms_bus_read(&bus,0xC161u)==0u);
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -972,6 +1018,8 @@ int main(void) {
     test_pc22_indexed_hl_iy_and_write_guards();
     test_pc23_sound_zerostore_and_psg();
     test_pc23_indexed_immediate_boundary();
+    test_pc24_indexed_inc_dec_16();
+    test_pc24_original_fixedbank_pointer_loop_step();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();

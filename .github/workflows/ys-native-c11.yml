@@ -113,6 +113,8 @@ jobs:
           python3 native/tools/verify_pc22_indexed_hl.py "$RUNNER_TEMP/ys-pc8-source.sms"
           # PC-23 original bank2 indexed sound state-clearing store.
           python3 native/tools/verify_pc23_sound_clear.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-24: original bank0 IY loop and static bank1 call provenance.
+          python3 native/tools/verify_pc24_iy_loop.py "$RUNNER_TEMP/ys-pc8-source.sms"
           # PC-9: validate authentic bank4 $807C collision predicate,
           # three bank1 candidate callers, and 3968 original Z80 cases.
           python3 native/tools/export_pc_collision.py --out "$RUNNER_TEMP/ys-pc9-collision.bin"
