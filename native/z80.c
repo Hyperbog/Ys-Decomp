@@ -187,6 +187,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0x74: case 0x75: case 0x77: /* indexed register stores */
         case 0x7E: case 0x86: case 0x96: case 0xB6: return 19u; /* indexed memory */
         case 0x34: return 23u; /* INC (IX/IY+d): read/modify/write */
+        case 0x36: return 19u; /* LD (IX/IY+d),n */
         case 0x09: case 0x19: case 0x29: case 0x39:
             return 15u;       /* ADD IX/IY,rr */
         case 0xCB: return 20u;/* BIT b,(IX/IY+d) */
@@ -370,6 +371,14 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             *index=pop16(cpu);
         } else if(sub==0x21) {
             *index=fetch16(cpu);
+        } else if(sub==0x36) {
+            /* Original bank2 $88FF DD 36 07 00.
+               Index displacement precedes immediate data.
+               LD (IX/IY+d),n does not change any flags. */
+            int8_t displacement=(int8_t)fetch(cpu);
+            uint8_t data=fetch(cpu);
+            uint16_t at=(uint16_t)(*index+displacement);
+            if(!store(cpu,at,data)) goto fail;
         } else if(sub==0x34 || sub==0x46 || sub==0x4E ||
                   sub==0x56 || sub==0x5E || sub==0x66 ||
                   sub==0x6E || sub==0x70 || sub==0x71 ||

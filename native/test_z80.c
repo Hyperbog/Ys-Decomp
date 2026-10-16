@@ -887,6 +887,66 @@ static void test_pc22_indexed_hl_iy_and_write_guards(void) {
            cpu.steps==0u && cpu.total_tstates==0u);
 }
 
+
+/* PC-23: source $88FF LD (IX+7),$00 and following PSG command.
+   The bytes are original; RAM/register fixture is isolated. */
+static void test_pc23_sound_zerostore_and_psg(void) {
+    setup();
+    YsSmsSound sound;
+    ys_sms_sound_reset(&sound);
+    ys_z80_attach_sound(&cpu,&sound);
+    LOAD(0,0xDD,0x36,0x07,0x00,
+           0x3E,0xFF,0xD3,0x7F,0xC9);
+    cpu.ix=0xC100u;
+    cpu.sp=0xC300u;
+    cpu.f=0xFFu;
+    assert(ys_sms_bus_write(&bus,0xC107u,0xE8u));
+    assert(ys_sms_bus_write(&bus,0xC300u,0x00u));
+    assert(ys_sms_bus_write(&bus,0xC301u,0x20u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC107u)==0u &&
+           cpu.ix==0xC100u && cpu.f==0xFFu &&
+           cpu.pc==4u && cpu.last_tstates==19u &&
+           cpu.total_tstates==19u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0xFFu && cpu.pc==6u &&
+           cpu.last_tstates==7u && cpu.f==0xFFu);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(sound.psg_write_count==1u &&
+           sound.psg_prefix[0]==0xFFu &&
+           cpu.last_tstates==11u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==0x2000u && cpu.sp==0xC302u &&
+           cpu.f==0xFFu && cpu.steps==4u &&
+           cpu.last_tstates==10u && cpu.total_tstates==47u);
+}
+
+static void test_pc23_indexed_immediate_boundary(void) {
+    setup();
+    LOAD(0,0xFD,0x36,0xFE,0x5Au); /* LD (IY-2),$5A */
+    cpu.iy=0xC102u;cpu.f=Z80_F_S|Z80_F_C;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC100u)==0x5Au &&
+           cpu.pc==4u && cpu.iy==0xC102u &&
+           cpu.f==(Z80_F_S|Z80_F_C) &&
+           cpu.last_tstates==19u && cpu.total_tstates==19u);
+    setup();
+    LOAD(0,0xDD,0x36,0x01,0xC3); /* wraps IX+1 to $0000 */
+    cpu.ix=0xFFFFu;cpu.f=Z80_F_Z|Z80_F_C;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0u && cpu.fault_pc==0u &&
+           cpu.ix==0xFFFFu && cpu.f==(Z80_F_Z|Z80_F_C) &&
+           rom[0]==0xDDu && cpu.total_tstates==0u &&
+           cpu.last_tstates==0u && cpu.steps==0u);
+    setup();
+    LOAD(0,0xFD,0x36,0xFF,0x77);
+    cpu.iy=0x8000u;cpu.f=0xFFu;
+    rom[0x7FFFu]=0x90u;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0u && cpu.fault_pc==0u &&
+           cpu.f==0xFFu && rom[0x7FFFu]==0x90u);
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -910,6 +970,8 @@ int main(void) {
     test_pc21_indexed_rom_write_guard();
     test_pc22_indexed_hl_source_sequence();
     test_pc22_indexed_hl_iy_and_write_guards();
+    test_pc23_sound_zerostore_and_psg();
+    test_pc23_indexed_immediate_boundary();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
