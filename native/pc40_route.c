@@ -61,6 +61,31 @@ bool ys_pc40_route_mark_prefix(YsPc40Route *w,const YsSmsRuntime *rt,
     w->prefix_collisions=collisions;
     return true;
 }
+bool ys_pc42_historical_checkpoint(const YsPc40Route *w,
+                                    const YsSmsRuntime *rt,
+                                    unsigned long step,
+                                    const uint32_t sprite_counts[5],
+                                    uint32_t collisions) {
+    if(!w || !rt || !rt->cpu || !rt->cpu->bus ||
+       !sprite_counts || !w->prefix_seen ||
+       step!=531478ul || w->seen_iterations!=step ||
+       rt->cpu->pc!=0x141Au ||
+       rt->recognized_irqs!=133u ||
+       rt->clock.vblank_events!=137u ||
+       rt->cpu->bus->mapped_bank[1]!=1u ||
+       rt->cpu->bus->mapped_bank[2]!=7u ||
+       ys_sms_bus_read(rt->cpu->bus,0xC01Fu)!=6u ||
+       collisions!=0u ||
+       w->events[1][0].hits!=1u || /* fixed bank0 $26B6 */
+       w->events[1][7].hits!=1u || /* physical bank6 $9966 */
+       w->events[1][8].hits!=2u || /* physical bank1 $4773 */
+       ys_sms_bus_read(rt->cpu->bus,0x141Au)!=0xEDu ||
+       ys_sms_bus_read(rt->cpu->bus,0x141Bu)!=0x5Fu)
+        return false;
+    for(unsigned i=0;i<5u;++i)
+        if(sprite_counts[i]!=(i==4u?41u:0u)) return false;
+    return true;
+}
 bool ys_pc41_historical_checkpoint(const YsPc40Route *w,
                                     const YsSmsRuntime *rt,
                                     unsigned long iteration,
