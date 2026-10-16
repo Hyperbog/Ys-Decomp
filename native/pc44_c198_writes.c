@@ -42,6 +42,7 @@ void ys_pc44_c198_hook(void *context,uint16_t logical,uint16_t physical,
     e->hl=(uint16_t)(((uint16_t)cpu->h<<8u)|cpu->l);
     e->de=(uint16_t)(((uint16_t)cpu->d<<8u)|cpu->e);
     e->bc=(uint16_t)(((uint16_t)cpu->b<<8u)|cpu->c);
+    e->source_at_hl=ys_sms_bus_read(cpu->bus,e->hl);
     e->bank=bank;
     e->before=before;e->after=after;
     e->a=cpu->a;e->f=cpu->f;
@@ -83,12 +84,14 @@ bool ys_pc44_write_report(FILE *out,const YsPc44Writer *w,
           "\"pc\":\"%04X\",\"bank\":%u,"
           "\"hl\":\"%04X\",\"de\":\"%04X\",\"bc\":\"%04X\","
           "\"before\":%u,\"after\":%u,\"a\":%u,\"f\":%u,"
+          "\"source_at_hl\":%u,"
           "\"selector\":%u,\"slot2\":%u,\"irq\":%u}%s\n",
           e->phase,e->iteration,(unsigned long long)e->cpu_step,
           e->logical,e->pc,(unsigned)e->bank,
           e->hl,e->de,e->bc,
           (unsigned)e->before,(unsigned)e->after,
           (unsigned)e->a,(unsigned)e->f,
+          (unsigned)e->source_at_hl,
           (unsigned)e->selector,(unsigned)e->slot2,(unsigned)e->irq,
           i+1u==w->count?"":",")<0) return false;
     }
