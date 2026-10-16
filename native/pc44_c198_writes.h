@@ -13,7 +13,7 @@ typedef struct {
     unsigned phase;
     unsigned long iteration;
     uint64_t cpu_step;
-    uint16_t logical,pc;
+    uint16_t logical,pc,hl,de,bc;
     uint8_t bank, before,after,a,f,selector,slot2,irq;
 } YsPc44Write;
 typedef struct {
