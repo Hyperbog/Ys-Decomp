@@ -1126,7 +1126,7 @@ static void test_pc29_rl_register_and_memory(void) {
     assert(ys_sms_bus_write(&bus,0xC200u,0x40u));
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
     assert(ys_sms_bus_read(&bus,0xC200u)==0x81u &&
-           cpu.f==Z80_F_S && cpu.pc==2u &&
+           cpu.f==(Z80_F_S|Z80_F_PV) && cpu.pc==2u &&
            cpu.last_tstates==15u && cpu.total_tstates==15u);
     setup();
     LOAD(0,0xCB,0x16);
