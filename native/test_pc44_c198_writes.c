@@ -103,7 +103,8 @@ int main(void) {
     assert(copy.writes[0].hl==0xC180u &&
            copy.writes[0].de==0xC198u && copy.writes[0].bc==1u);
     assert(copy.writes[0].before==7u &&
-           copy.writes[0].after==0x6Du && copy.writes[0].a==0xCCu);
+           copy.writes[0].after==0x6Du && copy.writes[0].a==0xCCu &&
+           copy.writes[0].source_at_hl==0x6Du);
     assert(cpu.h==0xC1u && cpu.l==0x81u &&
            cpu.d==0xC1u && cpu.e==0x99u &&
            cpu.b==0u && cpu.c==0u);
@@ -121,7 +122,8 @@ int main(void) {
            copy.writes[1].de==0xC198u &&
            copy.writes[1].bc==1u &&
            copy.writes[1].before==0x6Du &&
-           copy.writes[1].after==0x3Du);
+           copy.writes[1].after==0x3Du &&
+           copy.writes[1].source_at_hl==0x3Du);
     assert(ys_sms_bus_set_wram_hook(&bus,NULL,NULL));
     puts("PASS PC-44: source opcodes $2041/$2281, identical WRAM"
          " stores, aliases, SRAM exclusion, ROM refusal and phases");
