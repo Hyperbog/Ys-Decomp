@@ -317,7 +317,9 @@ int main(int argc,char **argv) {
            strcmp(argv[2],"--pc27-button-probe")==0 ||
            strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
            strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
-          (argc==5 && strcmp(argv[2],"--pc25-collision-watch")==0))) {
+          (argc==5 &&
+           (strcmp(argv[2],"--pc25-collision-watch")==0 ||
+            strcmp(argv[2],"--pc34-extended-postrelease")==0)))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
               "PC12/15 use 150k idle input; PC25 adds a 300k idle-only audit; PC27 is the source-armed button1 probe; PC33 runs 150k post-M45, PC34 separately extends to 300k after genuine release. Neither proves gameplay.\n",
               stderr);
@@ -1874,6 +1876,8 @@ int main(int argc,char **argv) {
     } else if(argc==4 &&
               (strcmp(argv[2],"--pc27-button-probe")==0 ||
                strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
+               strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
+              (argc==5 &&
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
@@ -1887,6 +1891,18 @@ int main(int argc,char **argv) {
         YsPcSpriteWatch sprite={0};
         const bool extended=
             strcmp(argv[2],"--pc34-extended-postrelease")==0;
+        const bool video_audit=extended && argc==5;
+        /* PC-35 independently samples the exact same source CPU run:
+           controller state and PC/WRAM/VDP/mapper are never modified. */
+        uint64_t display_enabled_samples=0u,display_transitions=0u;
+        uint64_t selector_transitions=0u,slot2_transitions=0u;
+        uint64_t first_display_step=0u,first_selector2_step=0u;
+        uint8_t last_display=(uint8_t)
+            ((vdp->registers[1] & 0x40u)!=0u);
+        uint8_t last_mode=ys_sms_bus_read(bus,0xC01Fu);
+        uint8_t last_slot2=bus->mapped_bank[2];
+        const uint64_t initial_vram=vdp->vram_writes;
+        const uint64_t initial_cram=vdp->cram_writes;
         const bool postrelease=extended ||
             strcmp(argv[2],"--pc33-postrelease-watch")==0;
         const unsigned step_budget=extended?300000u:150000u;
@@ -1908,6 +1924,26 @@ int main(int argc,char **argv) {
                 free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
             }
             const uint8_t selector=ys_sms_bus_read(bus,0xC01Fu);
+            if(video_audit) {
+                const uint8_t visible=(uint8_t)
+                    ((vdp->registers[1] & 0x40u)!=0u);
+                if(visible) {
+                    ++display_enabled_samples;
+                    if(first_display_step==0u)
+                        first_display_step=cpu.steps;
+                }
+                if(visible!=last_display) ++display_transitions;
+                if(selector!=last_mode) {
+                    ++selector_transitions;
+                    if(selector==2u && first_selector2_step==0u)
+                        first_selector2_step=cpu.steps;
+                }
+                if(bus->mapped_bank[2]!=last_slot2)
+                    ++slot2_transitions;
+                last_display=visible;
+                last_mode=selector;
+                last_slot2=bus->mapped_bank[2];
+            }
             if(cpu.pc==0x0CD1u && selector==0x01u) {
                 armed=true;
                 if(arm_hits!=UINT32_MAX) ++arm_hits;
@@ -1950,6 +1986,65 @@ int main(int argc,char **argv) {
                 why="unsupported";break;
             }
             if(execute_release) release_sampled=true;
+        }
+        if(video_audit) {
+            FILE *video_file=fopen(argv[4],"wb");
+            bool video_ok=video_file &&
+                fprintf(video_file,
+                  "{\n"
+                  " \"schema\":\"ys-pc35-source-video-dispatch-v1\",\n"
+                  " \"source\":\"pc34-same-run\",\n"
+                  " \"continued_steps\":%lu,\"stop_reason\":\"%s\",\n"
+                  " \"stop_pc\":\"%04X\",\"stop_irq\":%llu,"
+                  "\"stop_vblank\":%llu,\n"
+                  " \"release_sampled\":%s,"
+                  "\"mode2_seen\":%s,\n"
+                  " \"selector_transitions\":%llu,"
+                  "\"first_selector2_step\":%llu,"
+                  "\"stop_selector\":%u,\n"
+                  " \"display_transitions\":%llu,"
+                  "\"display_enabled_samples\":%llu,"
+                  "\"first_display_step\":%llu,"
+                  "\"display_enabled_final\":%s,\n"
+                  " \"vram_writes_delta\":%llu,"
+                  "\"cram_writes_delta\":%llu,\n"
+                  " \"slot2_transitions\":%llu,"
+                  "\"slot2_final\":%u,\n"
+                  " \"sprite_upload0427_hits\":%u,"
+                  "\"bank6_sprite9932_hits\":%u,"
+                  "\"collision_calls\":%u\n}\n",
+                  steps,why,cpu.pc,
+                  (unsigned long long)runtime.recognized_irqs,
+                  (unsigned long long)runtime.clock.vblank_events,
+                  release_sampled?"true":"false",
+                  saw_mode2?"true":"false",
+                  (unsigned long long)selector_transitions,
+                  (unsigned long long)first_selector2_step,
+                  (unsigned)ys_sms_bus_read(bus,0xC01Fu),
+                  (unsigned long long)display_transitions,
+                  (unsigned long long)display_enabled_samples,
+                  (unsigned long long)first_display_step,
+                  (vdp->registers[1]&0x40u)?"true":"false",
+                  (unsigned long long)(vdp->vram_writes-initial_vram),
+                  (unsigned long long)(vdp->cram_writes-initial_cram),
+                  (unsigned long long)slot2_transitions,
+                  (unsigned)bus->mapped_bank[2],
+                  sprite.counts[4],sprite.counts[3],
+                  collision.observed_collision_calls)>0;
+            if(video_file && fclose(video_file)!=0) video_ok=false;
+            if(!video_ok) {
+                fputs("PC-35 cannot serialize source video audit\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-35 same source-run video audit: display_samples=%llu"
+                   " display_switches=%llu VRAM_delta=%llu CRAM_delta=%llu"
+                   " selector_switches=%llu slot2_switches=%llu\n",
+                   (unsigned long long)display_enabled_samples,
+                   (unsigned long long)display_transitions,
+                   (unsigned long long)(vdp->vram_writes-initial_vram),
+                   (unsigned long long)(vdp->cram_writes-initial_cram),
+                   (unsigned long long)selector_transitions,
+                   (unsigned long long)slot2_transitions);
         }
         /* PC-33-only evidence fields; the PC-27 JSON schema is unchanged.
            Two different clocks exist: cpu.steps is absolute since reset,
