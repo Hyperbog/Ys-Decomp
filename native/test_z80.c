@@ -1681,7 +1681,10 @@ static void test_pc41_original_indexed_set_res(void) {
     const unsigned bank=6u*YS_ROM_BANK_BYTES+0x0100u;
     rom[bank]=0xDDu;rom[bank+1u]=0xCBu;
     rom[bank+2u]=0x01u;rom[bank+3u]=0xC6u;
-    bus.mapped_bank[2]=6u;
+    /* Configure mapper through the real register, so its WRAM
+       mirror also contains 6. SET bit0 then maps slot2 to bank7. */
+    assert(ys_sms_bus_write(&bus,0xFFFFu,6u));
+    assert(bus.mapped_bank[2]==6u);
     cpu.pc=0x8100u;cpu.ix=0xFFFEu;cpu.f=0xA5u;
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
     assert(bus.mapped_bank[2]==7u); /* initially 6 -> SET low bit */
