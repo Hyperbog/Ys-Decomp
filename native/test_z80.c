@@ -1524,6 +1524,95 @@ static void test_pc40_original_bank1_ld_de_indirect(void) {
     assert(cpu.d==0xBEu && cpu.e==0xEFu);
     assert(cpu.f==0xFFu && cpu.last_tstates==20u);
 }
+/* PC-41 independently computed ADC/SBC arithmetic oracle. The oracle
+   uses SIGNED mathematical range checks, while the implementation
+   uses Z80 bit algebra; this catches PV and carry-in regressions. */
+static unsigned pc41_expected_alu(unsigned lhs,unsigned rhs,
+                                 unsigned carry,bool subtract) {
+    unsigned result=(lhs+(subtract ? 256u-rhs-carry : rhs+carry))&255u;
+    int a_signed=lhs<128u?(int)lhs:(int)lhs-256;
+    int b_signed=rhs<128u?(int)rhs:(int)rhs-256;
+    int signed_full=subtract ? a_signed-b_signed-(int)carry :
+                               a_signed+b_signed+(int)carry;
+    unsigned flags=result&(Z80_F_S|Z80_F_5|Z80_F_3);
+    if(!result) flags|=Z80_F_Z;
+    if(((lhs^rhs^result)&0x10u)!=0u) flags|=Z80_F_H;
+    if(signed_full>127 || signed_full< -128) flags|=Z80_F_PV;
+    if(subtract) flags|=Z80_F_N;
+    if(subtract ? ((int)lhs-(int)rhs-(int)carry)<0 :
+                  lhs+rhs+carry>255u) flags|=Z80_F_C;
+    return (flags<<8u)|result;
+}
+static void test_pc41_alu_oracle_exhaustive(void) {
+    setup();
+    /* CPU itself executes original Z80 instruction 88 at bank0 $1A0A
+       as well as the generalized SBC A,B. Enumerate EVERY 8-bit
+       input pair and both carry-in states (262144 executions). */
+    LOAD(0x100u,0x88u); /* ADC A,B */
+    LOAD(0x102u,0x98u); /* SBC A,B */
+    for(unsigned subtract=0u;subtract<2u;++subtract) {
+        unsigned pc=subtract?0x102u:0x100u;
+        for(unsigned lhs=0u;lhs<256u;++lhs)
+            for(unsigned rhs=0u;rhs<256u;++rhs)
+                for(unsigned carry=0u;carry<2u;++carry) {
+                    cpu.pc=(uint16_t)pc;
+                    cpu.status=Z80_RUNNING;
+                    cpu.a=(uint8_t)lhs;cpu.b=(uint8_t)rhs;
+                    cpu.f=(uint8_t)(carry?Z80_F_C:0u);
+                    unsigned expected=pc41_expected_alu(
+                        lhs,rhs,carry,subtract!=0u);
+                    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+                    assert(cpu.a==(uint8_t)expected);
+                    assert(cpu.f==(uint8_t)(expected>>8u));
+                    assert(cpu.pc==pc+1u && cpu.last_tstates==4u);
+                    assert(cpu.b==rhs);
+                }
+    }
+    /* Also execute actual mapped (HL), immediate and A-self forms;
+       these exercise bus reads and the differing timing classes. */
+    const unsigned input_values[]={0u,1u,15u,16u,63u,127u,128u,129u,
+                                   240u,254u,255u};
+    for(unsigned subtract=0u;subtract<2u;++subtract)
+        for(unsigned carry=0u;carry<2u;++carry)
+            for(unsigned i=0u;i<sizeof(input_values)/sizeof(input_values[0]);++i)
+                for(unsigned j=0u;j<sizeof(input_values)/sizeof(input_values[0]);++j) {
+                    unsigned lhs=input_values[i],rhs=input_values[j];
+                    unsigned expected=pc41_expected_alu(
+                        lhs,rhs,carry,subtract!=0u);
+                    uint8_t opcode=subtract?0x9Eu:0x8Eu; /* (HL) */
+                    rom[0x120u]=opcode;
+                    assert(ys_sms_bus_write(&bus,0xC000u,(uint8_t)rhs));
+                    cpu.status=Z80_RUNNING;cpu.pc=0x120u;
+                    cpu.h=0xC0u;cpu.l=0u;cpu.a=(uint8_t)lhs;
+                    cpu.f=carry?Z80_F_C:0u;
+                    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+                    assert(cpu.a==(uint8_t)expected);
+                    assert(cpu.f==(uint8_t)(expected>>8u));
+                    assert(cpu.last_tstates==7u && cpu.pc==0x121u);
+                    assert(ys_sms_bus_read(&bus,0xC000u)==rhs);
+                    /* A-self: operand must be the ORIGINAL accumulator. */
+                    rom[0x122u]=subtract?0x9Fu:0x8Fu;
+                    expected=pc41_expected_alu(lhs,lhs,carry,subtract!=0u);
+                    cpu.status=Z80_RUNNING;cpu.pc=0x122u;
+                    cpu.a=(uint8_t)lhs;cpu.f=carry?Z80_F_C:0u;
+                    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+                    assert(cpu.a==(uint8_t)expected &&
+                           cpu.f==(uint8_t)(expected>>8u));
+                    assert(cpu.last_tstates==4u);
+                    /* ADC A,n / SBC A,n read immediate through ROM bus. */
+                    rom[0x124u]=subtract?0xDEu:0xCEu;
+                    rom[0x125u]=(uint8_t)rhs;
+                    expected=pc41_expected_alu(lhs,rhs,carry,subtract!=0u);
+                    cpu.status=Z80_RUNNING;cpu.pc=0x124u;
+                    cpu.a=(uint8_t)lhs;cpu.f=carry?Z80_F_C:0u;
+                    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+                    assert(cpu.a==(uint8_t)expected &&
+                           cpu.f==(uint8_t)(expected>>8u));
+                    assert(cpu.pc==0x126u && cpu.last_tstates==7u);
+                }
+    puts("PASS PC-41: 262144 carry-aware ADC/SBC register vectors plus"
+         " memory/self/immediate and T-state/bus guard fixtures");
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1568,6 +1657,7 @@ int main(void) {
     test_pc40_original_bank2_indexed_dec();
     test_pc40_original_bank1_srl();
     test_pc40_original_bank1_ld_de_indirect();
+    test_pc41_alu_oracle_exhaustive();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
