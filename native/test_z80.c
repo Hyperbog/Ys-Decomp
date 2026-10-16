@@ -1057,8 +1057,12 @@ static void test_pc28_indirect_stack_pointer_bus_boundaries(void) {
     LOAD(0,0xED,0x7B,0xFF,0xFF);
     cpu.f=Z80_F_C|Z80_F_N;
     rom[0]=0xEDu; /* high byte read wraps to source ROM at $0000. */
+    /* $FFFF reads its WRAM mirror; mapper reset select2=2 is not a
+       substitute for a real source write into that readable mirror. */
+    assert(ys_sms_bus_write(&bus,0xFFFFu,2u));
+    assert(ys_sms_bus_read(&bus,0xFFFFu)==2u);
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
-    /* $FFFF reports current mapper bank select2, initial 2. */
+    /* $FFFF reads the explicitly written bank-selector RAM mirror. */
     assert(cpu.sp==0xED02u && cpu.f==(Z80_F_C|Z80_F_N) &&
            cpu.pc==4u && cpu.total_tstates==20u);
 }
