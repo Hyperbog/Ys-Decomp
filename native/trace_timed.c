@@ -1909,7 +1909,7 @@ int main(int argc,char **argv) {
                 saw_mode_write=true;
             }
             if(pressed && saw_mode_write && selector==0x02u) {
-                if(!saw_mode2) mode2_step=cpu->steps;
+                if(!saw_mode2) mode2_step=cpu.steps;
                 saw_mode2=true;
             }
             if(armed && !pressed && cpu.pc==0x0773u) {
