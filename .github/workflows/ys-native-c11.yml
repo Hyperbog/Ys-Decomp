@@ -184,6 +184,16 @@ jobs:
           # PC-39: read-only actual CPU bus-write strobes in physical
           # SAT source WRAM, from real reset to M45 and same 300k PC34.
           python3 native/tools/verify_pc39_sat_strobes.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc39-strobes.json" "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc36-sat.json" "$RUNNER_TEMP/ys-pc37-source.json" "$RUNNER_TEMP/ys-pc38-provenance.json"
+          # PC-40: 600k SAME original controller schedule from M45; 300k
+          # prefix must be bitwise-observation identical to PC-34.
+          # Pure event observation; no injected mapper, PC, WRAM or VDP.
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc40-source-route "$RUNNER_TEMP/ys-pc40-source.json" "$RUNNER_TEMP/ys-pc40-route.json"
+          python3 native/tools/verify_pc40_route.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc40-source.json" "$RUNNER_TEMP/ys-pc40-route.json" "$RUNNER_TEMP/ys-pc34-postrelease.json"
+          printf 'tampered' > "$RUNNER_TEMP/ys-pc40-bad.json"
+          if python3 native/tools/verify_pc40_route.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc40-source.json" "$RUNNER_TEMP/ys-pc40-bad.json" "$RUNNER_TEMP/ys-pc34-postrelease.json"; then
+            echo "PC-40 corrupt original route accepted" >&2
+            exit 1
+          fi
           printf 'corrupt' > "$RUNNER_TEMP/ys-pc39-bad.json"
           if python3 native/tools/verify_pc39_sat_strobes.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc39-bad.json" "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc36-sat.json" "$RUNNER_TEMP/ys-pc37-source.json" "$RUNNER_TEMP/ys-pc38-provenance.json"; then
             echo "PC-39 corrupted bus trace was accepted" >&2
