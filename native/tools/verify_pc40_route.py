@@ -60,6 +60,12 @@ def verify(rom_path,source_json,route_json,pc34_json):
     bank1=(Path(__file__).resolve().parents[2]/
            "Ys/src/wholebank01/bank01_complete.asm").read_text(encoding="utf-8")
     assert "    srl a" in bank1
+    # The native source interpreter next naturally reaches bank1 $62DD.
+    # The original ROM contains ED 5B A1 C1 = LD DE,($C1A1).
+    # This byte sequence is guarded by original SHA, not a claim that
+    # every commercial bank-1 instruction has a semantic source label.
+    assert rom[1*0x4000+0x22DD:1*0x4000+0x22E1]==bytes.fromhex(
+        "ED 5B A1 C1")
     a=json.loads(Path(source_json).read_text(encoding="utf-8"))
     r=json.loads(Path(route_json).read_text(encoding="utf-8"))
     b=json.loads(Path(pc34_json).read_text(encoding="utf-8"))
