@@ -19,9 +19,9 @@ bool ys_pc_sat_provenance_sample(YsPcSatProvenance *a,
     uint8_t current[YS_PC38_BYTES];
     read_sat(cpu->bus,current);
     if(a->initialized) {
-        if(cpu->steps==a->previous_steps)
-            return cpu->pc==a->previous_pc &&
-                   source_bank(cpu)==a->previous_bank;
+        /* During HALT, the runtime can sample repeated clock advances
+           with an unchanged instruction count. An IM1 IRQ can also
+           change PC at the SAME count. Both are valid observations. */
         if(cpu->steps<a->previous_steps) return false;
         /* Attribution is to the previous sampled CPU/IRQ step boundary.
            A change is not proof that the preceding opcode alone wrote it. */
