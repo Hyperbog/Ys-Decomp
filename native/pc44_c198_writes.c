@@ -37,6 +37,11 @@ void ys_pc44_c198_hook(void *context,uint16_t logical,uint16_t physical,
     e->cpu_step=cpu->steps;
     e->logical=logical;
     e->pc=pc;
+    /* The bus invokes this callback before the interpreter updates
+       block-transfer pointers. Preserve the actual copy source. */
+    e->hl=(uint16_t)(((uint16_t)cpu->h<<8u)|cpu->l);
+    e->de=(uint16_t)(((uint16_t)cpu->d<<8u)|cpu->e);
+    e->bc=(uint16_t)(((uint16_t)cpu->b<<8u)|cpu->c);
     e->bank=bank;
     e->before=before;e->after=after;
     e->a=cpu->a;e->f=cpu->f;
@@ -76,10 +81,12 @@ bool ys_pc44_write_report(FILE *out,const YsPc44Writer *w,
           "{\"phase\":%u,\"iteration\":%lu,\"cpu_step\":%llu,"
           "\"logical\":\"%04X\",\"physical\":\"0198\","
           "\"pc\":\"%04X\",\"bank\":%u,"
+          "\"hl\":\"%04X\",\"de\":\"%04X\",\"bc\":\"%04X\","
           "\"before\":%u,\"after\":%u,\"a\":%u,\"f\":%u,"
           "\"selector\":%u,\"slot2\":%u,\"irq\":%u}%s\n",
           e->phase,e->iteration,(unsigned long long)e->cpu_step,
           e->logical,e->pc,(unsigned)e->bank,
+          e->hl,e->de,e->bc,
           (unsigned)e->before,(unsigned)e->after,
           (unsigned)e->a,(unsigned)e->f,
           (unsigned)e->selector,(unsigned)e->slot2,(unsigned)e->irq,
