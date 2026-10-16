@@ -9,6 +9,7 @@
 #include "pc_sprite_upload_watch.h"
 #include "pc_sat_provenance.h"
 #include "pc_sat_strobes.h"
+#include "pc40_route.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -333,7 +334,8 @@ int main(int argc,char **argv) {
            strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
           (argc==5 &&
            (strcmp(argv[2],"--pc25-collision-watch")==0 ||
-            strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
+            strcmp(argv[2],"--pc34-extended-postrelease")==0 ||
+            strcmp(argv[2],"--pc40-source-route")==0)) ||
           ((argc==6 || argc==8 || argc==9 || argc==10) &&
            strcmp(argv[2],"--pc34-extended-postrelease")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
@@ -1906,7 +1908,8 @@ int main(int argc,char **argv) {
                strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
               ((argc==5 || argc==6 || argc==8 || argc==9 || argc==10) &&
-               strcmp(argv[2],"--pc34-extended-postrelease")==0)) {
+               strcmp(argv[2],"--pc34-extended-postrelease")==0) ||
+              (argc==5 && strcmp(argv[2],"--pc40-source-route")==0)) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
            reaches PC $0CD1 (observed Phase5 C01C edge test) with C01F==$01.
@@ -1919,6 +1922,8 @@ int main(int argc,char **argv) {
         YsPcSpriteWatch sprite={0};
         YsPcSpriteUploadWatch upload={0};
         YsPcSatProvenance provenance={0};
+        YsPc40Route route={0};
+        const bool route_long=strcmp(argv[2],"--pc40-source-route")==0;
         const bool extended=
             strcmp(argv[2],"--pc34-extended-postrelease")==0;
         const bool video_audit=extended && argc>=5;
@@ -1948,10 +1953,12 @@ int main(int argc,char **argv) {
         uint8_t last_slot2=bus->mapped_bank[2];
         const uint64_t initial_vram=vdp->vram_writes;
         const uint64_t initial_cram=vdp->cram_writes;
-        const bool postrelease=extended ||
+        const bool postrelease=extended || route_long ||
             strcmp(argv[2],"--pc33-postrelease-watch")==0;
-        const unsigned step_budget=extended?300000u:150000u;
-        const uint64_t blank_budget=extended?120u:90u;
+        const unsigned step_budget=route_long?600000u:
+                                   extended?300000u:150000u;
+        const uint64_t blank_budget=route_long?240u:
+                                    extended?120u:90u;
         bool release_sampled=false;
         const uint8_t start_selector=ys_sms_bus_read(bus,0xC01Fu);
         const char *why="budget";
@@ -1963,9 +1970,17 @@ int main(int argc,char **argv) {
         uint64_t press_step=0u,release_step=0u,mode2_step=0u;
         unsigned edge_10_hits=0u;
         for(;steps<step_budget;++steps) {
+            if(route_long && steps==300000ul &&
+               !ys_pc40_route_mark_prefix(&route,&runtime,steps,
+                                          sprite.counts,
+                                          collision.observed_collision_calls)) {
+                fputs("PC-40 missing unchanged 300k source prefix\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
             const unsigned pc37_prev_completed=upload.completed;
             const unsigned pc38_prev_entries=upload.entries;
-            if((provenance_audit &&
+            if((route_long && !ys_pc40_route_sample(&route,&runtime,steps)) ||
+               (provenance_audit &&
                 !ys_pc_sat_provenance_sample(&provenance,&runtime)) ||
                !ys_pc_source_watch_sample(&collision,&runtime) ||
                (postrelease && !ys_pc_sprite_watch_sample(&sprite,&runtime)) ||
@@ -2069,6 +2084,22 @@ int main(int argc,char **argv) {
                 why="unsupported";break;
             }
             if(execute_release) release_sampled=true;
+        }
+        if(route_long) {
+            FILE *route_file=fopen(argv[4],"wb");
+            bool ok=route_file && ys_pc40_route_write(route_file,&route,
+                                                       &runtime,why,steps);
+            if(route_file && fclose(route_file)!=0) ok=false;
+            if(!ok) {
+                fputs("PC-40 cannot serialize extended original source route\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-40 original 600k extended source route:"
+                   " executed=%lu reason=%s PC=$%04X"
+                   " prefix=$%04X IRQ=%llu VBlank=%llu\n",
+                   steps,why,cpu.pc,route.prefix_pc,
+                   (unsigned long long)runtime.recognized_irqs,
+                   (unsigned long long)runtime.clock.vblank_events);
         }
         if(pc39_mode) {
             FILE *strobe=fopen(argv[9],"wb");
@@ -2283,6 +2314,7 @@ int main(int argc,char **argv) {
              "  \"port_dc\":%u,\"port_dd\":%u,\n"
              "  \"input_reads_dc\":%llu,\"input_reads_dd\":%llu,\n"
              "  \"observed_collision_calls\":%u%s\n}\n",
+             route_long?"ys-pc40-long-original-controller-v1":
              extended?"ys-pc34-extended-postrelease-source-watch-v1":
              postrelease?"ys-pc33-postrelease-source-watch-v1":
                          "ys-pc27-original-button-probe-v1",
