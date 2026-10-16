@@ -35,6 +35,8 @@ def verify(rom_path,source_json,route_json,pc34_json):
     source_rows=((0x267E,"ED 44","neg"),
                  (0x2693,"ED 52","sbc hl,de"),
                  (0x26C3,"ED 4B 10 C2","ld bc,($C210)"),
+                 (0x2AFE,"ED A8","ldd"),
+                 (0x2B4B,"ED A8","ldd"),
                  (0x26B6,"3A 98 C1","ld a,($C198)"),
                  (0x2704,"CD 32 99","call $9932"))
     listing=(Path(__file__).resolve().parents[2]/
