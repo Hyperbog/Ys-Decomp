@@ -273,6 +273,22 @@ experimental, not emulator-matched. No original-player, authentic
 gameplay frame, native soundtrack or Alpha gate is proven, and
 M45/PR #3 status remains unchanged.
 
+## PC-36 original 192-byte SAT upload subsystem
+
+[PC-36 original SAT source-to-VDP transfer verification](research/PC36_ORIGINAL_SAT_UPLOAD.md)
+independently checks both natural return phases of the original
+fixed-bank `$0427-$053F` sprite uploader. The existing, unchanged
+300k-step PC-34/35 controller experiment completed **27/27 full
+192-byte transfers** (64 source Y + 128 source X/tile bytes);
+**all 5,184 observed bytes matched** actual VDP VRAM at
+`$3F00/$3F80`, with no differing, abandoned or pending
+transfers. Original-ROM SHA-256 and all 128 unrolled `OUTI`
+source instructions were independently verified. The physical
+bank-6 sprite producer and original collision calls remain
+unobserved; this is hardware-path evidence, **not** player or
+gameplay authentication. The native suite passed **31/31**
+CTest cases; Alpha gates and M45 remain unchanged.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
