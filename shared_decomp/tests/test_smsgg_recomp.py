@@ -41,7 +41,8 @@ class SmsggAdapterTests(unittest.TestCase):
             "out = cfg.parent / 'generated'\n"
             "out.mkdir()\n"
             "for part in ('full', 'dispatch', 'layout'):\n"
-            "    (out / ('ystest_' + part + '.c')).write_text('/* fixture */\\n')\n",
+            "    (out / ('ystest_' + part + '.c')).write_text('/* fixture */\\n')\n"
+            "(out / 'ystest_funcs.h').write_text('/* generated fixture header */\\n')\n",
             encoding="utf-8",
         )
         self.tool.chmod(0o755)
@@ -100,14 +101,15 @@ class SmsggAdapterTests(unittest.TestCase):
         self.assertIn(f"{crc:08X}", result.stdout)
 
     @unittest.skipIf(os.name == "nt", "mock executable is a POSIX script")
-    def test_generates_three_outputs_and_evidence(self):
+    def test_generates_four_outputs_and_evidence(self):
         result = self.invoke("--tool", str(self.tool))
         self.assertEqual(result.returncode, 0, result.stderr)
         out = self.root / "generated"
         report = json.loads((out / "report.json").read_text())
         self.assertEqual(report["stage"], "generated-c-only")
         self.assertFalse(report["runtime_verified"])
-        self.assertEqual(len(report["outputs"]), 3)
+        self.assertEqual(len(report["outputs"]), 4)
+        self.assertIn("ystest_funcs.h", report["outputs"])
         self.assertEqual(report["rom_crc32"], f"{zlib.crc32(self.rom.read_bytes()):08X}")
         self.assertEqual(self.invoke("--tool", str(self.tool),
                                      "--verify-generated").returncode, 0)
@@ -124,6 +126,41 @@ class SmsggAdapterTests(unittest.TestCase):
         result = self.invoke("--tool", str(self.tool), "--verify-generated")
         self.assertEqual(result.returncode, 2)
         self.assertIn("generated output integrity mismatch", result.stderr)
+
+    @unittest.skipIf(os.name == "nt", "mock executable is a POSIX script")
+    def test_generated_header_tampering_is_detected(self):
+        result = self.invoke("--tool", str(self.tool))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        target = self.root / "generated" / "ystest_funcs.h"
+        target.write_text("/* tampered header */\n", encoding="utf-8")
+        outcome = self.invoke("--tool", str(self.tool), "--verify-generated")
+        self.assertEqual(outcome.returncode, 2)
+        self.assertIn("generated output integrity mismatch", outcome.stderr)
+
+    @unittest.skipIf(os.name == "nt", "mock executable is a POSIX script")
+    def test_missing_generated_header_rejected_before_copy(self):
+        # A generator that emits only the historical three .c files
+        # cannot satisfy the generated C's #include "ystest_funcs.h".
+        self.tool.write_text(
+            self.tool.read_text()
+            + "\n(out / 'ystest_funcs.h').unlink()\n"
+        )
+        result = self.invoke("--tool", str(self.tool))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("did not produce ystest_funcs.h", result.stderr)
+        self.assertFalse((self.root / "generated").exists())
+
+    @unittest.skipIf(os.name == "nt", "POSIX symbolic links")
+    def test_generated_header_symlink_rejected(self):
+        self.tool.write_text(
+            self.tool.read_text()
+            + "\n(out / 'ystest_funcs.h').unlink()"
+            + "\n(out / 'ystest_funcs.h').symlink_to(cfg)\n"
+        )
+        result = self.invoke("--tool", str(self.tool))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("did not produce ystest_funcs.h", result.stderr)
+        self.assertFalse((self.root / "generated").exists())
 
     @unittest.skipIf(os.name == "nt", "mock executable is a POSIX script")
     def test_stale_outputs_not_accepted_after_config_change(self):
