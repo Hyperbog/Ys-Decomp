@@ -1873,7 +1873,7 @@ int main(int argc,char **argv) {
             puts("BLOCKED PC-25: no source collision call within this"
                  " larger original unpressed-input research horizon");
 
-    } else if(argc==4 &&
+    } else if((argc==4 &&
               (strcmp(argv[2],"--pc27-button-probe")==0 ||
                strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
