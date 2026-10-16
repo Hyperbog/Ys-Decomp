@@ -757,6 +757,91 @@ static void test_pc20_indexed_add_flags_and_mapping(void) {
            cpu.pc==3u && cpu.last_tstates==19u);
 }
 
+
+/* PC-21 original source $850F-$8518 sound table writes.
+   The surrounding source (HL), INC HL, BIT instruction shapes are exact;
+   RAM and VDP state are an isolated fixture, not observed original state. */
+static void test_pc21_indexed_sound_table_writes(void) {
+    setup();
+    LOAD(0,0x7E,0xDD,0x77,0x0E,0x23,0x7E,0xDD,0x77,0x0F);
+    cpu.ix=0xC100u;
+    cpu.h=0xC2u;cpu.l=0x00u;
+    cpu.f=0xFFu;
+    assert(ys_sms_bus_write(&bus,0xC200u,0x41u));
+    assert(ys_sms_bus_write(&bus,0xC201u,0xE3u));
+    run(9u,5u);
+    assert(ys_sms_bus_read(&bus,0xC10Eu)==0x41u &&
+           ys_sms_bus_read(&bus,0xC10Fu)==0xE3u &&
+           cpu.a==0xE3u && cpu.f==0xFFu &&
+           cpu.ix==0xC100u && cpu.h==0xC2u && cpu.l==0x01u &&
+           cpu.last_tstates==19u && cpu.steps==5u &&
+           cpu.total_tstates==56u);
+}
+
+/* Exactly indexed A/B/C/D/E source stores and B/C indexed reads.
+   Neither 0x74 nor 0x75 is admitted before IXH/IXL source review. */
+static void test_pc21_indexed_register_store_read(void) {
+    setup();
+    LOAD(0,0xDD,0x70,0x05,0xDD,0x71,0x06,
+           0xFD,0x72,0xFE,0xFD,0x73,0xFF,
+           0xDD,0x46,0x05,0xFD,0x4E,0xFE,
+           0xDD,0x77,0x07);
+    cpu.ix=0xC100u;cpu.iy=0xC202u;
+    cpu.b=0x37u;cpu.c=0x64u;
+    cpu.d=0xA3u;cpu.e=0xB6u;cpu.a=0xF8u;
+    cpu.f=Z80_F_C|Z80_F_Z|Z80_F_N|Z80_F_PV;
+    assert(ys_z80_run_until(&cpu,21u,7u)==Z80_RUNNING);
+    assert(cpu.pc==21u && cpu.steps==7u &&
+           cpu.total_tstates==133u && cpu.last_tstates==19u);
+    assert(ys_sms_bus_read(&bus,0xC105u)==0x37u &&
+           ys_sms_bus_read(&bus,0xC106u)==0x64u &&
+           ys_sms_bus_read(&bus,0xC200u)==0xA3u &&
+           ys_sms_bus_read(&bus,0xC201u)==0xB6u &&
+           ys_sms_bus_read(&bus,0xC107u)==0xF8u);
+    assert(cpu.b==0x37u && cpu.c==0xA3u &&
+           cpu.d==0xA3u && cpu.e==0xB6u &&
+           cpu.ix==0xC100u && cpu.iy==0xC202u &&
+           cpu.f==(Z80_F_C|Z80_F_Z|Z80_F_N|Z80_F_PV));
+    setup();
+    LOAD(0,0xDD,0x74,0x03);
+    cpu.ix=0xC100u;
+    assert(ys_z80_step(&cpu)==Z80_UNSUPPORTED);
+    assert(cpu.pc==0u && cpu.fault_pc==0u &&
+           cpu.steps==0u && cpu.last_tstates==0u);
+    setup();
+    LOAD(0,0xFD,0x75,0x03);
+    cpu.iy=0xC100u;
+    assert(ys_z80_step(&cpu)==Z80_UNSUPPORTED);
+    assert(cpu.pc==0u && cpu.fault_pc==0u &&
+           cpu.steps==0u && cpu.last_tstates==0u);
+}
+
+static void test_pc21_indexed_rom_write_guard(void) {
+    setup();
+    LOAD(0,0xDD,0x77,0x01);
+    cpu.ix=0xFFFFu; /* IX+1 wraps to physical ROM CPU $0000. */
+    cpu.a=0x55u;
+    cpu.f=0xFFu;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0u && cpu.fault_pc==0u && cpu.f==0xFFu &&
+           cpu.ix==0xFFFFu && rom[0]==0xDDu &&
+           cpu.steps==0u && cpu.total_tstates==0u &&
+           cpu.last_tstates==0u);
+    setup();
+    LOAD(0,0xFD,0x72,0xFE);
+    cpu.iy=0x8000u;cpu.d=0x77u;cpu.f=Z80_F_C;
+    rom[0x7FFEu]=0x24u;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0u && cpu.fault_pc==0u && cpu.f==Z80_F_C &&
+           rom[0x7FFEu]==0x24u && cpu.steps==0u);
+    setup();
+    LOAD(0,0xDD,0x77,0x01);
+    cpu.ix=0xBFFFu;cpu.a=0x79u;cpu.f=0xFFu;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC000u)==0x79u &&
+           cpu.f==0xFFu && cpu.last_tstates==19u);
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -775,6 +860,9 @@ int main(void) {
     test_pc19_indexed_load_boundaries();
     test_pc20_indexed_add_sound_event();
     test_pc20_indexed_add_flags_and_mapping();
+    test_pc21_indexed_sound_table_writes();
+    test_pc21_indexed_register_store_read();
+    test_pc21_indexed_rom_write_guard();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
