@@ -1790,6 +1790,30 @@ static void test_pc42_original_xor_immediate(void) {
     assert(cpu.pc==0x13F7u && cpu.last_tstates==7u);
     puts("PASS PC-42: 65536 independent XOR n vectors plus original $13F5");
 }
+static void test_pc42_original_ccf_flags(void) {
+    /* CCF must preserve S/Z/PV, set H=old C, invert C, reset N,
+       and take undocumented flag bits 3/5 from A, not previous F. */
+    setup();
+    LOAD(0x100u,0x3Fu);
+    for(unsigned a=0;a<256u;++a)
+        for(unsigned f=0;f<256u;++f) {
+            cpu.status=Z80_RUNNING;cpu.pc=0x100u;
+            cpu.a=(uint8_t)a;cpu.f=(uint8_t)f;
+            uint8_t expected=(uint8_t)((f&(Z80_F_S|Z80_F_Z|Z80_F_PV))|
+                (a&(Z80_F_3|Z80_F_5))|
+                ((f&Z80_F_C)?Z80_F_H:Z80_F_C));
+            assert(ys_z80_step(&cpu)==Z80_RUNNING);
+            assert(cpu.f==expected && cpu.a==a);
+            assert(cpu.pc==0x101u && cpu.last_tstates==4u);
+        }
+    setup();
+    LOAD(0x1A77u,0x3Fu);
+    cpu.pc=0x1A77u;cpu.a=0x28u;cpu.f=0x01u;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.f==(Z80_F_H|Z80_F_3|Z80_F_5));
+    assert(cpu.pc==0x1A78u && cpu.last_tstates==4u);
+    puts("PASS PC-42: exhaustive 65536 CCF accumulator/flags combinations");
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1838,6 +1862,7 @@ int main(void) {
     test_pc41_original_indexed_set_res();
     test_pc42_refresh_ld_a_r_and_irq();
     test_pc42_original_xor_immediate();
+    test_pc42_original_ccf_flags();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
