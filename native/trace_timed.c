@@ -6,6 +6,7 @@
 #include "pc_vdp_checkpoint.h"
 #include "pc_source_watch.h"
 #include "pc_sprite_watch.h"
+#include "pc_sprite_upload_watch.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -319,7 +320,9 @@ int main(int argc,char **argv) {
            strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
           (argc==5 &&
            (strcmp(argv[2],"--pc25-collision-watch")==0 ||
-            strcmp(argv[2],"--pc34-extended-postrelease")==0)))) {
+            strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
+          (argc==6 &&
+           strcmp(argv[2],"--pc34-extended-postrelease")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
               "PC12/15 use 150k idle input; PC25 adds a 300k idle-only audit; PC27 is the source-armed button1 probe; PC33 runs 150k post-M45, PC34 separately extends to 300k after genuine release. Neither proves gameplay.\n",
               stderr);
@@ -1877,7 +1880,7 @@ int main(int argc,char **argv) {
               (strcmp(argv[2],"--pc27-button-probe")==0 ||
                strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
-              (argc==5 &&
+              ((argc==5 || argc==6) &&
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
@@ -1889,9 +1892,11 @@ int main(int argc,char **argv) {
         const uint64_t start_blank=runtime.clock.vblank_events;
         YsPcSourceWatch collision={0};
         YsPcSpriteWatch sprite={0};
+        YsPcSpriteUploadWatch upload={0};
         const bool extended=
             strcmp(argv[2],"--pc34-extended-postrelease")==0;
-        const bool video_audit=extended && argc==5;
+        const bool video_audit=extended && argc>=5;
+        const bool upload_audit=extended && argc==6;
         /* PC-35 independently samples the exact same source CPU run:
            controller state and PC/WRAM/VDP/mapper are never modified. */
         uint64_t display_enabled_samples=0u,display_transitions=0u;
@@ -1919,7 +1924,8 @@ int main(int argc,char **argv) {
         unsigned edge_10_hits=0u;
         for(;steps<step_budget;++steps) {
             if(!ys_pc_source_watch_sample(&collision,&runtime) ||
-               (postrelease && !ys_pc_sprite_watch_sample(&sprite,&runtime))) {
+               (postrelease && !ys_pc_sprite_watch_sample(&sprite,&runtime)) ||
+               (upload_audit && !ys_pc_sprite_upload_watch_sample(&upload,&runtime))) {
                 fputs("PC-27/33 invalid source event observer\n",stderr);
                 free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
             }
@@ -1986,6 +1992,24 @@ int main(int argc,char **argv) {
                 why="unsupported";break;
             }
             if(execute_release) release_sampled=true;
+        }
+        if(upload_audit) {
+            FILE *upload_file=fopen(argv[5],"wb");
+            bool upload_ok=upload_file &&
+                ys_pc_sprite_upload_watch_write(upload_file,&upload,
+                                                 &runtime,why,steps);
+            if(upload_file && fclose(upload_file)!=0) upload_ok=false;
+            if(!upload_ok) {
+                fputs("PC-36 cannot write original SAT transfer audit\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-36 full original SAT transfers:"
+                   " entries=%u halfway=%u complete=%u matched=%u"
+                   " mismatched=%u bytes=%llu different=%llu\n",
+                   upload.entries,upload.halfway,upload.completed,
+                   upload.matched,upload.mismatched,
+                   (unsigned long long)upload.bytes_compared,
+                   (unsigned long long)upload.bytes_different);
         }
         if(video_audit) {
             FILE *video_file=fopen(argv[4],"wb");
