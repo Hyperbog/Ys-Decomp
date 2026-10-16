@@ -28,6 +28,13 @@ bool ys_pc40_route_mark_prefix(YsPc40Route *watch,const YsSmsRuntime *rt,
                                 unsigned long iteration,
                                 const uint32_t sprite_counts[5],
                                 uint32_t collisions);
+/* PC-41 regression: verify the entire prior PC-40 natural stop
+   as a SOURCE pre-instruction checkpoint, without stopping the CPU. */
+bool ys_pc41_historical_checkpoint(const YsPc40Route *watch,
+                                    const YsSmsRuntime *rt,
+                                    unsigned long iteration,
+                                    const uint32_t sprite_counts[5],
+                                    uint32_t collisions);
 bool ys_pc40_route_write(FILE *file,const YsPc40Route *watch,
                           const YsSmsRuntime *rt,const char *reason,
                           unsigned long executed);
