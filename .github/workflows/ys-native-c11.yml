@@ -183,9 +183,9 @@ jobs:
           python3 native/tools/verify_pc38_sat_provenance.py "$RUNNER_TEMP/ys-pc38-provenance.json" "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc36-sat.json" "$RUNNER_TEMP/ys-pc37-source.json"
           # PC-39: read-only actual CPU bus-write strobes in physical
           # SAT source WRAM, from real reset to M45 and same 300k PC34.
-          python3 native/tools/verify_pc39_sat_strobes.py "$RUNNER_TEMP/ys-pc39-strobes.json" "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc36-sat.json" "$RUNNER_TEMP/ys-pc37-source.json" "$RUNNER_TEMP/ys-pc38-provenance.json"
+          python3 native/tools/verify_pc39_sat_strobes.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc39-strobes.json" "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc36-sat.json" "$RUNNER_TEMP/ys-pc37-source.json" "$RUNNER_TEMP/ys-pc38-provenance.json"
           printf 'corrupt' > "$RUNNER_TEMP/ys-pc39-bad.json"
-          if python3 native/tools/verify_pc39_sat_strobes.py "$RUNNER_TEMP/ys-pc39-bad.json" "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc36-sat.json" "$RUNNER_TEMP/ys-pc37-source.json" "$RUNNER_TEMP/ys-pc38-provenance.json"; then
+          if python3 native/tools/verify_pc39_sat_strobes.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc39-bad.json" "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc36-sat.json" "$RUNNER_TEMP/ys-pc37-source.json" "$RUNNER_TEMP/ys-pc38-provenance.json"; then
             echo "PC-39 corrupted bus trace was accepted" >&2
             exit 1
           fi
