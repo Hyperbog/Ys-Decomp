@@ -152,12 +152,40 @@ static void xor_immediate_all_input_flags(void) {
     puts("PASS PC-42: exhaustive 65536 XOR immediate values/flags,"
          " real original $13F5 and R count");
 }
+static void ccf_original_all_accumulator_flags(void) {
+    reset();
+    CODE(0x100u,0x3Fu);
+    for(unsigned accumulator=0u;accumulator<256u;++accumulator)
+        for(unsigned initial=0u;initial<256u;++initial) {
+            cpu.pc=0x100u;
+            cpu.a=(uint8_t)accumulator;
+            cpu.f=(uint8_t)initial;
+            uint8_t prior_r=cpu.r;
+            assert(ys_z80_step(&cpu)==Z80_RUNNING);
+            uint8_t expected=(uint8_t)(
+                (initial&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
+                (accumulator&(Z80_F_3|Z80_F_5)) |
+                ((initial&Z80_F_C)?Z80_F_H:Z80_F_C));
+            assert(cpu.a==accumulator && cpu.f==expected);
+            assert(cpu.pc==0x101u && cpu.last_tstates==4u);
+            assert(cpu.r==(uint8_t)((prior_r&0x80u)|
+                                    ((prior_r+1u)&0x7Fu)));
+        }
+    reset();
+    CODE(0x1A77u,0x3Fu,0x98u); /* Original bank0 CCF; SBC A,B */
+    cpu.pc=0x1A77u;cpu.a=0x28u;cpu.f=Z80_F_C|Z80_F_S;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x28u && cpu.f==(Z80_F_S|Z80_F_H|Z80_F_3|Z80_F_5));
+    assert(cpu.pc==0x1A78u && cpu.last_tstates==4u);
+    puts("PASS PC-42: exhaustive 65536 original CCF input/flag cases");
+}
 int main(void) {
     basic_m1_and_prefix();
     r_write_bit7_low7_wrap_and_flags();
     irq_halt_refresh_and_fail_closed();
     interrupt_delay_and_repeat_r();
     xor_immediate_all_input_flags();
+    ccf_original_all_accumulator_flags();
     puts("PASS PC-42: real Z80 M1 refresh, two-fetch ED/CB/DDCB,"
          " HALT, IM1, IFF2, R7 preservation and LD A,R/I flags");
     return 0;
