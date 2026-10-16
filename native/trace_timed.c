@@ -455,7 +455,11 @@ int main(int argc,char **argv) {
         handler_steps>20u && runtime.recognized_irqs==2u &&
         runtime.clock.vblank_events==6u &&
         cpu.sp==interrupted.sp && !cpu.iff1 &&
-        cpu.iff2 && (vdp->status&0x80u)!=0u &&
+        /* PC-42: an acknowledged IM1 clears BOTH IFF1 and IFF2.
+           The older test erroneously preserved IFF2 across IRQ 2.
+           The source $01AA EI reinstates both before IRQ 2;
+           the IRQ then clears both again. */
+        !cpu.iff2 && (vdp->status&0x80u)!=0u &&
         same_registers(&cpu,&interrupted) &&
         bus->mapper_control==control_before &&
         bus->mapped_bank[2]==slot2_before &&
