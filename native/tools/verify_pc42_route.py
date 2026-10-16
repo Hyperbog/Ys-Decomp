@@ -14,6 +14,7 @@ def check(rom,source_path,route_path,pc34_path):
     verify(rom,source_path,route_path,pc34_path,milestone="pc41")
     original=Path(rom).read_bytes()
     assert original[0x141A:0x141E]==bytes.fromhex("ED 5F E6 0F")
+    assert original[0x13F5:0x13F7]==bytes.fromhex("EE 80")
     source=json.loads(Path(source_path).read_text(encoding="utf-8"))
     route=json.loads(Path(route_path).read_text(encoding="utf-8"))
     assert route["continued_steps"]>531478
