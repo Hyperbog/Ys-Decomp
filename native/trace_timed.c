@@ -2086,6 +2086,11 @@ int main(int argc,char **argv) {
             if(execute_release) release_sampled=true;
         }
         if(route_long) {
+            printf("PC-40 source stop: reason=%s steps=%lu"
+                   " observations=%lu PC=$%04X IRQ=%llu VBlank=%llu\n",
+                   why,steps,route.seen_iterations,cpu.pc,
+                   (unsigned long long)runtime.recognized_irqs,
+                   (unsigned long long)runtime.clock.vblank_events);
             FILE *route_file=fopen(argv[4],"wb");
             bool ok=route_file && ys_pc40_route_write(route_file,&route,
                                                        &runtime,why,steps);
