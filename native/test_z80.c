@@ -1396,6 +1396,48 @@ static void test_pc40_original_ld_bc_indirect(void) {
     assert(cpu.b==0x28u && cpu.c==0x79u && cpu.f==0xFFu);
     assert(cpu.last_tstates==20u);
 }
+static void test_pc40_original_graphics_ldd(void) {
+    /* ED A8 is the Z80 backward block move used directly after LDI
+       at original bank0 $2AFE and again at $2B4B. */
+    setup();
+    LOAD(0x2AFEu,0xEDu,0xA8u);
+    assert(ys_sms_bus_write(&bus,0xC011u,0x22u));
+    cpu.pc=0x2AFEu;cpu.h=0xC0u;cpu.l=0x11u;
+    cpu.d=0xC0u;cpu.e=0x21u;cpu.b=0u;cpu.c=2u;
+    cpu.a=0x10u;cpu.f=Z80_F_S|Z80_F_Z|Z80_F_C|Z80_F_H|Z80_F_N;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC021u)==0x22u);
+    assert(cpu.h==0xC0u && cpu.l==0x10u);
+    assert(cpu.d==0xC0u && cpu.e==0x20u);
+    assert(cpu.b==0u && cpu.c==1u);
+    assert(cpu.f==0xE5u); /* S/Z/C kept, PV=BC!=0, Y from A+byte */
+    assert(cpu.pc==0x2B00u && cpu.last_tstates==16u);
+
+    setup();
+    LOAD(0x2B4Bu,0xEDu,0xA8u);
+    assert(ys_sms_bus_write(&bus,0xC000u,0x33u));
+    cpu.pc=0x2B4Bu;cpu.h=0xC0u;cpu.l=0x00u;
+    cpu.d=0xC0u;cpu.e=0x00u;cpu.b=0u;cpu.c=1u;
+    cpu.a=0u;cpu.f=Z80_F_C;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.h==0xBFu && cpu.l==0xFFu);
+    assert(cpu.d==0xBFu && cpu.e==0xFFu);
+    assert(cpu.b==0u && cpu.c==0u);
+    assert(!(cpu.f & Z80_F_PV) && (cpu.f & Z80_F_C));
+    assert(cpu.pc==0x2B4Du && cpu.last_tstates==16u);
+
+    /* Fail-closed ROM writes cannot advance pointers or flags. */
+    setup();
+    LOAD(0x100u,0xEDu,0xA8u);
+    assert(ys_sms_bus_write(&bus,0xC000u,0x44u));
+    cpu.pc=0x100u;cpu.h=0xC0u;cpu.l=0u;
+    cpu.d=0x40u;cpu.e=0u;cpu.b=0u;cpu.c=1u;cpu.f=0xA5u;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0x100u && cpu.fault_pc==0x100u);
+    assert(cpu.h==0xC0u && cpu.l==0u &&
+           cpu.d==0x40u && cpu.e==0u && cpu.c==1u);
+    assert(cpu.f==0xA5u && rom[0x4000u]==0u);
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1436,6 +1478,7 @@ int main(void) {
     test_pc40_original_neg_and_flags();
     test_pc40_sbc_hl_16bit_carry_overflow();
     test_pc40_original_ld_bc_indirect();
+    test_pc40_original_graphics_ldd();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
