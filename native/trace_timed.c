@@ -7,6 +7,7 @@
 #include "pc_source_watch.h"
 #include "pc_sprite_watch.h"
 #include "pc_sprite_upload_watch.h"
+#include "pc_sat_provenance.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -332,7 +333,7 @@ int main(int argc,char **argv) {
           (argc==5 &&
            (strcmp(argv[2],"--pc25-collision-watch")==0 ||
             strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
-          ((argc==6 || argc==8) &&
+          ((argc==6 || argc==8 || argc==9) &&
            strcmp(argv[2],"--pc34-extended-postrelease")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
               "PC12/15 use 150k idle input; PC25 adds a 300k idle-only audit; PC27 is the source-armed button1 probe; PC33 runs 150k post-M45, PC34 separately extends to 300k after genuine release. Neither proves gameplay.\n",
@@ -1891,7 +1892,7 @@ int main(int argc,char **argv) {
               (strcmp(argv[2],"--pc27-button-probe")==0 ||
                strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
-              ((argc==5 || argc==6 || argc==8) &&
+              ((argc==5 || argc==6 || argc==8 || argc==9) &&
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
@@ -1904,11 +1905,13 @@ int main(int argc,char **argv) {
         YsPcSourceWatch collision={0};
         YsPcSpriteWatch sprite={0};
         YsPcSpriteUploadWatch upload={0};
+        YsPcSatProvenance provenance={0};
         const bool extended=
             strcmp(argv[2],"--pc34-extended-postrelease")==0;
         const bool video_audit=extended && argc>=5;
         const bool upload_audit=extended && argc>=6;
-        const bool frame_audit=extended && argc==8;
+        const bool frame_audit=extended && argc>=8;
+        const bool provenance_audit=extended && argc==9;
         /* Captured after the SECOND natural $053F return for each upload;
            there are no writes back into the running source machine. */
         YsSmsVdp pc37_vdp={0};
@@ -1944,13 +1947,23 @@ int main(int argc,char **argv) {
         unsigned edge_10_hits=0u;
         for(;steps<step_budget;++steps) {
             const unsigned pc37_prev_completed=upload.completed;
-            if(!ys_pc_source_watch_sample(&collision,&runtime) ||
+            const unsigned pc38_prev_entries=upload.entries;
+            if((provenance_audit &&
+                !ys_pc_sat_provenance_sample(&provenance,&runtime)) ||
+               !ys_pc_source_watch_sample(&collision,&runtime) ||
                (postrelease && !ys_pc_sprite_watch_sample(&sprite,&runtime)) ||
                (upload_audit && !ys_pc_sprite_upload_watch_sample(&upload,&runtime))) {
                 fputs("PC-27/33 invalid source event observer\n",stderr);
                 free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
             }
             const uint8_t selector=ys_sms_bus_read(bus,0xC01Fu);
+            if(provenance_audit && upload.entries!=pc38_prev_entries &&
+               (upload.entries!=pc38_prev_entries+1u ||
+                !ys_pc_sat_provenance_upload(&provenance,&runtime))) {
+                fputs("PC-38 cannot trace original SAT WRAM entry\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);
+                return EXIT_FAILURE;
+            }
             if(frame_audit && upload.completed!=pc37_prev_completed) {
                 /* PC-36 proved this event completes exactly 64+128 OUTI;
                    take a full VDP snapshot without changing the interpreter. */
@@ -2039,6 +2052,22 @@ int main(int argc,char **argv) {
                 why="unsupported";break;
             }
             if(execute_release) release_sampled=true;
+        }
+        if(provenance_audit) {
+            FILE *file=fopen(argv[8],"wb");
+            bool ok=file && ys_pc_sat_provenance_write(file,&provenance,
+                                                          &runtime,why,steps);
+            if(file && fclose(file)!=0) ok=false;
+            if(!ok) {
+                fputs("PC-38 cannot serialize source SAT provenance\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);
+                return EXIT_FAILURE;
+            }
+            printf("PC-38 original visible SAT mutations: changes=%llu"
+                   " unique=%u sites=%u uploads=%u changed_uploads=%u\n",
+                   (unsigned long long)provenance.changed,
+                   provenance.unique_bytes,provenance.site_count,
+                   provenance.upload_count,provenance.changed_uploads);
         }
         if(frame_audit) {
             if(!pc37_have || pc37_captures!=upload.completed) {
