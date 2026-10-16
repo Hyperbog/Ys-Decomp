@@ -47,8 +47,56 @@ modified to satisfy these checks.
 
 The independent Python verifier checks original ROM SHA,
 source opcode bytes, same PC-34 prefix, bank-qualified route
-and strict bounded stop. Real results must be observed
-separately in CI before pinning a final golden.
+and an **exact golden measured in original-ROM CI**.
+
+## Verified bounded original-ROM continuation
+
+[Original-ROM CI run 38961300656](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38961300656)
+passed the entire **600,000-iteration post-M45 continuation budget**.
+All 34 native CTest cases, source-only PC-34 through PC-41
+regressions and the exact pre-CPU-ADC/pre-LD A,R history guards
+passed. The source reached original fixed-bank `$13F5` with
+`EE 80` (`XOR $80`) and then fixed-bank `$1A77` `3F`
+(`CCF`). Those documented Z80 operations were implemented with
+exactly 7 and 4 T-states, respectively, original ROM opcode
+byte verification, a further **65,536** exhaustive XOR immediate
+vectors and **65,536** exhaustive CCF flag combinations.
+
+The final source trace, independently golden-pinned, is:
+
+| Observation | Recorded value |
+| --- | ---: |
+| Source controller continuation iterations | **600,000 / 600,000** |
+| Natural stop | **Budget** — no unsupported opcode |
+| Final CPU PC | **$0046** |
+| IRQ acknowledgements | **144** |
+| Original SMS VBlank events | **148** |
+| Physical mapper slot1 / slot2 | **1 / 6** |
+| Visible $C01F selector | **6** |
+| Fixed-bank0 $26B6 selector entry | **1** |
+| Physical bank6 $9966 handler entry | **13** |
+| Physical bank1 $4773 route entry | **13** |
+| Physical bank6 $9932 sprite producer | **0** |
+| Qualified collision calls | **0** |
+| Fixed-bank0 $0427 SAT uploader **entries** | **52** |
+
+The extra 25 SAT uploader entry-site visits after PC-34 are
+**not** independently proven to be 192-byte-complete SAT
+transfers. PC-36 verified completion for 27 earlier uploads.
+Do not convert 52 uploader entries into 52 frames or animated
+sprites.
+
+The bank6 $9966 location is in a recovered sprite handler
+which conditionally calls $9932 based on $C198. Its **13
+natural visits** do not demonstrate that conditional call was
+taken, or a sprite was drawn. The original game is not yet
+authenticated on external SMS hardware or independent emulator.
+
+A verified continuation of the whole **600k bounded input
+experiment** is an important original source execution
+milestone. It is not world traversal, player movement,
+an independently confirmed framebuffer, or one of the five
+original-game Alpha gates.
 
 ## Authentic game limitations
 
