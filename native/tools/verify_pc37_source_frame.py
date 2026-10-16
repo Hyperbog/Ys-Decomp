@@ -46,6 +46,11 @@ def validate(frame_file, meta_file, pc34_file, pc35_file, pc36_file):
     assert meta["captures"] == meta["completed"] == p36["completed"] == 27
     assert p36["matched"] == p36["completed"] and p36["mismatched"] == 0
     assert p36["bytes_compared"] == 5184 and p36["bytes_different"] == 0
+    # Fixed original ROM and fixed PC-34 controller schedule: reject
+    # self-consistent but changed source/renderer output, as PC-36 does.
+    assert meta["display_enabled_captures"] == 26
+    assert meta["selected_step"] == 162573
+    assert meta["rgb_crc32"] == 0x9FB8BB1E
     assert 0 <= meta["display_enabled_captures"] <= meta["captures"]
     assert meta["selected_display_enabled"] == (
         meta["display_enabled_captures"] > 0)
