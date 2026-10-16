@@ -80,7 +80,9 @@ int main(void) {
        and apparent non-budget reports. */
     cpu.pc=0x996Au;
     assert(ys_pc43_gate_pre(&watch,&rt,11ul));
-    assert(!ys_pc43_gate_pre(&watch,&rt,12ul));
+    /* Repeating the SAME iteration fails; advancing to the next
+       one before post() is not a valid way to test this. */
+    assert(!ys_pc43_gate_pre(&watch,&rt,11ul));
     assert(ys_pc43_gate_post(&watch,&rt,11ul));
     assert(watch.orphan_gates==1u);
     assert(!ys_pc43_gate_post(&watch,&rt,12ul));
