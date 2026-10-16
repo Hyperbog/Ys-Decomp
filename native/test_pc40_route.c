@@ -103,6 +103,29 @@ int main(void) {
     assert(!ys_pc41_historical_checkpoint(&watch,&rt,525358ul,exact,0u));
     watch.events[1][8].hits=1u;
     assert(ys_pc41_historical_checkpoint(&watch,&rt,525358ul,exact,0u));
+    /* PC-42 historical gate: exact original PC-41 pre-R opcode,
+       plus genuine bank-qualified producer-handler observations. */
+    watch.seen_iterations=531478ul;
+    cpu.pc=0x141Au;
+    rt.recognized_irqs=133u;rt.clock.vblank_events=137u;
+    exact[4]=41u;
+    watch.events[1][7].hits=1u;
+    watch.events[1][8].hits=2u;
+    assert(ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u)==false);
+    /* The prior synthetic fixture has zero source ROM; install ED 5F
+       in physical fixed bank0 and prove the stricter opcode assertion. */
+    static uint8_t source_rom[YS_ROM_BYTES]={0};
+    source_rom[0x141Au]=0xEDu;source_rom[0x141Bu]=0x5Fu;
+    bus.rom=source_rom;
+    assert(ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
+    assert(!ys_pc42_historical_checkpoint(&watch,&rt,531479ul,exact,0u));
+    exact[4]=40u;
+    assert(!ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
+    exact[4]=41u;
+    watch.events[1][7].hits=0u;
+    assert(!ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
+    watch.events[1][7].hits=1u;
+    assert(ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
     puts("PASS PC-40: bank-qualified original route, prefix boundary,"
          " negative mapper hits, source route serialization");
     return 0;
