@@ -3,6 +3,28 @@
 **Target:** uploaded USA/Europe Sega Master System cartridge ROM. This folder
 contains no copy of the full commercial ROM; provide your own ROM to the verifier.
 
+## Current full-cartridge reference (M10/M13 onward)
+
+**For complete original ROM assembly/data lookup, start here:**
+[Full ROM disassembly index](whole_system/FULL_ROM_DISASSEMBLY.md)
+and its [single-file 16-bank master listing](whole_system/MASTER_ROM_LISTING.txt).
+
+The listing includes **all 262,144 source-backed bytes** of the
+original SMS cartridge and matches the original ROM's verified SHA-256
+without reading an owner ROM. It contains **22,552 bytes of established
+Z80 instructions** plus **239,592 bytes of DB/DW data**; unresolved
+data remains explicitly unclassified rather than being misrepresented
+as game code. Bank-specific authoritative assembly inputs remain in
+`src/wholebank00/…` through `src/wholebank15/…`.
+
+There is **no need to rerun a disassembler** to find existing code or
+original bytes. To check the committed master after an intentional
+source update: `python3 tools/build_master_rom_listing.py --check`.
+
+> Some historical phase notes below describe the repository as it
+> existed at that particular early milestone. See the linked full
+> reference for the current complete byte reconstruction.
+
 ## Verify
 
 ```sh

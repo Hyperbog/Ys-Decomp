@@ -20,7 +20,13 @@ typedef struct {
     YsSmsSound *sound; /* Optional observable PSG/FM write sink. */
     YsSmsInput *input; /* Optional active-low controller read snapshots. */
     uint16_t pc, sp, fault_pc, ix, iy;
+    /* ROM-qualified address at the START of current Z80 opcode, not
+       the PC after fetching operands. IRQ stack strobes are separate. */
+    uint16_t instruction_pc;
+    uint8_t instruction_bank;
+    bool irq_write_active;
     uint8_t a, f, b, c, d, e, h, l, interrupt_mode;
+    uint8_t r, i; /* Z80 refresh (R) and interrupt-vector (I) registers. */
     uint8_t a_alt, f_alt, b_alt, c_alt, d_alt, e_alt, h_alt, l_alt;
     uint8_t ei_delay; /* Interrupt recognition blocked until after following instruction. */
     bool iff1, iff2;
@@ -36,6 +42,9 @@ void ys_z80_attach_input(YsZ80 *cpu, YsSmsInput *input);
 Z80Status ys_z80_step(YsZ80 *cpu);
 /* External caller provides the VBlank/IRQ event; no timing is synthesized. */
 bool ys_z80_irq(YsZ80 *cpu);
+/* One 4-T-state HALT refresh cycle, no PC advance or instruction retire.
+   The host handles clock advancement and any later IRQ recognition. */
+bool ys_z80_halt_refresh(YsZ80 *cpu);
 /* Stops after reaching stop_pc (before executing it); reports budget exhaustion. */
 Z80Status ys_z80_run_until(YsZ80 *cpu, uint16_t stop_pc, uint64_t budget);
 const char *ys_z80_status_name(Z80Status status);

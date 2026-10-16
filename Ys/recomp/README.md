@@ -39,24 +39,30 @@ Preflight validates ROM size and SHA-256, and independently checks CRC-32
 if supplied by the manifest and/or game.toml. The upstream tool only
 **warns** about configured CRC mismatches; the adapter **rejects** them.
 
-After code generation, `recomp-verify` re-hashes all three output files
+After code generation, `recomp-verify` re-hashes all four generated source/header files
 and checks the evidence report against the exact ROM, config and external
 tool binary. This catches tampered files and obsolete generated C even
 when the filenames are unchanged. Successful verification proves only
 **generated-file provenance**, not that the output compiles or runs.
 
 The adapter first verifies exact SHA-256 and ROM size, stages upstream
-generation in a temporary directory, then writes three files to the ignored
+generation in a temporary directory, then writes four files to the ignored
 Ys/recomp/generated/ directory:
 
 - ys_sms_full.c
 - ys_sms_dispatch.c
 - ys_sms_layout.c
+- ys_sms_funcs.h (required by the generated .c files)
 
 A local report.json holds input/tool identity and generated-file hashes.
 Its runtime_verified flag remains false until a separately tested runner
 has executed the generated code against hardware-accurate reference traces.
 Generated C is **not** decompilation-semantic or gameplay proof.
+Older three-file reports fail verification after this fix and must be regenerated
+against the same owned ROM, configuration and external tool.
+The uploaded four-file snapshot illustrates this integration requirement:
+its current dispatcher covers only 16 function entry points and has unresolved
+call targets, so the header fix alone does **not** establish runnable gameplay.
 
 ## Portability contract for other SMS games
 

@@ -271,6 +271,15 @@ system-m12-verify:
 	@test -n "$(ROM)" || (echo 'Set ROM=/path/to/owned-Ys.sms' >&2; exit 2)
 	$(PYTHON) tools/run_system_m12_regressions.py "$(ROM)" $(if $(EMULICIOUS_JAR),--external-jar "$(EMULICIOUS_JAR)",) --jobs 4 --timeout 600
 
+# Complete ROM source-backed master reference: verifies the already recovered
+# 16 bank listings; never re-disassembles or needs the commercial ROM.
+.PHONY: master-listing master-listing-check
+master-listing:
+	$(PYTHON) tools/build_master_rom_listing.py
+master-listing-check:
+	$(PYTHON) tools/build_master_rom_listing.py --check
+	$(PYTHON) -m unittest -v tests_master_rom_listing
+
 # M13: fail-closed semantic debt inventory. A source-backed DB byte is NOT
 # considered semantically decoded merely because the cartridge hash matches.
 .PHONY: semantic-audit semantic-audit-tests
