@@ -7,6 +7,7 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import re
 
 ORIGINAL_SHA="02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9"
 PCS=("26B6","26DA","26F3","26F5","2704","2BF2",
@@ -28,6 +29,23 @@ def verify(rom_path,source_json,route_json,pc34_json):
     rom=Path(rom_path).read_bytes()
     assert len(rom)==262144
     assert hashlib.sha256(rom).hexdigest()==ORIGINAL_SHA
+    # Source-only fixed bank 0: actual failing NEG, following 16-bit SBC,
+    # source selector gate and bank-6 producer call. Match physical bytes
+    # AND existing independently committed Z80 listing mnemonics.
+    source_rows=((0x267E,"ED 44","neg"),
+                 (0x2693,"ED 52","sbc hl,de"),
+                 (0x26C3,"ED 4B 10 C2","ld bc,($C210)"),
+                 (0x26B6,"3A 98 C1","ld a,($C198)"),
+                 (0x2704,"CD 32 99","call $9932"))
+    listing=(Path(__file__).resolve().parents[2]/
+             "Ys/phase6/code.lst").read_text(encoding="utf-8")
+    for pc,hexbytes,mnemonic in source_rows:
+        raw=bytes.fromhex(hexbytes)
+        assert rom[pc:pc+len(raw)]==raw,hex(pc)
+        pattern=(rf"^{pc:05X}\\s+{pc:04X}\\s+"+
+                 r"\\s+".join(hexbytes.split())+
+                 r"\\s+"+re.escape(mnemonic)+r"\\s*$")
+        assert len(re.findall(pattern,listing,re.I|re.M))==1,hex(pc)
     a=json.loads(Path(source_json).read_text(encoding="utf-8"))
     r=json.loads(Path(route_json).read_text(encoding="utf-8"))
     b=json.loads(Path(pc34_json).read_text(encoding="utf-8"))
