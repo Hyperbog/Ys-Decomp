@@ -76,6 +76,15 @@ def validate(source,pc34,pc36):
     assert audit["halfway"]>=audit["completed"]
     assert audit["halfway"]<=audit["entries"]
     assert audit["completed"]==audit["matched"]+audit["mismatched"]
+    # Source-observed golden result on the fixed PC-34 ROM/input schedule.
+    # A consistent but corrupted renderer is NOT a successful regression.
+    assert (audit["entries"],audit["halfway"],audit["completed"],
+            audit["matched"],audit["mismatched"],audit["abandoned"],
+            audit["pending"],audit["bytes_compared"],audit["bytes_different"],
+            audit["last_write_delta"])==(27,27,27,27,0,0,False,5184,0,192),(
+            "original SAT upload golden result changed",audit)
+    assert audit["first_source_crc32"]==audit["first_vram_crc32"]
+    assert audit["last_source_crc32"]==audit["last_vram_crc32"]
     assert audit["bytes_compared"]==192*audit["completed"]
     assert audit["bytes_different"]<=audit["bytes_compared"]
     assert audit["first_mismatch_1based"]<=192
