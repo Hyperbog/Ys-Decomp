@@ -15,7 +15,7 @@ KEYS={"schema","stop_reason","continued_steps","final_pc",
       "final_value","count","phase_counts","same","changed",
       "aliases","events"}
 EVENT_KEYS={"phase","iteration","cpu_step","logical","physical",
-            "pc","bank","before","after","a","f","selector",
+            "pc","bank","hl","de","bc","before","after","a","f","selector",
             "slot2","irq"}
 
 def strict(path):
@@ -42,6 +42,10 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
         assert len([row for row in listing.splitlines()
                     if row.startswith("%05X %04X  32 98 C1" % (pc,pc))
                     and "ld ($C198),a" in row])==1,hex(pc)
+    assert raw[0x0B1A:0x0B1C]==bytes.fromhex("ED A0")
+    assert len([row for row in listing.splitlines()
+                if row.startswith("00B1A 0B1A  ED A0")
+                and row.strip().endswith("ldi")])==1
     source=strict(source_path)
     gate=strict(gate_path)
     w=strict(write_path)
@@ -66,8 +70,9 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
     last_step=-1
     last_iteration=-1
     phase=0
-    known_sites={"00B4":"clear RAM LDIR", "2041":"increment original state",
-                 "2281":"clear original state"}
+    known_sites={"00B4":"reset LDIR", "0B1A":"real block-copy LDI",
+                 "2041":"source data bit-7 state setter",
+                 "2281":"guarded state reset"}
     for e in w["events"]:
         assert type(e) is dict and set(e)==EVENT_KEYS
         for k in ("phase","iteration","cpu_step","bank","before",
@@ -86,6 +91,9 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
             last_iteration=e["iteration"]
         assert type(e["pc"]) is str and len(e["pc"])==4
         assert type(e["logical"]) is str and len(e["logical"])==4
+        for register in ("hl","de","bc"):
+            assert type(e[register]) is str and len(e[register])==4
+            int(e[register],16)
         assert e["physical"]=="0198"
         assert e["logical"] in ("C198","E198")
         assert e["bank"] in (*range(16),254,255)
@@ -100,6 +108,11 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
         derived[phase][1]+=int(e["before"]==e["after"])
         derived[phase][2]+=int(e["before"]!=e["after"])
         derived[phase][3]+=int(e["logical"]=="E198")
+        if e["pc"] in ("00B4","0B1A"):
+            # Hook executes before original Z80 LDIR/LDI increments DE.
+            assert e["bank"]==0 and e["irq"]==0
+            assert e["de"]==e["logical"]
+            assert int(e["bc"],16)>0
         if e["pc"] in ("2041","2281"):
             assert e["bank"]==0 and e["irq"]==0
             assert e["logical"]=="C198"
@@ -125,10 +138,11 @@ def check(rom,source_path,route_path,gate_path,write_path,pc34):
           w["changed"],w["aliases"],w["final_value"]))
     for e in w["events"]:
         print("  phase=%d iteration=%d cpu_step=%d pc=$%s bank=%d"
-              " logical=$%s before=%d after=%d A=%d irq=%d" % (
+              " logical=$%s before=%d after=%d A=%d"
+              " HL=$%s DE=$%s BC=$%s irq=%d" % (
                e["phase"],e["iteration"],e["cpu_step"],e["pc"],
                e["bank"],e["logical"],e["before"],e["after"],
-               e["a"],e["irq"]))
+               e["a"],e["hl"],e["de"],e["bc"],e["irq"]))
 
 if __name__=="__main__":
     try:
