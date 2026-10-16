@@ -1138,6 +1138,76 @@ static void test_pc29_rl_register_and_memory(void) {
            cpu.steps==0u && cpu.total_tstates==0u);
 }
 
+
+/* PC-30: original $0FEB RRA / $0FEC CB 19 RR C source combination.
+   These are controlled register cases, not original-runtime values. */
+static void test_pc30_source_rr_c_and_flags(void) {
+    static const struct {
+        uint8_t old,carry,result,flags;
+    } cases[]={
+        {0x00u,0u,0x00u,Z80_F_Z|Z80_F_PV},
+        {0x01u,0u,0x00u,Z80_F_Z|Z80_F_PV|Z80_F_C},
+        {0x80u,1u,0xC0u,Z80_F_S|Z80_F_PV},
+        {0x01u,1u,0x80u,Z80_F_S|Z80_F_C},
+        {0xFFu,0u,0x7Fu,Z80_F_5|Z80_F_3|Z80_F_C},
+        {0xFFu,1u,0xFFu,Z80_F_S|Z80_F_5|Z80_F_3|Z80_F_PV|Z80_F_C}
+    };
+    for(size_t i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
+        setup();
+        LOAD(0,0xCB,0x19);
+        cpu.c=cases[i].old;cpu.a=0x55u;cpu.b=0x63u;
+        cpu.f=(uint8_t)(Z80_F_S|Z80_F_Z|Z80_F_H|Z80_F_N|
+                        Z80_F_PV|Z80_F_3|Z80_F_5|
+                        (cases[i].carry?Z80_F_C:0u));
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        assert(cpu.c==cases[i].result && cpu.f==cases[i].flags &&
+               cpu.a==0x55u && cpu.b==0x63u &&
+               cpu.pc==2u && cpu.last_tstates==8u &&
+               cpu.total_tstates==8u && cpu.steps==1u);
+    }
+    setup();
+    LOAD(0,0x1F,0xCB,0x19,0x47); /* original fixed-bank prefix */
+    cpu.a=0x03u;cpu.c=0x02u;cpu.f=0u;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x01u && cpu.f==Z80_F_C && cpu.pc==1u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.c==0x81u && cpu.f==(Z80_F_S|Z80_F_PV) &&
+           cpu.pc==3u && cpu.last_tstates==8u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.b==0x01u && cpu.a==0x01u && cpu.c==0x81u &&
+           cpu.pc==4u && cpu.total_tstates==16u);
+}
+
+/* RR r/(HL) must implement register and RAM variants, keep ROM read-only. */
+static void test_pc30_rr_register_memory_and_guard(void) {
+    setup();
+    LOAD(0,0xCB,0x18,0xCB,0x1Bu,0xCB,0x1Fu);
+    cpu.b=0x01u;cpu.e=0x04u;cpu.a=0x02u;cpu.f=Z80_F_C;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.b==0x80u && cpu.f==(Z80_F_S|Z80_F_C));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.e==0x82u && cpu.f==Z80_F_S);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x01u && cpu.f==0u &&
+           cpu.pc==6u && cpu.total_tstates==24u);
+    setup();
+    LOAD(0,0xCB,0x1E); /* RR (HL), WRAM */
+    cpu.h=0xC2u;cpu.l=0x00u;cpu.f=Z80_F_C|Z80_F_N;
+    assert(ys_sms_bus_write(&bus,0xC200u,0x01u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC200u)==0x80u &&
+           cpu.f==(Z80_F_S|Z80_F_C) &&
+           cpu.pc==2u && cpu.last_tstates==15u);
+    setup();
+    LOAD(0,0xCB,0x1E);
+    cpu.h=0x40u;cpu.l=0x20u;cpu.f=0xFFu;
+    rom[0x4020u]=0x01u;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0u && cpu.fault_pc==0u &&
+           cpu.f==0xFFu && rom[0x4020u]==0x01u &&
+           cpu.steps==0u && cpu.total_tstates==0u);
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1169,6 +1239,8 @@ int main(void) {
     test_pc28_indirect_stack_pointer_bus_boundaries();
     test_pc29_original_rl_c_carry_and_flags();
     test_pc29_rl_register_and_memory();
+    test_pc30_source_rr_c_and_flags();
+    test_pc30_rr_register_memory_and_guard();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();

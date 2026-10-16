@@ -335,6 +335,18 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             cpu->f=(uint8_t)(sz53(result) |
                 (parity(result)?Z80_F_PV:0u) |
                 ((prior&0x80u)?Z80_F_C:0u));
+        } else if ((operation&0xF8u)==0x18u) {
+            /* PC-30: original bank0 $0FEC CB 19, RR C.
+               RR r/(HL): old carry to bit 7, bit 0 to carry;
+               S/Z/P/V/3/5 from result, H/N cleared. */
+            unsigned reg=(unsigned)(operation&7u);
+            uint8_t prior=r8(cpu,reg);
+            uint8_t result=(uint8_t)((prior>>1)|
+                                      ((cpu->f&Z80_F_C)<<7));
+            if(!w8(cpu,reg,result)) goto fail;
+            cpu->f=(uint8_t)(sz53(result) |
+                (parity(result)?Z80_F_PV:0u) |
+                ((prior&1u)?Z80_F_C:0u));
         } else if ((operation&0xC0u)==0x40u) {
             uint8_t value=r8(cpu,operation&7u);
             cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,value);
