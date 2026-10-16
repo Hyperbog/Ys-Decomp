@@ -14,7 +14,7 @@ static void setup(void) {
     cpu.bus=&bus;rt.cpu=&cpu;cpu.pc=0x1000u;cpu.steps=1u;
     assert(ys_pc_sat_provenance_sample(&a,&rt));
     assert(ys_pc_sat_provenance_sample(&a,&rt));
-    assert(a.samples==1u);
+    assert(a.samples==2u); /* repeated HALT-clock sample */
 }
 int main(void) {
     setup();
