@@ -18,6 +18,11 @@ def check(rom_path,source_json,route_json,pc34_json):
     # This performs its own independent ROM SHA verification and the
     # exact source-only PC34 300000-iteration checkpoint cross-check.
     verify(rom_path,source_json,route_json,pc34_json,milestone="pc41")
+    # Natural NEXT blocker after indexed SET: $141A ED 5F = LD A,R,
+    # immediately followed by E6 0F. Do NOT approximate R as zero.
+    raw=Path(rom_path).read_bytes()
+    assert raw[0x141A:0x141E]==bytes.fromhex("ED 5F E6 0F")
+
     source=json.loads(Path(source_json).read_text(encoding="utf-8"))
     route=json.loads(Path(route_json).read_text(encoding="utf-8"))
     observed=(route["continued_steps"],route["stop_reason"],route["stop_pc"],
