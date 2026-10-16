@@ -11,6 +11,7 @@
 #include "pc_sat_strobes.h"
 #include "pc40_route.h"
 #include "pc43_sprite_gate.h"
+#include "pc44_c198_writes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -337,7 +338,8 @@ int main(int argc,char **argv) {
            (strcmp(argv[2],"--pc25-collision-watch")==0 ||
             strcmp(argv[2],"--pc34-extended-postrelease")==0 ||
             strcmp(argv[2],"--pc40-source-route")==0)) ||
-          (argc==6 && strcmp(argv[2],"--pc40-source-route")==0) ||
+          ((argc==6 || argc==7) &&
+           strcmp(argv[2],"--pc40-source-route")==0) ||
           ((argc==6 || argc==8 || argc==9 || argc==10) &&
            strcmp(argv[2],"--pc34-extended-postrelease")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
@@ -383,12 +385,22 @@ int main(int argc,char **argv) {
        Opt-in only, no change to bus writes or CPU execution. */
     const bool pc39_mode=(argc==10 &&
         strcmp(argv[2],"--pc34-extended-postrelease")==0);
+    const bool pc44_mode=(argc==7 &&
+        strcmp(argv[2],"--pc40-source-route")==0);
+    YsPc44Writer pc44={0};
+    pc44.cpu=&cpu;
     YsPcSatStrobeAudit pc39={0};
     pc39.cpu=&cpu;
     if(pc39_mode &&
        !ys_sms_bus_set_wram_hook(bus,ys_pc_sat_strobes_hook,&pc39)) {
         fputs("PC-39 failed to attach passive WRAM strobe observer\n",stderr);
         free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+    }
+    if(pc44_mode &&
+       !ys_sms_bus_set_wram_hook(bus,ys_pc44_c198_hook,&pc44)) {
+        fputs("PC-44 cannot attach original C198 WRAM store observer\n",stderr);
+        free(rom);free(bus);free(vdp);free(sound);
+        return EXIT_FAILURE;
     }
     unsigned long iterations=0;
     while(runtime.recognized_irqs==0u && iterations<1000000ul) {
@@ -1927,7 +1939,7 @@ int main(int argc,char **argv) {
         YsPcSatProvenance provenance={0};
         YsPc40Route route={0};
         YsPc43SpriteGate gate={0};
-        const bool gate_audit=(argc==6 &&
+        const bool gate_audit=(argc>=6 &&
             strcmp(argv[2],"--pc40-source-route")==0);
         const bool route_long=strcmp(argv[2],"--pc40-source-route")==0;
         const bool extended=
@@ -1936,6 +1948,10 @@ int main(int argc,char **argv) {
         const bool upload_audit=extended && argc>=6;
         const bool frame_audit=extended && argc>=8;
         const bool provenance_audit=extended && argc>=9;
+        if(pc44_mode && !ys_pc44_set_phase(&pc44,1u)) {
+            fputs("PC-44 cannot enter post-M45 source phase\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
         if(pc39_mode && !ys_pc_sat_strobes_set_phase(&pc39,1u)) {
             fputs("PC-39 cannot enter post-M45 observation phase\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
@@ -1976,6 +1992,7 @@ int main(int argc,char **argv) {
         uint64_t press_step=0u,release_step=0u,mode2_step=0u;
         unsigned edge_10_hits=0u;
         for(;steps<step_budget;++steps) {
+            if(pc44_mode) pc44.iteration=steps;
             /* Prior PC-40 stopped naturally at this instruction on
                UNSUPPORTED 88. PC-41 may now execute ADC A,B, but MUST
                arrive at identical source-machine state first. */
@@ -2159,6 +2176,24 @@ int main(int argc,char **argv) {
                    gate.branch_zero,gate.branch_nonzero,
                    gate.call_sites,gate.producer_entries,
                    gate.skip_targets,gate.branch_mismatch,gate.irq_gate);
+        }
+        if(pc44_mode) {
+            FILE *writes=fopen(argv[6],"wb");
+            bool writer_ok=writes &&
+                ys_pc44_write_report(writes,&pc44,&runtime,why,steps);
+            if(writes && fclose(writes)!=0) writer_ok=false;
+            if(!writer_ok) {
+                fputs("PC-44 cannot serialize authentic C198 writes\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-44 original source C198 stores:"
+                   " reset=%u post=%u same=%u,%u changed=%u,%u"
+                   " aliases=%u,%u final=%u\n",
+                   pc44.phase_counts[0],pc44.phase_counts[1],
+                   pc44.same[0],pc44.same[1],
+                   pc44.changed[0],pc44.changed[1],
+                   pc44.aliases[0],pc44.aliases[1],
+                   (unsigned)ys_sms_bus_read(bus,0xC198u));
         }
         if(pc39_mode) {
             FILE *strobe=fopen(argv[9],"wb");
