@@ -258,6 +258,21 @@ natural runtime entry has been authenticated. **No original
 gameplay, live controls, native audio or Alpha gate is proven**.
 M45 is still the verified Development release, PR #3 remains draft.
 
+## PC-35 original source VDP and selector audit (reference only)
+
+[PC-35 same-run original source video/dispatch audit](research/PC35_POSTRELEASE_VIDEO_DISPATCH.md)
+adds a read-only, optional report to the existing PC-34 300k-step
+controller experiment. It verified **156,411 display-enabled CPU
+samples**, **2 display-enable transitions**, **15,592 VRAM writes**,
+**288 CRAM writes**, **99 slot-2 mapper changes**, and the source
+$C01F selector $01→$02 transition. The existing
+$0427 sprite *upload* path was observed 27 times;
+the physical bank-6 $9932 producer and mapper-qualified original
+bank-1 collision calls remain **unobserved**. The input pulse is
+experimental, not emulator-matched. No original-player, authentic
+gameplay frame, native soundtrack or Alpha gate is proven, and
+M45/PR #3 status remains unchanged.
+
 ## Build and run
 
 Install a C11 compiler, CMake 3.16+, and SDL2 development headers and
