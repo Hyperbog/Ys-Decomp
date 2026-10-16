@@ -94,6 +94,24 @@ def check(rom,source_path,route_path,gate_path,pc34):
                 # with the Z80 branch decision captured BEFORE the JR.
                 expected="99C6" if (e["f_gate"]&0x40) else "996C"
                 assert e["successor_pc"]==expected,(e,expected)
+    # PC-43 original-ROM CI 38966030340: independent source trace.
+    # Source $9966 -> $9969 -> $996A -> actual successor $99C6,
+    # on thirteen precise post-M45 continuation iterations.
+    exact_entries=(526991,535842,539067,545367,551112,557033,
+                   562765,569046,574795,580833,586432,592714,598479)
+    assert gate["entries"]==gate["or_hits"]==gate["gate_hits"]==13
+    assert gate["branch_zero"]==gate["skip_targets"]==13
+    for key in ("branch_nonzero","call_sites","producer_entries",
+                "orphan_gates","branch_mismatch","irq_gate"):
+        assert gate[key]==0,(key,gate[key])
+    assert tuple(e["entry_iteration"] for e in gate["events"])==exact_entries
+    for e in gate["events"]:
+        assert e["c198_entry"]==e["c198_gate"]==e["a_gate"]==0
+        assert (e["f_gate"]&0x40)!=0
+        assert e["or_seen"] and e["gate_seen"] and e["successor_seen"]
+        assert not e["irq_during_gate"] and e["successor_pc"]=="99C6"
+        assert e["irq_before"]==e["irq_after"]
+        assert e["entry_iteration"]+2==e["gate_iteration"]
     print("PASS PC-43 bank6 original $9966 C198 conditional:",
           "entries=%d gates=%d zero=%d nonzero=%d calls=%d producer=%d"
           " skips=%d" % (gate["entries"],gate["gate_hits"],
