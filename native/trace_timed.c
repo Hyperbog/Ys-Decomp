@@ -1975,11 +1975,18 @@ int main(int argc,char **argv) {
         }
         printf("PC-27 source-armed controller experiment:"
                " reason=%s steps=%lu PC=$%04X fault=$%04X status=%u"
+               " slot1=%u slot2=%u bytes=%02X_%02X_%02X_%02X"
                " selector=%u->%u arm_hits=%u"
                " edge_bit4=%u mode_write_hits=%u mode2=%u"
                " pressed=%u released=%u IRQ=%llu VBlank=%llu"
                " collisions=%u\n",
                why,steps,cpu.pc,cpu.fault_pc,(unsigned)cpu.status,
+               (unsigned)bus->mapped_bank[1],
+               (unsigned)bus->mapped_bank[2],
+               (unsigned)ys_sms_bus_read(bus,cpu.pc),
+               (unsigned)ys_sms_bus_read(bus,(uint16_t)(cpu.pc+1u)),
+               (unsigned)ys_sms_bus_read(bus,(uint16_t)(cpu.pc+2u)),
+               (unsigned)ys_sms_bus_read(bus,(uint16_t)(cpu.pc+3u)),
                (unsigned)start_selector,
                (unsigned)ys_sms_bus_read(bus,0xC01Fu),
                arm_hits,edge_10_hits,hits_mode_write,(unsigned)saw_mode2,
