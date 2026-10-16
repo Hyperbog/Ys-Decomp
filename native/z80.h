@@ -20,6 +20,11 @@ typedef struct {
     YsSmsSound *sound; /* Optional observable PSG/FM write sink. */
     YsSmsInput *input; /* Optional active-low controller read snapshots. */
     uint16_t pc, sp, fault_pc, ix, iy;
+    /* ROM-qualified address at the START of current Z80 opcode, not
+       the PC after fetching operands. IRQ stack strobes are separate. */
+    uint16_t instruction_pc;
+    uint8_t instruction_bank;
+    bool irq_write_active;
     uint8_t a, f, b, c, d, e, h, l, interrupt_mode;
     uint8_t a_alt, f_alt, b_alt, c_alt, d_alt, e_alt, h_alt, l_alt;
     uint8_t ei_delay; /* Interrupt recognition blocked until after following instruction. */
