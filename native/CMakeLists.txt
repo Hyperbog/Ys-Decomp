@@ -370,12 +370,15 @@ add_test(NAME z80_core COMMAND ys-z80-tests)
 add_executable(ys-z80-irq-tests test_irq.c)
 target_link_libraries(ys-z80-irq-tests PRIVATE ys_z80)
 add_test(NAME z80_irq COMMAND ys-z80-irq-tests)
+add_executable(ys-pc42-refresh-tests test_pc42_refresh.c)
+target_link_libraries(ys-pc42-refresh-tests PRIVATE ys_sms_runtime)
+add_test(NAME pc42_z80_refresh_and_irq COMMAND ys-pc42-refresh-tests)
 
 # CTest fixtures intentionally use assert() for both checks and setup.
 # Force assert() on even in optimized Release / RelWithDebInfo packaging
 # builds; otherwise -DNDEBUG compiles away setup and can crash tests.
 foreach(target ys-sms-bus-tests ys-sms-vdp-tests ys-sms-clock-tests ys-sms-video-tests ys-sms-sound-tests
-               ys-sms-input-tests ys-z80-tests ys-z80-irq-tests ys-z80-timing-tests ys-pc-game-tests ys-pc-tiles-tests ys-pc-records-tests ys-pc-objects-tests ys-pc-object-types-tests ys-pc-scenes-tests ys-pc-nametable-tests ys-pc-patterns-tests ys-pc-vdp-checkpoint-tests ys-pc-collision-tests ys-pc-collision-routes-tests ys-pc-source-watch-tests ys-pc-content-tests ys-pc-campaign-tests ys-pc-sprite-sat-tests ys-pc-sprite-watch-tests ys-pc-sprite-upload-tests ys-pc-sprite-selector-tests)
+               ys-sms-input-tests ys-z80-tests ys-z80-irq-tests ys-pc42-refresh-tests ys-z80-timing-tests ys-pc-game-tests ys-pc-tiles-tests ys-pc-records-tests ys-pc-objects-tests ys-pc-object-types-tests ys-pc-scenes-tests ys-pc-nametable-tests ys-pc-patterns-tests ys-pc-vdp-checkpoint-tests ys-pc-collision-tests ys-pc-collision-routes-tests ys-pc-source-watch-tests ys-pc-content-tests ys-pc-campaign-tests ys-pc-sprite-sat-tests ys-pc-sprite-watch-tests ys-pc-sprite-upload-tests ys-pc-sprite-selector-tests)
     if(MSVC)
         target_compile_options(${target} PRIVATE /UNDEBUG)
     else()
