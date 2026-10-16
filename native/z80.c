@@ -76,6 +76,23 @@ static uint8_t add8_flags(uint8_t lhs, uint8_t rhs, uint8_t result,
         (full_result > 0xFFu ? Z80_F_C : 0u));
 }
 
+/* Z80 carry-aware 8-bit ADC/SBC. Bit 3 and bit 5 derive from the
+   eight-bit result, not the untruncated intermediate. Carry-in is
+   included in half-borrow and full-borrow; N is set only for SBC. */
+static uint8_t adc8_flags(uint8_t lhs,uint8_t rhs,unsigned carry,
+                          uint8_t result,unsigned full) {
+    return (uint8_t)(sz53(result) |
+        (((lhs&15u)+(rhs&15u)+carry)>15u?Z80_F_H:0u) |
+        (((~(lhs^rhs)&(lhs^result))&0x80u)?Z80_F_PV:0u) |
+        (full>255u?Z80_F_C:0u));
+}
+static uint8_t sbc8_flags(uint8_t lhs,uint8_t rhs,unsigned carry,
+                          uint8_t result) {
+    return (uint8_t)(sz53(result)|Z80_F_N |
+        ((lhs&15u)<((rhs&15u)+carry)?Z80_F_H:0u) |
+        (((lhs^rhs)&(lhs^result)&0x80u)?Z80_F_PV:0u) |
+        ((unsigned)lhs<(unsigned)rhs+carry?Z80_F_C:0u));
+}
 static uint8_t bit_flags(uint8_t flags, uint8_t value, unsigned bit,
                          uint8_t undocumented) {
     bool set=(value & (1u<<bit))!=0;
@@ -155,7 +172,8 @@ static bool timed_condition(uint8_t opcode, uint8_t f) {
 }
 static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
                               uint8_t sub, uint8_t f_before,
-                              uint8_t b_before, uint16_t start) {
+                              uint8_t b_before, uint16_t start,
+                              uint8_t indexed_cb_operation) {
     if (opcode>=0x40u && opcode<=0x7Fu)
         return opcode==0x76u ? 4u :
                (opcode&7u)==6u || ((opcode>>3)&7u)==6u ? 7u : 4u;
@@ -194,7 +212,10 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0x36: return 19u; /* LD (IX/IY+d),n */
         case 0x09: case 0x19: case 0x29: case 0x39:
             return 15u;       /* ADD IX/IY,rr */
-        case 0xCB: return 20u;/* BIT b,(IX/IY+d) */
+        case 0xCB:
+            /* DD/FD CB d xx: BIT=20 T, successful RES/SET=23 T.
+               Final operation was latched BEFORE any mapper write. */
+            return (indexed_cb_operation&0xC0u)==0x40u?20u:23u;
         default: return 0u;
         }
     case 0x02: case 0x0A: case 0x12: case 0x1A: return 7u;
@@ -203,7 +224,8 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0x0B: case 0x1B: case 0x2B: return 6u;
     case 0x22: case 0x2A: return 16u;
     case 0x32: case 0x3A: return 13u;
-    case 0xC6: case 0xD6: case 0xE6: case 0xF6: case 0xFE: return 7u;
+    case 0xC6: case 0xCE: case 0xD6: case 0xDE:
+    case 0xE6: case 0xF6: case 0xFE: return 7u;
     case 0xC3: return 10u;
     case 0xE9: return 4u;
     case 0xC9: return 10u;
@@ -253,6 +275,11 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     uint8_t timing_sub=(opcode==0xCBu || opcode==0xDDu ||
                         opcode==0xFDu || opcode==0xEDu) ?
                         ys_sms_bus_read(cpu->bus,cpu->pc) : 0u;
+    /* Index-prefix CB disp operation can modify a mapper register.
+       Capture last byte BEFORE execution, never read it afterward. */
+    uint8_t indexed_cb_operation=
+        (opcode==0xDDu || opcode==0xFDu) && timing_sub==0xCBu ?
+        ys_sms_bus_read(cpu->bus,(uint16_t)(cpu->pc+2u)) : 0u;
     if (opcode >= 0x40u && opcode <= 0x7Fu) {
         if (opcode == 0x76u) cpu->status = Z80_HALTED;
         else if (!w8(cpu, (opcode >> 3) & 7u, r8(cpu, opcode & 7u)))
@@ -272,6 +299,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     } else if (opcode>=0xB8u && opcode<=0xBFu) {
         uint8_t rhs=r8(cpu,opcode&7u);
         cpu->f=sub_flags(cpu->a,rhs,(uint8_t)(cpu->a-rhs));
+    } else if (opcode>=0x98u && opcode<=0x9Fu) {
+        /* PC-41: SBC A,r and SBC A,(HL); correct carry-in and
+           half-borrow, signed overflow, S/Z/N/F3/F5. */
+        uint8_t rhs=r8(cpu,opcode&7u),prior=cpu->a;
+        unsigned carry=cpu->f&Z80_F_C;
+        cpu->a=(uint8_t)((unsigned)prior-rhs-carry);
+        cpu->f=sbc8_flags(prior,rhs,carry,cpu->a);
     } else if (opcode>=0x90u && opcode<=0x97u) {
         /* SUB r (including (HL)): full Z80 S/Z/H/PV/N/C and F3/F5. */
         uint8_t rhs=r8(cpu,opcode&7u);
@@ -290,6 +324,14 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         cpu->a=(uint8_t)(cpu->a | r8(cpu,opcode&7u));
         cpu->f=(uint8_t)(sz53(cpu->a)|
                          (parity(cpu->a)?Z80_F_PV:0));
+    } else if (opcode>=0x88u && opcode<=0x8Fu) {
+        /* PC-41 source bank0 $1A0A: 88 = ADC A,B.
+           General ADC A,r/(HL) shares the same Z80 ALU flags. */
+        uint8_t rhs=r8(cpu,opcode&7u),prior=cpu->a;
+        unsigned carry=cpu->f&Z80_F_C;
+        unsigned full=(unsigned)prior+rhs+carry;
+        cpu->a=(uint8_t)full;
+        cpu->f=adc8_flags(prior,rhs,carry,cpu->a,full);
     } else if (opcode>=0x80u && opcode<=0x87u) {
         uint8_t rhs=r8(cpu,opcode&7u);
         uint8_t old=cpu->a;
@@ -517,14 +559,30 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         } else if(sub==0xCB) {
             int8_t displacement=(int8_t)fetch(cpu);
             uint8_t operation=fetch(cpu);
-            if ((operation&0xC7u)!=0x46u) {
+            uint16_t addr=(uint16_t)(*index+displacement);
+            if ((operation&0xC0u)==0x40u) {
+                /* Indexed BIT b,(IX/IY+d): F3/F5 are from address
+                   HIGH byte; no bus write or register copy. */
+                uint8_t value=ys_sms_bus_read(cpu->bus,addr);
+                cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,
+                                  (uint8_t)(addr>>8));
+            } else if((operation&0xC0u)==0x80u ||
+                      (operation&0xC0u)==0xC0u) {
+                /* Original bank0 $1AC4 DD CB 01 C6: SET 0,(IX+1).
+                   RES/SET b,(IX/IY+d),r are read/modify/write.
+                   Undocumented r!=6 opcodes ALSO load the result
+                   into ordinary B/C/D/E/H/L/A, never IXH/IYL.
+                   Successful SET/RES preserve ALL flags. */
+                uint8_t value=ys_sms_bus_read(cpu->bus,addr);
+                uint8_t mask=(uint8_t)(1u<<((operation>>3)&7u));
+                uint8_t result=(operation&0x40u)?
+                    (uint8_t)(value|mask):(uint8_t)(value&~mask);
+                if(!store(cpu,addr,result)) goto fail;
+                unsigned reg=operation&7u;
+                if(reg!=6u && !w8(cpu,reg,result)) goto fail;
+            } else {
                 cpu->status=Z80_UNSUPPORTED;goto fail;
             }
-            uint16_t addr=(uint16_t)(*index+displacement);
-            uint8_t value=ys_sms_bus_read(cpu->bus,addr);
-            /* On indexed BIT, undocumented F3/F5 come from address high. */
-            cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,
-                              (uint8_t)(addr>>8));
         } else {
             cpu->status=Z80_UNSUPPORTED;goto fail;
         }
@@ -569,6 +627,21 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         unsigned full=(unsigned)old+rhs;
         cpu->a=(uint8_t)full;
         cpu->f=add8_flags(old,rhs,cpu->a,full);
+        break;
+    }
+    case 0xCE: { /* ADC A,n, 7 T-states; both carry states. */
+        uint8_t rhs=fetch(cpu),prior=cpu->a;
+        unsigned carry=cpu->f&Z80_F_C;
+        unsigned full=(unsigned)prior+rhs+carry;
+        cpu->a=(uint8_t)full;
+        cpu->f=adc8_flags(prior,rhs,carry,cpu->a,full);
+        break;
+    }
+    case 0xDE: { /* SBC A,n, 7 T-states; full borrow flags. */
+        uint8_t rhs=fetch(cpu),prior=cpu->a;
+        unsigned carry=cpu->f&Z80_F_C;
+        cpu->a=(uint8_t)((unsigned)prior-rhs-carry);
+        cpu->f=sbc8_flags(prior,rhs,carry,cpu->a);
         break;
     }
     case 0xD6: { /* SUB n. Original bank2 $8204: D6 81;
@@ -842,7 +915,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     default: cpu->status=Z80_UNSUPPORTED;goto fail;
     }
     cpu->last_tstates=opcode_tstates(cpu,opcode,timing_sub,f_before,
-                                      b_before,start);
+                                      b_before,start,indexed_cb_operation);
     cpu->total_tstates+=cpu->last_tstates;
     ++cpu->steps;
     if (cpu->ei_delay) --cpu->ei_delay;

@@ -25,10 +25,18 @@ def number(value, upper=None):
     assert type(value) is int and value>=0,value
     if upper is not None: assert value<=upper,value
 
-def verify(rom_path,source_json,route_json,pc34_json):
+def verify(rom_path,source_json,route_json,pc34_json,milestone='pc40'):
     rom=Path(rom_path).read_bytes()
     assert len(rom)==262144
     assert hashlib.sha256(rom).hexdigest()==ORIGINAL_SHA
+    # PC-41 natural historical stop: fixed bank0 $1A0A begins with
+    # 88 (ADC A,B). Original M45-reconstructed ROM SHA is checked above.
+    assert rom[0x1A0A]==0x88
+    assert rom[0x1AC4:0x1AC8]==bytes.fromhex("DD CB 01 C6")
+    bank0=(Path(__file__).resolve().parents[2]/
+           "Ys/src/wholebank00/bank00_complete.asm").read_text(
+               encoding="utf-8")
+    assert bank0.count("    set 0,(ix+1)")>=1
     # Source-only fixed bank 0: actual failing NEG, following 16-bit SBC,
     # source selector gate and bank-6 producer call. Match physical bytes
     # AND existing independently committed Z80 listing mnemonics.
@@ -115,27 +123,39 @@ def verify(rom_path,source_json,route_json,pc34_json):
         else:
             assert event["first_step"]==event["last_step"]==0
             assert event["first_selector"]==event["first_slot2"]==0
-    # Fixed, SHA-gated original Ys source golden after PC-40 opcode
-    # completion. The source Z80 stops at its *next real unsupported*
-    # instruction, rather than bypassing or forcing a new scene.
-    assert (r["continued_steps"],r["stop_reason"],r["stop_pc"],
-            r["stop_irq"],r["stop_vblank"],r["stop_slot1"],
-            r["stop_slot2"],r["stop_selector"]) == (
-            525358,"unsupported","1A0A",132,136,1,7,6)
-    assert a["observed_collision_calls"]==0
-    assert a["sprite_counts"]==[0,0,0,0,40]
-    measured={(1,0):1,(1,8):1}
-    for event in r["events"]:
-        assert event["hits"]==measured.get((event["phase"],
-                                             PCS.index(event["pc"])),0)
+    assert milestone in ("pc40","pc41")
+    if milestone=="pc40":
+        # Fixed, SHA-gated original Ys source golden after PC-40 opcode
+        # completion. The source Z80 stops at its *next real unsupported*
+        # instruction, rather than bypassing or forcing a new scene.
+        assert (r["continued_steps"],r["stop_reason"],r["stop_pc"],
+                r["stop_irq"],r["stop_vblank"],r["stop_slot1"],
+                r["stop_slot2"],r["stop_selector"]) == (
+                525358,"unsupported","1A0A",132,136,1,7,6)
+        assert a["observed_collision_calls"]==0
+        assert a["sprite_counts"]==[0,0,0,0,40]
+        measured={(1,0):1,(1,8):1}
+        for event in r["events"]:
+            assert event["hits"]==measured.get((event["phase"],
+                                                 PCS.index(event["pc"])),0)
+    else:
+        # PC-41 must execute strictly beyond the original PC-40
+        # UNSUPPORTED $1A0A boundary, which is separately checked
+        # *during the source execution* by the C11 PC41 checkpoint.
+        assert 525358<r["continued_steps"]<=600000
+        assert r["events"][12]["hits"]>=1   # $26B6 bank 0
+        assert r["events"][20]["hits"]>=1   # $4773 physical bank 1
+        assert a["observed_collision_calls"]>=0
     # These are already physical bank-qualified in PC-34/PC-12.
     assert r["events"][6]["hits"]==b["sprite_counts"][3]
     assert sum(r["events"][k]["hits"] for k in (9,10,11))==b["observed_collision_calls"]
     assert r["prefix_irq"]<=r["stop_irq"]
     assert r["prefix_vblank"]<=r["stop_vblank"]
-    print("PASS PC-40: exact original 300k prefix, same input schedule,"
+    print("PASS PC-"+("40" if milestone=="pc40" else "41")+
+          ": exact original 300k prefix, same input schedule,"
           " physical mapper sites, full source SHA and bounded continuation")
-    print("PC-40 source-only: steps=%d reason=%s PC=%s IRQ=%d VBlank=%d" %
+    print(("PC-40" if milestone=="pc40" else "PC-41")+
+          " source-only: steps=%d reason=%s PC=%s IRQ=%d VBlank=%d" %
           (r["continued_steps"],r["stop_reason"],r["stop_pc"],
            r["stop_irq"],r["stop_vblank"]))
     for i,site in enumerate(r["events"]):

@@ -61,6 +61,28 @@ bool ys_pc40_route_mark_prefix(YsPc40Route *w,const YsSmsRuntime *rt,
     w->prefix_collisions=collisions;
     return true;
 }
+bool ys_pc41_historical_checkpoint(const YsPc40Route *w,
+                                    const YsSmsRuntime *rt,
+                                    unsigned long iteration,
+                                    const uint32_t sprite_counts[5],
+                                    uint32_t collisions) {
+    if(!w || !rt || !rt->cpu || !rt->cpu->bus ||
+       !sprite_counts || !w->prefix_seen ||
+       iteration!=525358ul || w->seen_iterations!=iteration ||
+       rt->cpu->pc!=0x1A0Au ||
+       rt->recognized_irqs!=132u ||
+       rt->clock.vblank_events!=136u ||
+       rt->cpu->bus->mapped_bank[1]!=1u ||
+       rt->cpu->bus->mapped_bank[2]!=7u ||
+       ys_sms_bus_read(rt->cpu->bus,0xC01Fu)!=6u ||
+       collisions!=0u ||
+       w->events[1][0].hits!=1u || /* bank0 $26B6 */
+       w->events[1][8].hits!=1u) /* bank1 $4773 */
+        return false;
+    for(unsigned i=0;i<5u;++i)
+        if(sprite_counts[i]!=(i==4u?40u:0u)) return false;
+    return true;
+}
 bool ys_pc40_route_write(FILE *file,const YsPc40Route *w,
                           const YsSmsRuntime *rt,const char *reason,
                           unsigned long steps) {

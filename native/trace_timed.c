@@ -1970,6 +1970,20 @@ int main(int argc,char **argv) {
         uint64_t press_step=0u,release_step=0u,mode2_step=0u;
         unsigned edge_10_hits=0u;
         for(;steps<step_budget;++steps) {
+            /* Prior PC-40 stopped naturally at this instruction on
+               UNSUPPORTED 88. PC-41 may now execute ADC A,B, but MUST
+               arrive at identical source-machine state first. */
+            if(route_long && steps==525358ul) {
+                if(!ys_pc41_historical_checkpoint(&route,&runtime,steps,
+                                                    sprite.counts,
+                                                    collision.observed_collision_calls)) {
+                    fputs("PC-41 original 525358-step checkpoint drift\n",stderr);
+                    free(rom);free(bus);free(vdp);free(sound);
+                    return EXIT_FAILURE;
+                }
+                puts("PC-41 PASS original PC-40 pre-ADC 525358-step"
+                     " CPU/mapper/IRQ/selector/sprite checkpoint");
+            }
             if(route_long && steps==300000ul &&
                !ys_pc40_route_mark_prefix(&route,&runtime,steps,
                                           sprite.counts,
