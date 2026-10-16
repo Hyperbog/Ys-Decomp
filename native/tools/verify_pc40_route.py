@@ -115,6 +115,19 @@ def verify(rom_path,source_json,route_json,pc34_json):
         else:
             assert event["first_step"]==event["last_step"]==0
             assert event["first_selector"]==event["first_slot2"]==0
+    # Fixed, SHA-gated original Ys source golden after PC-40 opcode
+    # completion. The source Z80 stops at its *next real unsupported*
+    # instruction, rather than bypassing or forcing a new scene.
+    assert (r["continued_steps"],r["stop_reason"],r["stop_pc"],
+            r["stop_irq"],r["stop_vblank"],r["stop_slot1"],
+            r["stop_slot2"],r["stop_selector"]) == (
+            525358,"unsupported","1A0A",132,136,1,7,6)
+    assert a["observed_collision_calls"]==0
+    assert a["sprite_counts"]==[0,0,0,0,40]
+    measured={(1,0):1,(1,8):1}
+    for event in r["events"]:
+        assert event["hits"]==measured.get((event["phase"],
+                                             PCS.index(event["pc"])),0)
     # These are already physical bank-qualified in PC-34/PC-12.
     assert r["events"][6]["hits"]==b["sprite_counts"][3]
     assert sum(r["events"][k]["hits"] for k in (9,10,11))==b["observed_collision_calls"]
