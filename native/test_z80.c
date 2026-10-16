@@ -1438,6 +1438,43 @@ static void test_pc40_original_graphics_ldd(void) {
            cpu.d==0x40u && cpu.e==0u && cpu.c==1u);
     assert(cpu.f==0xA5u && rom[0x4000u]==0u);
 }
+static void test_pc40_original_bank2_indexed_dec(void) {
+    static const struct { uint8_t start,result,carry,flags; } cases[]={
+        {0x00u,0xFFu,1u,0xBBu},
+        {0x80u,0x7Fu,0u,0x3Eu},
+        {0x01u,0x00u,1u,0x43u}
+    };
+    for(unsigned i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
+        setup();
+        LOAD(0x100u,0xDDu,0x35u,0x09u);
+        cpu.pc=0x100u;cpu.ix=0xC000u;
+        assert(ys_sms_bus_write(&bus,0xC009u,cases[i].start));
+        cpu.f=cases[i].carry?Z80_F_C:0u;
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        assert(ys_sms_bus_read(&bus,0xC009u)==cases[i].result);
+        assert(cpu.f==cases[i].flags);
+        assert(cpu.pc==0x103u && cpu.last_tstates==23u);
+        assert(cpu.ix==0xC000u);
+    }
+    /* Negative signed displacement with IY, no index-register change. */
+    setup();
+    LOAD(0x100u,0xFDu,0x35u,0xFFu);
+    cpu.pc=0x100u;cpu.iy=0xC100u;
+    assert(ys_sms_bus_write(&bus,0xC0FFu,0x20u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC0FFu)==0x1Fu);
+    assert(cpu.f==0x1Au && cpu.iy==0xC100u);
+    assert(cpu.last_tstates==23u);
+
+    /* ROM target: fail before updating memory, flags or IX/IY. */
+    setup();
+    LOAD(0x100u,0xDDu,0x35u,0xFFu);
+    cpu.pc=0x100u;cpu.ix=0xC000u;cpu.f=0xA5u;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0x100u && cpu.fault_pc==0x100u);
+    assert(cpu.f==0xA5u && cpu.ix==0xC000u);
+    assert(cpu.last_tstates==0u && rom[0xBFFFu]==0u);
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1479,6 +1516,7 @@ int main(void) {
     test_pc40_sbc_hl_16bit_carry_overflow();
     test_pc40_original_ld_bc_indirect();
     test_pc40_original_graphics_ldd();
+    test_pc40_original_bank2_indexed_dec();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
