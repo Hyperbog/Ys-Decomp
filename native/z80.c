@@ -12,6 +12,21 @@ static uint8_t fetch(YsZ80 *cpu) {
     cpu->pc = (uint16_t)(cpu->pc + 1u);
     return value;
 }
+/* Only R0-R6 increment on an M1 bus cycle. R7 is latched by LD R,A.
+   This also handles wrapping from low7=127 back to 0. */
+static void refresh_m1(YsZ80 *cpu) {
+    cpu->r=(uint8_t)((cpu->r&0x80u)|((cpu->r+1u)&0x7Fu));
+}
+static uint8_t fetch_m1(YsZ80 *cpu) {
+    uint8_t opcode=fetch(cpu);
+    refresh_m1(cpu);
+    return opcode;
+}
+bool ys_z80_halt_refresh(YsZ80 *cpu) {
+    if(!cpu || !cpu->bus || cpu->status!=Z80_HALTED) return false;
+    refresh_m1(cpu);
+    return true;
+}
 static uint16_t fetch16(YsZ80 *cpu) {
     uint8_t lo = fetch(cpu), hi = fetch(cpu);
     return pair(hi, lo);
@@ -144,8 +159,9 @@ bool ys_z80_irq(YsZ80 *cpu) {
         cpu->interrupt_mode!=1 || (cpu->status!=Z80_RUNNING &&
                                      cpu->status!=Z80_HALTED))
         return false;
-    /* IM 1: maskable interrupt acknowledges IFF1, vectors to $0038.
-       IFF2 is preserved for RETN/NMI semantics. */
+    /* IM 1: acknowledged maskable IRQ costs one M1 refresh cycle;
+       BOTH IFF1/IFF2 are cleared (unlike an NMI's saved IFF2).
+       Fail-closed memory pushes must not acknowledge an interrupt. */
     cpu->irq_write_active=true;
     bool pushed=push16(cpu,cpu->pc);
     cpu->irq_write_active=false;
@@ -153,7 +169,9 @@ bool ys_z80_irq(YsZ80 *cpu) {
         cpu->fault_pc=cpu->pc;
         return false;
     }
+    refresh_m1(cpu);
     cpu->iff1=false;
+    cpu->iff2=false;
     cpu->ei_delay=0;
     cpu->pc=0x0038u;
     cpu->status=Z80_RUNNING;
@@ -241,6 +259,8 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0xD3: case 0xDB: return 11u;
     case 0xED:
         if (sub==0x56u) return 8u; /* IM 1 */
+        if (sub==0x4Fu || sub==0x5Fu ||
+            sub==0x47u || sub==0x57u) return 9u; /* LD R/I,A; LD A,R/I */
         if (sub==0x44u) return 8u; /* NEG */
         if ((sub&0xCFu)==0x42u) return 15u; /* SBC HL,rr */
         if (sub==0x4Bu || sub==0x5Bu) return 20u; /* LD BC/DE,(nn) */
@@ -271,7 +291,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         start<0x0400u ? 0u : cpu->bus->mapped_bank[start>>14u]);
     cpu->last_tstates=0u;
     uint8_t f_before=cpu->f, b_before=cpu->b;
-    uint8_t opcode = fetch(cpu);
+    uint8_t opcode = fetch_m1(cpu);
     uint8_t timing_sub=(opcode==0xCBu || opcode==0xDDu ||
                         opcode==0xFDu || opcode==0xEDu) ?
                         ys_sms_bus_read(cpu->bus,cpu->pc) : 0u;
@@ -381,7 +401,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         break;
     }
     case 0xCB: {
-        uint8_t operation=fetch(cpu);
+        uint8_t operation=fetch_m1(cpu);
         if ((operation&0xF8u)==0x10u) {
             /* PC-29: fixed bank0 $0F8E/$0F9B CB 11, RL C.
                Z80 RL r/(HL) shifts bit 7 into carry, prior carry
@@ -456,7 +476,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         exchange(&cpu->h,&cpu->h_alt); exchange(&cpu->l,&cpu->l_alt);
         break; /* EXX */
     case 0xDD: case 0xFD: {
-        uint8_t sub=fetch(cpu);
+        uint8_t sub=fetch_m1(cpu);
         uint16_t *index=opcode==0xDD ? &cpu->ix : &cpu->iy;
         if(sub==0xE5) {
             if(!push16(cpu,*index)) goto fail;
@@ -735,8 +755,26 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     case 0xF3: cpu->iff1=false;cpu->iff2=false;break;
     case 0xFB: cpu->iff1=true;cpu->iff2=true;cpu->ei_delay=2;break;
     case 0xED: {
-        uint8_t sub=fetch(cpu);
+        uint8_t sub=fetch_m1(cpu);
         if (sub==0x56) {cpu->interrupt_mode=1;break;}
+        if(sub==0x4Fu) { /* LD R,A: stores ALL eight bits. */
+            cpu->r=cpu->a;
+            break;
+        }
+        if(sub==0x47u) { /* LD I,A: no flag changes. */
+            cpu->i=cpu->a;
+            break;
+        }
+        if(sub==0x5Fu || sub==0x57u) {
+            /* PC-42 original fixed-bank $141A ED 5F LD A,R.
+               R has ALREADY seen M1 cycles for BOTH ED and 5F.
+               S/Z/3/5 from loaded byte; PV copies IFF2, C kept.
+               H and N are cleared, NOT ordinary parity. */
+            cpu->a=sub==0x5Fu?cpu->r:cpu->i;
+            cpu->f=(uint8_t)(sz53(cpu->a) |
+                (cpu->iff2?Z80_F_PV:0u) | (cpu->f&Z80_F_C));
+            break;
+        }
         if (sub==0x45 || sub==0x4D) {
             cpu->pc=pop16(cpu);
             if(sub==0x45) cpu->iff1=cpu->iff2; /* RETN */
