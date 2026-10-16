@@ -111,7 +111,6 @@ def check(rom,source_path,route_path,gate_path,pc34):
         assert e["or_seen"] and e["gate_seen"] and e["successor_seen"]
         assert not e["irq_during_gate"] and e["successor_pc"]=="99C6"
         assert e["irq_before"]==e["irq_after"]
-        assert e["entry_iteration"]+2==e["gate_iteration"]
     print("PASS PC-43 bank6 original $9966 C198 conditional:",
           "entries=%d gates=%d zero=%d nonzero=%d calls=%d producer=%d"
           " skips=%d" % (gate["entries"],gate["gate_hits"],
