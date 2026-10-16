@@ -1970,6 +1970,25 @@ int main(int argc,char **argv) {
         uint64_t press_step=0u,release_step=0u,mode2_step=0u;
         unsigned edge_10_hits=0u;
         for(;steps<step_budget;++steps) {
+            /* PC-41 stopped on ED 5F LD A,R. Verify its complete
+               read-only physical source history before PC-42 runs it.
+               Print REAL R/IFF2, never synthesize refresh register. */
+            if(route_long && steps==531478ul) {
+                if(!ys_pc42_historical_checkpoint(&route,&runtime,steps,
+                                                    sprite.counts,
+                                                    collision.observed_collision_calls)) {
+                    fputs("PC-42 original 531478-step checkpoint drift\n",stderr);
+                    free(rom);free(bus);free(vdp);free(sound);
+                    return EXIT_FAILURE;
+                }
+                printf("PC-42 PASS original PC-41 pre-LD-A-R"
+                       " step=531478 R=%02X IFF2=%u"
+                       " IRQ=%llu VBlank=%llu PC=%04X\n",
+                       cpu.r,(unsigned)cpu.iff2,
+                       (unsigned long long)runtime.recognized_irqs,
+                       (unsigned long long)runtime.clock.vblank_events,
+                       cpu.pc);
+            }
             /* Prior PC-40 stopped naturally at this instruction on
                UNSUPPORTED 88. PC-41 may now execute ADC A,B, but MUST
                arrive at identical source-machine state first. */
