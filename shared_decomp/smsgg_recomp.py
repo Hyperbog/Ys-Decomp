@@ -118,7 +118,7 @@ def verify_generated(output, names, size, sha, crc, config, tool):
             raise RecompError(f"generated output missing or unsafe: {name}")
         if path.stat().st_size != entry.get("bytes") or digest(path) != entry.get("sha256"):
             raise RecompError(f"generated output integrity mismatch: {name}")
-    print(f"Verified {len(names)} generated C files; runtime execution NOT VERIFIED")
+    print(f"Verified {len(names)} generated C/header files; runtime execution NOT VERIFIED")
 
 
 def execute(args):
@@ -149,7 +149,10 @@ def execute(args):
     output = output_candidate.resolve()
     if output.name != "generated":
         raise RecompError("output directory must be named 'generated' (ROM-derived code)")
+    # The generated .c files include this fourth, mandatory generated header.
+    # Keep it hash-gated beside them; a three-C-only bundle cannot compile.
     names = [f"{prefix}_{suffix}.c" for suffix in ("full", "dispatch", "layout")]
+    names.append(f"{prefix}_funcs.h")
     if args.verify_generated:
         verify_generated(output, names, size, sha, crc, config, tool)
         return
@@ -209,7 +212,7 @@ def execute(args):
             stream.write(json.dumps(report, indent=2, sort_keys=True) + "\n")
         os.replace(pending, report_target)
         verify_generated(output, names, size, sha, crc, config, tool)
-        print(f"Generated {len(names)} C files in {output}")
+        print(f"Generated {len(names)} C/header files in {output}")
         print("Native compilation, execution and gameplay equivalence: NOT VERIFIED")
 
 

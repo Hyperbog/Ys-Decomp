@@ -3,9 +3,125 @@
    This is a bounded diagnostic, never interactive gameplay. No injected IRQ. */
 #include "sms_runtime.h"
 #include "sms_video.h"
+#include "pc_vdp_checkpoint.h"
+#include "pc_source_watch.h"
+#include "pc_sprite_watch.h"
+#include "pc_sprite_upload_watch.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+
+/* PC-26 source-only fixed-bank input/selector observation.
+   This is a passive audit of known Phase2 sampler opcodes, never
+   an input injection, menu-state inference or game progression. */
+enum { PC26_SITES=6 };
+static const uint16_t pc26_sites[PC26_SITES]={
+    0x0126u,0x012Du,0x0773u,0x077Du,0x0780u,0x0138u
+};
+typedef struct {
+    uint64_t count, first_step, last_step;
+    uint8_t first_selector, last_selector, last_pressed, last_edges;
+} Pc26Site;
+typedef struct {
+    Pc26Site sites[PC26_SITES];
+    uint64_t samples, selector_changes, nonzero_pressed, nonzero_edges;
+    uint8_t initial_selector, initial_pressed, initial_edges, last_selector;
+} Pc26Audit;
+static bool pc26_sample(Pc26Audit *out,const YsSmsRuntime *rt) {
+    if(!out || !rt || !rt->cpu || !rt->cpu->bus ||
+       !rt->cpu->input || !rt->cpu->vdp ||
+       out->samples==UINT64_MAX) return false;
+    const YsZ80 *cpu=rt->cpu;
+    uint8_t selector=ys_sms_bus_read(cpu->bus,0xC01Fu);
+    uint8_t pressed=ys_sms_bus_read(cpu->bus,0xC01Bu);
+    uint8_t edges=ys_sms_bus_read(cpu->bus,0xC01Cu);
+    if(out->samples==0u) {
+        out->initial_selector=selector;
+        out->initial_pressed=pressed;
+        out->initial_edges=edges;
+    } else if(selector!=out->last_selector) {
+        ++out->selector_changes;
+    }
+    out->last_selector=selector;
+    if(pressed!=0u) ++out->nonzero_pressed;
+    if(edges!=0u) ++out->nonzero_edges;
+    ++out->samples;
+    for(unsigned i=0;i<PC26_SITES;++i) {
+        if(cpu->pc!=pc26_sites[i]) continue;
+        Pc26Site *p=&out->sites[i];
+        if(p->count==0u) {
+            p->first_step=cpu->steps;
+            p->first_selector=selector;
+        }
+        if(p->count!=UINT64_MAX) ++p->count;
+        p->last_step=cpu->steps;
+        p->last_selector=selector;
+        p->last_pressed=pressed;
+        p->last_edges=edges;
+        break;
+    }
+    return true;
+}
+static bool pc26_write(FILE *file,const Pc26Audit *audit,
+                       const YsSmsRuntime *rt,
+                       const char *reason,unsigned long executed) {
+    if(!file || !audit || !audit->samples || !rt || !rt->cpu ||
+       !rt->cpu->bus || !rt->cpu->input || !rt->cpu->vdp ||
+       !reason) return false;
+    const YsZ80 *cpu=rt->cpu;
+    const YsSmsInput *input=cpu->input;
+    if(fprintf(file,
+       "{\n  \"schema\":\"ys-pc26-original-input-audit-v1\",\n"
+       "  \"start_pc\":\"0C92\",\"stop_reason\":\"%s\",\n"
+       "  \"continued_steps\":%lu,\"samples\":%llu,\n"
+       "  \"stop_pc\":\"%04X\",\"stop_slot1\":%u,\"stop_slot2\":%u,\n"
+       "  \"stop_irq\":%llu,\"stop_vblank\":%llu,\n"
+       "  \"input_dc\":%u,\"input_dd\":%u,"
+       "\"reads_dc\":%llu,\"reads_dd\":%llu,\n"
+       "  \"initial_selector\":%u,\"last_selector\":%u,"
+       "\"initial_pressed\":%u,\"initial_edges\":%u,\n"
+       "  \"last_pressed\":%u,\"last_edges\":%u,\n"
+       "  \"selector_changes\":%llu,\"nonzero_pressed_samples\":%llu,"
+       "\"nonzero_edge_samples\":%llu,\n"
+       "  \"vram_writes\":%llu,\"cram_writes\":%llu,"
+       "\"display_reg1\":%u,\n  \"sites\":[\n",
+       reason,executed,(unsigned long long)audit->samples,cpu->pc,
+       (unsigned)cpu->bus->mapped_bank[1],
+       (unsigned)cpu->bus->mapped_bank[2],
+       (unsigned long long)rt->recognized_irqs,
+       (unsigned long long)rt->clock.vblank_events,
+       (unsigned)input->dc,(unsigned)input->dd,
+       (unsigned long long)input->reads_dc,
+       (unsigned long long)input->reads_dd,
+       (unsigned)audit->initial_selector,
+       (unsigned)audit->last_selector,
+       (unsigned)audit->initial_pressed,
+       (unsigned)audit->initial_edges,
+       (unsigned)ys_sms_bus_read(cpu->bus,0xC01Bu),
+       (unsigned)ys_sms_bus_read(cpu->bus,0xC01Cu),
+       (unsigned long long)audit->selector_changes,
+       (unsigned long long)audit->nonzero_pressed,
+       (unsigned long long)audit->nonzero_edges,
+       (unsigned long long)cpu->vdp->vram_writes,
+       (unsigned long long)cpu->vdp->cram_writes,
+       (unsigned)cpu->vdp->registers[1])<0) return false;
+    for(unsigned i=0;i<PC26_SITES;++i) {
+        const Pc26Site *p=&audit->sites[i];
+        if(fprintf(file,
+          "    {\"pc\":\"%04X\",\"count\":%llu,"
+          "\"first_step\":%llu,\"last_step\":%llu,"
+          "\"first_selector\":%u,\"last_selector\":%u,"
+          "\"last_pressed\":%u,\"last_edges\":%u}%s\n",
+          pc26_sites[i],(unsigned long long)p->count,
+          (unsigned long long)p->first_step,
+          (unsigned long long)p->last_step,
+          (unsigned)p->first_selector,(unsigned)p->last_selector,
+          (unsigned)p->last_pressed,(unsigned)p->last_edges,
+          i+1u<PC26_SITES?",":"")<0) return false;
+    }
+    return fputs("  ]\n}\n",file)>=0 && ferror(file)==0;
+}
 
 static int fail(const char *message, const YsSmsRuntime *rt) {
     const YsZ80 *cpu=rt->cpu;
@@ -193,9 +309,22 @@ static bool reference_staged_columns(const uint8_t *source,size_t size,
 }
 
 int main(int argc,char **argv) {
-    if (!(argc==2 || (argc==4 && strcmp(argv[2],"--frame")==0))) {
-        fputs("usage: ys-native-timed-rom user-supplied-Ys.sms [--frame snapshot.ppm]\n"
-              "Stops after four-column resource staging at $0C92 (not gameplay).\n",
+    if (!(argc==2 || (argc==4 &&
+          (strcmp(argv[2],"--frame")==0 ||
+           strcmp(argv[2],"--vdp-at-m44")==0 ||
+           strcmp(argv[2],"--pc12-watch")==0 ||
+           strcmp(argv[2],"--pc15-sprite-watch")==0 ||
+           strcmp(argv[2],"--pc25-collision-watch")==0 ||
+           strcmp(argv[2],"--pc27-button-probe")==0 ||
+           strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
+           strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
+          (argc==5 &&
+           (strcmp(argv[2],"--pc25-collision-watch")==0 ||
+            strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
+          (argc==6 &&
+           strcmp(argv[2],"--pc34-extended-postrelease")==0))) {
+        fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
+              "PC12/15 use 150k idle input; PC25 adds a 300k idle-only audit; PC27 is the source-armed button1 probe; PC33 runs 150k post-M45, PC34 separately extends to 300k after genuine release. Neither proves gameplay.\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1465,6 +1594,26 @@ int main(int argc,char **argv) {
            (unsigned long long)runtime.clock.vblank_events,
            (unsigned long long)vdp->vram_writes);
 
+    /* PC-8: snapshot actual *simultaneously resident* VDP state
+       immediately upon real-source return to PC=$0C87 after M44.
+       No Z80/VDP RAM/register changes or runtime shortcuts. */
+    if(argc==4 && strcmp(argv[2],"--vdp-at-m44")==0) {
+        FILE *snapshot=fopen(argv[3],"wb");
+        bool saved=snapshot &&
+            ys_pc_vdp_checkpoint_save(snapshot,vdp,cpu.pc);
+        if(snapshot && fclose(snapshot)!=0) saved=false;
+        if(!saved) {
+            fputs("PC-8 cannot write M44 VDP state capture\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);
+            return EXIT_FAILURE;
+        }
+        printf("PASS PC-8 original simultaneous VDP capture at PC=$%04X:"
+               " 16384 VRAM, 32 CRAM, 16 registers, IRQ=%llu VBlank=%llu\n",
+               cpu.pc,
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+    }
+
     /* M45: original bank-0 $0C87-$0C91 selects HL=$A4D1,
        DE=$C600, C=4, and calls $0BEF. The real source routine
        transfers FOUR interleaved compressed resource columns
@@ -1554,7 +1703,470 @@ int main(int argc,char **argv) {
            (unsigned long long)cpu.total_tstates,
            (unsigned long long)runtime.recognized_irqs,
            (unsigned long long)runtime.clock.vblank_events);
-    puts("Stop before source $0C92 video setup, not playable.");
+    if(argc==4 && strcmp(argv[2],"--pc12-watch")==0) {
+        /* PC-12: only CONTINUE the already verified original M45 CPU,
+           mapper, WRAM, VDP, clock and IRQ state. Never patch PC,
+           input, memory, mapper state or VBlank. Source execution
+           may STOP on an unsupported instruction before any scene. */
+        enum { PC12_STEP_LIMIT=150000u,PC12_EXTRA_VBLANKS=90u };
+        const uint64_t start_blank=runtime.clock.vblank_events;
+        YsPcSourceWatch watch={0};
+        const char *why="budget";
+        unsigned long seen_steps=0ul;
+        for(;seen_steps<PC12_STEP_LIMIT;++seen_steps) {
+            if(!ys_pc_source_watch_sample(&watch,&runtime)) {
+                fputs("PC-12 invalid read-only original observer state\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            if(watch.observed_collision_calls!=0u) {
+                why="observed";break;
+            }
+            if(runtime.clock.vblank_events-start_blank>=PC12_EXTRA_VBLANKS) {
+                why="vblank_limit";break;
+            }
+            Z80Status state=ys_sms_runtime_step_auto(&runtime);
+            if(state!=Z80_RUNNING && state!=Z80_HALTED) {
+                why="unsupported";break;
+            }
+        }
+        FILE *file=fopen(argv[3],"wb");
+        bool ok=file && ys_pc_source_watch_write(file,&watch,&runtime,
+                                                  why,seen_steps);
+        if(file && fclose(file)!=0) ok=false;
+        if(!ok) {
+            fputs("PC-12 cannot write observation result\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        printf("PC-12 original source continuation from verified M45:"
+               " reason=%s continuation_steps=%lu PC=$%04X"
+               " slot1=%u slot2=%u source_collision_calls=%u"
+               " IRQ=%llu VBlank=%llu\n",
+               why,seen_steps,cpu.pc,(unsigned)bus->mapped_bank[1],
+               (unsigned)bus->mapped_bank[2],watch.observed_collision_calls,
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+        if(watch.observed_collision_calls==0u)
+            puts("BLOCKED PC-12: no actual original bank1 collision call"
+                 " witnessed in bounded continuation;"
+                 " no gameplay/map proof");
+        else
+            puts("OBSERVED PC-12: original mapped bank1 collision PC"
+                 " reached; inspect JSON for mapper/WRAM/IX context;"
+                 " still not proof of a playable scene");
+    } else if(argc==4 && strcmp(argv[2],"--pc15-sprite-watch")==0) {
+        /* PC-15: original CPU CONTINUATION from identical verified
+           M45 state. No mapper, controller, VDP or RAM injections.
+           First source bank6 $9932 entry is qualified by physical
+           bank6 present in slot2, not its CPU address alone. */
+        enum { PC15_STEPS=150000u,PC15_EXTRA_VBLANKS=90u };
+        YsPcSpriteWatch watch={0};
+        const uint64_t start_blank=runtime.clock.vblank_events;
+        const char *why="budget";
+        unsigned long steps=0ul;
+        for(;steps<PC15_STEPS;++steps) {
+            if(!ys_pc_sprite_watch_sample(&watch,&runtime)) {
+                fputs("PC-15 invalid original sprite source sampler\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            if(watch.seen[3]) {why="observed";break;}
+            if(runtime.clock.vblank_events-start_blank>=PC15_EXTRA_VBLANKS) {
+                why="vblank_limit";break;
+            }
+            Z80Status result=ys_sms_runtime_step_auto(&runtime);
+            if(result!=Z80_RUNNING && result!=Z80_HALTED) {
+                why="unsupported";break;
+            }
+        }
+        FILE *file=fopen(argv[3],"wb");
+        bool ok=file &&
+            ys_pc_sprite_watch_write(file,&watch,&runtime,why,steps);
+        if(file && fclose(file)!=0) ok=false;
+        if(!ok) {
+            fputs("PC-15 cannot write source sprite watch report\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        printf("PC-15 source sprite watch: reason=%s steps=%lu"
+               " PC=$%04X slot2=%u $9932_hits=%u"
+               " IRQ=%llu VBlank=%llu\n",
+               why,steps,cpu.pc,(unsigned)bus->mapped_bank[2],
+               watch.counts[3],
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+        if(watch.seen[3])
+            puts("OBSERVED PC-15: actual mapped bank6 sprite producer"
+                 " entered; JSON records raw selector/origins;"
+                 " sprite and scene identities UNVERIFIED");
+        else
+            puts("BLOCKED PC-15: no original mapped bank6 sprite"
+                 " producer observed; no original player/scene proof");
+    } else if((argc==4 || argc==5) &&
+              strcmp(argv[2],"--pc25-collision-watch")==0) {
+        /* PC-25 is a SEPARATE opt-in research bound, not a change to
+           PC-12/15 regression observers, original ROM or test oracles.
+           Keep source CPU/IRQ/controller/RAM/mapper untouched. */
+        enum { PC25_STEPS=300000u,PC25_EXTRA_VBLANKS=120u };
+        const uint64_t start_blank=runtime.clock.vblank_events;
+        YsPcSourceWatch watch={0};
+        Pc26Audit audit={0};
+        const bool audit_enabled=(argc==5);
+        const char *why="budget";
+        unsigned long steps=0ul;
+        for(;steps<PC25_STEPS;++steps) {
+            if(audit_enabled && !pc26_sample(&audit,&runtime)) {
+                fputs("PC-26 invalid read-only input observation\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            if(!ys_pc_source_watch_sample(&watch,&runtime)) {
+                fputs("PC-25 invalid read-only collision observer state\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            if(watch.observed_collision_calls!=0u) {
+                why="observed";break; /* BEFORE executing source call. */
+            }
+            if(runtime.clock.vblank_events-start_blank>=PC25_EXTRA_VBLANKS) {
+                why="vblank_limit";break;
+            }
+            Z80Status state=ys_sms_runtime_step_auto(&runtime);
+            if(state!=Z80_RUNNING && state!=Z80_HALTED) {
+                why="unsupported";break;
+            }
+        }
+        FILE *file=fopen(argv[3],"wb");
+        bool ok=file && ys_pc_source_watch_write(file,&watch,&runtime,
+                                                  why,steps);
+        if(file && fclose(file)!=0) ok=false;
+        if(!ok) {
+            fputs("PC-25 cannot write extended collision observation\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        if(audit_enabled) {
+            FILE *audit_file=fopen(argv[4],"wb");
+            bool audit_ok=audit_file &&
+                pc26_write(audit_file,&audit,&runtime,why,steps);
+            if(audit_file && fclose(audit_file)!=0) audit_ok=false;
+            if(!audit_ok) {
+                fputs("PC-26 cannot write read-only input report\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-26 original input sampler audit:"
+                   " sites_0773=%llu reads_DC=%llu reads_DD=%llu"
+                   " selector_changes=%llu pressed_samples=%llu"
+                   " C01F=$%02X C01B=$%02X C01C=$%02X\n",
+                   (unsigned long long)audit.sites[2].count,
+                   (unsigned long long)input.reads_dc,
+                   (unsigned long long)input.reads_dd,
+                   (unsigned long long)audit.selector_changes,
+                   (unsigned long long)audit.nonzero_pressed,
+                   (unsigned)ys_sms_bus_read(bus,0xC01Fu),
+                   (unsigned)ys_sms_bus_read(bus,0xC01Bu),
+                   (unsigned)ys_sms_bus_read(bus,0xC01Cu));
+        }
+        printf("PC-25 extended original source collision research:"
+               " reason=%s continuation_steps=%lu PC=$%04X"
+               " slot1=%u slot2=%u original_calls=%u"
+               " IRQ=%llu VBlank=%llu\n",
+               why,steps,cpu.pc,(unsigned)bus->mapped_bank[1],
+               (unsigned)bus->mapped_bank[2],watch.observed_collision_calls,
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+        if(watch.observed_collision_calls>0u)
+            puts("OBSERVED PC-25: mapper-qualified source collision call"
+                 " before execution; source player and scene still unverified");
+        else
+            puts("BLOCKED PC-25: no source collision call within this"
+                 " larger original unpressed-input research horizon");
+
+    } else if((argc==4 &&
+              (strcmp(argv[2],"--pc27-button-probe")==0 ||
+               strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
+               strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
+              ((argc==5 || argc==6) &&
+               strcmp(argv[2],"--pc34-extended-postrelease")==0)) {
+        /* Independent opt-in source-backed input experiment, not a
+           hardware/emulator-match claim. Idle until original CPU
+           reaches PC $0CD1 (observed Phase5 C01C edge test) with C01F==$01.
+           Deliver active-low DC bit4 at first subsequent ORIGINAL
+           IN A,($DC) at $0773. Release at NEXT $0773 sampling.
+           Never edit Z80 PC, WRAM, mapper, timing, or IRQ state. */
+        /* Separate 150k (PC27/33) and 300k (PC34) source budgets. */
+        const uint64_t start_blank=runtime.clock.vblank_events;
+        YsPcSourceWatch collision={0};
+        YsPcSpriteWatch sprite={0};
+        YsPcSpriteUploadWatch upload={0};
+        const bool extended=
+            strcmp(argv[2],"--pc34-extended-postrelease")==0;
+        const bool video_audit=extended && argc>=5;
+        const bool upload_audit=extended && argc==6;
+        /* PC-35 independently samples the exact same source CPU run:
+           controller state and PC/WRAM/VDP/mapper are never modified. */
+        uint64_t display_enabled_samples=0u,display_transitions=0u;
+        uint64_t selector_transitions=0u,slot2_transitions=0u;
+        uint64_t first_display_step=0u,first_selector2_step=0u;
+        uint8_t last_display=(uint8_t)
+            ((vdp->registers[1] & 0x40u)!=0u);
+        uint8_t last_mode=ys_sms_bus_read(bus,0xC01Fu);
+        uint8_t last_slot2=bus->mapped_bank[2];
+        const uint64_t initial_vram=vdp->vram_writes;
+        const uint64_t initial_cram=vdp->cram_writes;
+        const bool postrelease=extended ||
+            strcmp(argv[2],"--pc33-postrelease-watch")==0;
+        const unsigned step_budget=extended?300000u:150000u;
+        const uint64_t blank_budget=extended?120u:90u;
+        bool release_sampled=false;
+        const uint8_t start_selector=ys_sms_bus_read(bus,0xC01Fu);
+        const char *why="budget";
+        unsigned long steps=0ul;
+        bool armed=false,pressed=false,released=false;
+        bool saw_mode_write=false,saw_mode2=false;
+        unsigned arm_hits=0u,hits_edge=0u,hits_mode_write=0u;
+        uint8_t last_edge=0u;
+        uint64_t press_step=0u,release_step=0u,mode2_step=0u;
+        unsigned edge_10_hits=0u;
+        for(;steps<step_budget;++steps) {
+            if(!ys_pc_source_watch_sample(&collision,&runtime) ||
+               (postrelease && !ys_pc_sprite_watch_sample(&sprite,&runtime)) ||
+               (upload_audit && !ys_pc_sprite_upload_watch_sample(&upload,&runtime))) {
+                fputs("PC-27/33 invalid source event observer\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            const uint8_t selector=ys_sms_bus_read(bus,0xC01Fu);
+            if(video_audit) {
+                const uint8_t visible=(uint8_t)
+                    ((vdp->registers[1] & 0x40u)!=0u);
+                if(visible) {
+                    ++display_enabled_samples;
+                    if(first_display_step==0u)
+                        first_display_step=cpu.steps;
+                }
+                if(visible!=last_display) ++display_transitions;
+                if(selector!=last_mode) {
+                    ++selector_transitions;
+                    if(selector==2u && first_selector2_step==0u)
+                        first_selector2_step=cpu.steps;
+                }
+                if(bus->mapped_bank[2]!=last_slot2)
+                    ++slot2_transitions;
+                last_display=visible;
+                last_mode=selector;
+                last_slot2=bus->mapped_bank[2];
+            }
+            if(cpu.pc==0x0CD1u && selector==0x01u) {
+                armed=true;
+                if(arm_hits!=UINT32_MAX) ++arm_hits;
+            }
+            if(cpu.pc==0x0CD1u) {
+                last_edge=ys_sms_bus_read(bus,0xC01Cu);
+                if(hits_edge!=UINT32_MAX) ++hits_edge;
+                if((last_edge&0x10u)!=0u && edge_10_hits!=UINT32_MAX)
+                    ++edge_10_hits;
+            }
+            if(cpu.pc==0x0CC8u && hits_mode_write!=UINT32_MAX) {
+                ++hits_mode_write;
+                saw_mode_write=true;
+            }
+            if(pressed && saw_mode_write && selector==0x02u) {
+                if(!saw_mode2) mode2_step=cpu.steps;
+                saw_mode2=true;
+            }
+            if(armed && !pressed && cpu.pc==0x0773u) {
+                input.dc=0xEFu; /* Button 1, port DC bit 4 active low. */
+                pressed=true;press_step=cpu.steps;
+            } else if(pressed && !released && cpu.pc==0x0773u) {
+                input.dc=0xFFu; /* Release before second sampled IN. */
+                released=true;release_step=cpu.steps;
+            }
+            if(saw_mode2 && released && !postrelease) {
+                why="mode2_after_release";break;
+            }
+            if(collision.observed_collision_calls>0u) {
+                why="collision_observed";break;
+            }
+            if(runtime.clock.vblank_events-start_blank>=blank_budget) {
+                why="vblank_limit";break;
+            }
+            const bool execute_release=
+                postrelease && released && !release_sampled &&
+                cpu.pc==0x0773u;
+            Z80Status state=ys_sms_runtime_step_auto(&runtime);
+            if(state!=Z80_RUNNING && state!=Z80_HALTED) {
+                why="unsupported";break;
+            }
+            if(execute_release) release_sampled=true;
+        }
+        if(upload_audit) {
+            FILE *upload_file=fopen(argv[5],"wb");
+            bool upload_ok=upload_file &&
+                ys_pc_sprite_upload_watch_write(upload_file,&upload,
+                                                 &runtime,why,steps);
+            if(upload_file && fclose(upload_file)!=0) upload_ok=false;
+            if(!upload_ok) {
+                fputs("PC-36 cannot write original SAT transfer audit\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-36 full original SAT transfers:"
+                   " entries=%u halfway=%u complete=%u matched=%u"
+                   " mismatched=%u bytes=%llu different=%llu\n",
+                   upload.entries,upload.halfway,upload.completed,
+                   upload.matched,upload.mismatched,
+                   (unsigned long long)upload.bytes_compared,
+                   (unsigned long long)upload.bytes_different);
+        }
+        if(video_audit) {
+            FILE *video_file=fopen(argv[4],"wb");
+            bool video_ok=video_file &&
+                fprintf(video_file,
+                  "{\n"
+                  " \"schema\":\"ys-pc35-source-video-dispatch-v1\",\n"
+                  " \"source\":\"pc34-same-run\",\n"
+                  " \"continued_steps\":%lu,\"stop_reason\":\"%s\",\n"
+                  " \"stop_pc\":\"%04X\",\"stop_irq\":%llu,"
+                  "\"stop_vblank\":%llu,\n"
+                  " \"release_sampled\":%s,"
+                  "\"mode2_seen\":%s,\n"
+                  " \"selector_transitions\":%llu,"
+                  "\"first_selector2_step\":%llu,"
+                  "\"stop_selector\":%u,\n"
+                  " \"display_transitions\":%llu,"
+                  "\"display_enabled_samples\":%llu,"
+                  "\"first_display_step\":%llu,"
+                  "\"display_enabled_final\":%s,\n"
+                  " \"vram_writes_delta\":%llu,"
+                  "\"cram_writes_delta\":%llu,\n"
+                  " \"slot2_transitions\":%llu,"
+                  "\"slot2_final\":%u,\n"
+                  " \"sprite_upload0427_hits\":%u,"
+                  "\"bank6_sprite9932_hits\":%u,"
+                  "\"collision_calls\":%u\n}\n",
+                  steps,why,cpu.pc,
+                  (unsigned long long)runtime.recognized_irqs,
+                  (unsigned long long)runtime.clock.vblank_events,
+                  release_sampled?"true":"false",
+                  saw_mode2?"true":"false",
+                  (unsigned long long)selector_transitions,
+                  (unsigned long long)first_selector2_step,
+                  (unsigned)ys_sms_bus_read(bus,0xC01Fu),
+                  (unsigned long long)display_transitions,
+                  (unsigned long long)display_enabled_samples,
+                  (unsigned long long)first_display_step,
+                  (vdp->registers[1]&0x40u)?"true":"false",
+                  (unsigned long long)(vdp->vram_writes-initial_vram),
+                  (unsigned long long)(vdp->cram_writes-initial_cram),
+                  (unsigned long long)slot2_transitions,
+                  (unsigned)bus->mapped_bank[2],
+                  sprite.counts[4],sprite.counts[3],
+                  collision.observed_collision_calls)>0;
+            if(video_file && fclose(video_file)!=0) video_ok=false;
+            if(!video_ok) {
+                fputs("PC-35 cannot serialize source video audit\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-35 same source-run video audit: display_samples=%llu"
+                   " display_switches=%llu VRAM_delta=%llu CRAM_delta=%llu"
+                   " selector_switches=%llu slot2_switches=%llu\n",
+                   (unsigned long long)display_enabled_samples,
+                   (unsigned long long)display_transitions,
+                   (unsigned long long)(vdp->vram_writes-initial_vram),
+                   (unsigned long long)(vdp->cram_writes-initial_cram),
+                   (unsigned long long)selector_transitions,
+                   (unsigned long long)slot2_transitions);
+        }
+        /* PC-33-only evidence fields; the PC-27 JSON schema is unchanged.
+           Two different clocks exist: cpu.steps is absolute since reset,
+           but continued_steps starts after the verified M45 checkpoint. */
+        char extra[256]="";
+        if(postrelease) {
+            int written=snprintf(extra,sizeof(extra),
+                ",\n  \"release_sampled\":%s,"
+                "\n  \"sprite_counts\":[%u,%u,%u,%u,%u]",
+                release_sampled?"true":"false",
+                sprite.counts[0],sprite.counts[1],sprite.counts[2],
+                sprite.counts[3],sprite.counts[4]);
+            if(written<0 || (size_t)written>=sizeof(extra)) {
+                fputs("PC-33 cannot serialize passive event counts\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+        }
+        FILE *output=fopen(argv[3],"wb");
+        bool ok=output &&
+            fprintf(output,
+             "{\n"
+             "  \"schema\":\"%s\",\n"
+             "  \"start_pc\":\"0C92\",\"start_selector\":%u,\n"
+             "  \"stop_reason\":\"%s\",\"continued_steps\":%lu,\n"
+             "  \"stop_pc\":\"%04X\",\"stop_selector\":%u,\n"
+             "  \"stop_slot1\":%u,\"stop_slot2\":%u,\n"
+             "  \"stop_irq\":%llu,\"stop_vblank\":%llu,\n"
+             "  \"arm_hits\":%u,\"edge_check_hits\":%u,\n"
+             "  \"edge_bit4_hits\":%u,\"last_edge\":%u,\n"
+             "  \"mode_write_hits\":%u,\"mode2_seen\":%s,\n"
+             "  \"pressed\":%s,\"released\":%s,\n"
+             "  \"press_pc\":\"0773\",\"release_pc\":\"0773\",\n"
+             "  \"press_step\":%llu,\"release_step\":%llu,\n"
+             "  \"mode2_step\":%llu,\n"
+             "  \"port_dc\":%u,\"port_dd\":%u,\n"
+             "  \"input_reads_dc\":%llu,\"input_reads_dd\":%llu,\n"
+             "  \"observed_collision_calls\":%u%s\n}\n",
+             extended?"ys-pc34-extended-postrelease-source-watch-v1":
+             postrelease?"ys-pc33-postrelease-source-watch-v1":
+                         "ys-pc27-original-button-probe-v1",
+             (unsigned)start_selector,why,steps,cpu.pc,
+             (unsigned)ys_sms_bus_read(bus,0xC01Fu),
+             (unsigned)bus->mapped_bank[1],(unsigned)bus->mapped_bank[2],
+             (unsigned long long)runtime.recognized_irqs,
+             (unsigned long long)runtime.clock.vblank_events,
+             arm_hits,hits_edge,edge_10_hits,(unsigned)last_edge,
+             hits_mode_write,saw_mode2?"true":"false",
+             pressed?"true":"false",released?"true":"false",
+             (unsigned long long)press_step,
+             (unsigned long long)release_step,
+             (unsigned long long)mode2_step,
+             (unsigned)input.dc,(unsigned)input.dd,
+             (unsigned long long)input.reads_dc,
+             (unsigned long long)input.reads_dd,
+             collision.observed_collision_calls,extra)>0;
+        if(output && fclose(output)!=0) ok=false;
+        if(!ok) {
+            fputs("PC-27 cannot write original controller experiment\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        printf("PC-27/33 source-armed controller experiment:"
+               " reason=%s steps=%lu PC=$%04X fault=$%04X status=%u"
+               " slot1=%u slot2=%u bytes=%02X_%02X_%02X_%02X"
+               " selector=%u->%u arm_hits=%u"
+               " edge_bit4=%u mode_write_hits=%u mode2=%u"
+               " pressed=%u released=%u IRQ=%llu VBlank=%llu"
+               " collisions=%u\n",
+               why,steps,cpu.pc,cpu.fault_pc,(unsigned)cpu.status,
+               (unsigned)bus->mapped_bank[1],
+               (unsigned)bus->mapped_bank[2],
+               (unsigned)ys_sms_bus_read(bus,cpu.pc),
+               (unsigned)ys_sms_bus_read(bus,(uint16_t)(cpu.pc+1u)),
+               (unsigned)ys_sms_bus_read(bus,(uint16_t)(cpu.pc+2u)),
+               (unsigned)ys_sms_bus_read(bus,(uint16_t)(cpu.pc+3u)),
+               (unsigned)start_selector,
+               (unsigned)ys_sms_bus_read(bus,0xC01Fu),
+               arm_hits,edge_10_hits,hits_mode_write,(unsigned)saw_mode2,
+               (unsigned)pressed,(unsigned)released,
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events,
+               collision.observed_collision_calls);
+        if(postrelease) {
+            printf("PC-33/34 source post-release research:"
+                   " sampled_release=%u step=%lu"
+                   " sprite_caller26F3=%u sprite_mapper26F5=%u"
+                   " sprite_upload0427=%u bank6_9932=%u"
+                   " source_collision_calls=%u\n",
+                   (unsigned)release_sampled,steps,
+                   sprite.counts[0],sprite.counts[1],
+                   sprite.counts[4],sprite.counts[3],
+                   collision.observed_collision_calls);
+        }
+        puts("PC-27/33/34 research only: controller pulse is experimental;"
+             " even a source-proven transition is NOT independent"
+             " emulator-match, original gameplay or an Alpha gate");
+    } else {
+        puts("Stop before source $0C92 video setup, not playable.");
+    }
 
 
 
@@ -1566,7 +2178,7 @@ int main(int argc,char **argv) {
 
 
 
-    if (argc==4) {
+    if (argc==4 && strcmp(argv[2],"--frame")==0) {
         uint8_t *rgb=malloc(YS_SMS_RGB_BYTES);
         if (!rgb) {
             fputs("cannot allocate RGB frame\n",stderr);

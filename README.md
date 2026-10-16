@@ -1,3 +1,78 @@
+## Full Ys SMS ROM assembly/data reference
+
+The [16-bank master ROM disassembly index](Ys/whole_system/FULL_ROM_DISASSEMBLY.md)
+links to a [single, searchable complete ROM listing](Ys/whole_system/MASTER_ROM_LISTING.txt)
+and to each authoritative per-bank assembly source. It covers the
+entire **262,144-byte** original cartridge in source-backed Z80
+mnemonics or byte-preserving DB/DW directives; **not all bytes
+are semantically decoded Z80 code**.
+
+The committed listing is reusable for future PC-port and decomp
+milestones without rerunning a disassembler. Source consistency is
+checked in CI with `python3 Ys/tools/build_master_rom_listing.py --check`.
+
+## Enhanced native Ys PC port (new track)
+
+**PC-15 sprite selection provenance:** [Original C199 selector formula and bounded actual CPU watch](native/research/PC15_SPRITE_SELECTOR_WATCH.md)
+establishes the source-verified 8×8 mapping into all 64
+bank6 SAT records and adds passive original mapper/WRAM/
+VDP observations. This is source evidence and diagnostic
+tooling **not** identification of a live original player
+sprite or playable scene. All genuine Alpha gates remain false.
+
+**PC-14 sprite integration:** [Original 64-record bank-6 SAT source pipeline](native/research/PC14_ORIGINAL_SPRITE_SAT.md)
+is reproduced independently in native C11 and checked against
+192 original-Z80 SAT hash cases. F12 displays a read-only
+sprite-coordinate marker diagnostic; **no original playable
+scene, player sprite identity, palette or Alpha gate is claimed**.
+
+**PC-13 Alpha-path rehearsal:** [Two-room native prototype campaign](native/research/PC13_CAMPAIGN_VERTICAL_SLICE.md)
+is an opt-in source-free progression loop with linked
+canonical scene IDs, full button-input replay tests and
+persistent player HP/defeat count. It is **not** a recovered
+Ys level, a genuine original encounter or a release Alpha.
+Run `ys-native-game --prototype-campaign` to try the
+two-room prototype; the default one-room placeholder is unchanged.
+
+**PC-12 original CPU research:** [Bounded post-M45 collision-call watch](native/research/PC12_RUNTIME_COLLISION_WATCH.md)
+is an opt-in, read-only attempt to observe the actual source
+mapper and IX inputs at original bank-1 collision PCs.
+A terminated or unobserved watch is explicitly a gameplay
+evidence blocker; it does not add a native Ys area.
+
+**PC-11 source collision routing:** [Bank-1 collision-call provenance](native/research/PC11_BANK1_COLLISION_ROUTES.md)
+now proves the `$476C` entry path selects physical bank 4 before
+three original `$807C` calls, and reproduces the source byte-bound
+producer in native C11. This is conditional source control-flow
+evidence, **not** a confirmed live gameplay mapper trace or a
+playable original Ys map.
+
+**PC-10 mod-forward adoption:** [Ys-specific support profile](native/YS_MODDING_PROFILE.md)
+and [canonical experimental scene-content foundation](native/research/PC10_CANONICAL_CONTENT.md)
+specify a versioned in-memory prototype scene with stable symbolic IDs,
+strict validation and deterministic explicit replacement/addition. The
+original **PC-0 placeholder gameplay is unchanged**; no actual end-user
+mod loader/editor or authentic Ys level is implemented.
+
+The new [PC-0 foundation](native/ENHANCED_PC_PORT.md) and
+[PC-1 source-verified tile gallery](native/research/PC1_BANK3_TILE_GALLERY.md)
+and [PC-2 verified map-object record ledger](native/research/PC2_BANK7_MAP_RECORDS.md)
+and [PC-4 conditional original object initializer](native/research/PC4_OBJECT_TYPE_INITIALIZER.md)
+and [PC-5 verified scene routing](native/research/PC5_SCENE_SELECTORS.md)
+and [PC-6 original name-table initialization data](native/research/PC6_INITIAL_NAMETABLE.md)
+and [PC-7 source-backed graphic composition](native/research/PC7_PATTERN_NAME_PREVIEW.md)
+and [PC-8 actual simultaneous VDP checkpoint](native/research/PC8_SIMULTANEOUS_VDP.md)
+and [PC-9 original object collision predicate](native/research/PC9_SOURCE_COLLISION.md)
+plus [PC-3 source work-field projection](native/research/PC3_OBJECT_WORK_PROJECTION.md)
+introduce
+an independent C11 game-state core and SDL2-native `ys-native-game`
+prototype with keyboard/controller input. Its room, art and combat values
+are **placeholders**, not verified content from Ys. Z80 execution and
+ROM rebuilding remain reverse-engineering tools, not the intended PC
+runtime. The original-release Alpha/Beta/Final gates remain unchanged.
+
+---
+
 ## Ys PC builds: Development / Alpha / Beta / Final
 
 **Universal mod-forward development policy:** [MOD_FORWARD_METHODOLOGY.md](MOD_FORWARD_METHODOLOGY.md) sets the shared standard for replaceable content, stable resource IDs, extensible menus, deterministic mod resolution, save compatibility and editor-ready data across DOS, NES, SNES, SMS, Genesis and future ports. It is a development policy, not a claim that the current Ys native build has a mod loader or editor.

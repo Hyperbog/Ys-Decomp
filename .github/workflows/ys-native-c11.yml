@@ -24,12 +24,203 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Install SDL2 development library for native PC build
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libsdl2-dev
       - name: Configure strict C11 runtime
         run: cmake -S native -B build-native -DCMAKE_BUILD_TYPE=Debug
       - name: Compile SMS bus, VDP, sound and bounded Z80
         run: cmake --build build-native --parallel
       - name: Test SMS bus, VDP, sound and Z80
         run: ctest --test-dir build-native --output-on-failure
+      - name: Smoke-test native PC game window and frame loop
+        env:
+          SDL_VIDEODRIVER: dummy
+          SDL_RENDER_DRIVER: software
+        run: |
+          test -x ./build-native/ys-native-game
+          ./build-native/ys-native-game --smoke
+          # PC-13: optional two-room native prototype, NOT a real Ys stage.
+          ./build-native/ys-native-game --smoke --prototype-campaign
+          # PC-14: source-only physical bank6 records. Independently
+          # check 192 original-Z80 SAT hashes and native C11 SAT bytes.
+          python3 native/tools/export_pc_sprite_sat.py --out "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          python3 native/tools/export_pc_sprite_sat.py --verify "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          ./build-native/ys-pc-sprite-sat-tests "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          # PC-15: source-derived 8x8 C199 selector feeds the true
+          # 64 record directory with all three Phase19 origin pairs.
+          ./build-native/ys-pc-sprite-selector-tests "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          ./build-native/ys-pc-sprite-sat-dump "$RUNNER_TEMP/ys-pc14-sprites.bin" "$RUNNER_TEMP/ys-pc14-sat.bin"
+          python3 -c 'import pathlib,hashlib,json,os; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc14-sat.bin"; blob=p.read_bytes(); ledger=json.loads(pathlib.Path("Ys/phase19/execution_report.json").read_text()); assert len(blob)==36864; assert hashlib.sha256(blob).hexdigest()==ledger["concat_sat_sha256"], "PC-14 original-Z80 and native-C11 SAT mismatch"; print("PASS PC-14 original source SAT corpus: 192/192 cases, SHA256",hashlib.sha256(blob).hexdigest())'
+          ./build-native/ys-native-game --smoke --sprite-records "$RUNNER_TEMP/ys-pc14-sprites.bin"
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc14-invalid.bin"
+          if ./build-native/ys-native-game --smoke --sprite-records "$RUNNER_TEMP/ys-pc14-invalid.bin"; then
+            echo "PC-14 SDL accepted corrupt original sprite records" >&2
+            exit 1
+          fi
+          if ./build-native/ys-pc-sprite-sat-dump "$RUNNER_TEMP/ys-pc14-invalid.bin" "$RUNNER_TEMP/ys-pc14-invalid-sat.bin"; then
+            echo "PC-14 decoder accepted corrupt source records" >&2
+            exit 1
+          fi
+          ./build-native/ys-pc-campaign-tests
+          python3 native/tools/export_pc_tiles.py --out "$RUNNER_TEMP/ys-pc-source-tiles.bin"
+          python3 native/tools/export_pc_tiles.py --verify "$RUNNER_TEMP/ys-pc-source-tiles.bin"
+          ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin"
+          python3 native/tools/export_pc_records.py --out "$RUNNER_TEMP/ys-pc-source-records.bin"
+          python3 native/tools/export_pc_records.py --verify "$RUNNER_TEMP/ys-pc-source-records.bin"
+          ./build-native/ys-pc-objects-tests "$RUNNER_TEMP/ys-pc-source-records.bin"
+          python3 native/tools/export_pc_object_types.py --out "$RUNNER_TEMP/ys-pc-object-types.bin"
+          python3 native/tools/export_pc_object_types.py --verify "$RUNNER_TEMP/ys-pc-object-types.bin"
+          ./build-native/ys-pc-objects-tests "$RUNNER_TEMP/ys-pc-source-records.bin" "$RUNNER_TEMP/ys-pc-object-types.bin"
+          ./build-native/ys-native-game --smoke --smoke-projection --records "$RUNNER_TEMP/ys-pc-source-records.bin" --object-types "$RUNNER_TEMP/ys-pc-object-types.bin"
+          printf 'bad' > "$RUNNER_TEMP/ys-pc-bad-types.bin"
+          if ./build-native/ys-native-game --smoke --records "$RUNNER_TEMP/ys-pc-source-records.bin" --object-types "$RUNNER_TEMP/ys-pc-bad-types.bin"; then
+            echo "Corrupt bank0 object type asset was accepted" >&2
+            exit 1
+          fi
+          ./build-native/ys-native-game --smoke --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          ./build-native/ys-native-game --smoke --smoke-projection --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          python3 native/tools/export_pc_scenes.py --out "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          python3 native/tools/export_pc_scenes.py --verify "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          ./build-native/ys-pc-scenes-tests "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          ./build-native/ys-native-game --smoke --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          ./build-native/ys-native-game --smoke --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin" --tiles "$RUNNER_TEMP/ys-pc-source-tiles.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          python3 native/tools/export_pc_nametable.py --out "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          python3 native/tools/export_pc_nametable.py --verify "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          ./build-native/ys-pc-nametable-tests "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          python3 native/tools/export_pc_patterns.py --out "$RUNNER_TEMP/ys-pc-init-patterns.bin"
+          python3 native/tools/export_pc_patterns.py --verify "$RUNNER_TEMP/ys-pc-init-patterns.bin"
+          ./build-native/ys-pc-patterns-tests "$RUNNER_TEMP/ys-pc-init-patterns.bin" "$RUNNER_TEMP/ys-pc-init-nt.bin"
+          ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-init-patterns.bin"
+          # PC-8: preserve M46/Z80 decomp as REFERENCE tooling only.
+          # Build source-only original cartridge locally; no ROM is shipped.
+          python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-16: independently match physical bank-2 $8307 EX DE,HL
+          # against the source-only full-cartridge build and Phase4 listing.
+          python3 native/tools/verify_pc16_sound_exchange.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-17 original bank2 PSG path: source byte and listing verification.
+          python3 native/tools/verify_pc17_psg_source.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-18: authentic bank2 $8947 indexed sound counter instruction bytes.
+          python3 native/tools/verify_pc18_sound_counter.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-19: original bank2 $84F1 indexed D/E pointer load provenance.
+          python3 native/tools/verify_pc19_sound_pointer.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-20: original bank2 sound-table dispatch source instructions.
+          python3 native/tools/verify_pc20_sound_table.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-21: verified bank2 sound indexed register writes/reads.
+          python3 native/tools/verify_pc21_sound_stores.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-22: bank2 indexed H/L bytes preserved, hardware meaning tested.
+          python3 native/tools/verify_pc22_indexed_hl.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-23 original bank2 indexed sound state-clearing store.
+          python3 native/tools/verify_pc23_sound_clear.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-24: original bank0 IY loop and static bank1 call provenance.
+          python3 native/tools/verify_pc24_iy_loop.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-9: validate authentic bank4 $807C collision predicate,
+          # three bank1 candidate callers, and 3968 original Z80 cases.
+          python3 native/tools/export_pc_collision.py --out "$RUNNER_TEMP/ys-pc9-collision.bin"
+          python3 native/tools/export_pc_collision.py --verify "$RUNNER_TEMP/ys-pc9-collision.bin"
+          python3 Ys/tools/bank04_crossbank_ledger.py --check
+          python3 Ys/tools/bank04_collision_trace.py "$RUNNER_TEMP/ys-pc8-source.sms" --check
+          ./build-native/ys-pc-collision-tests "$RUNNER_TEMP/ys-pc9-collision.bin"
+          # PC-11: prove entry $476C writes bank4 before three original
+          # collision calls. This remains CONDITIONAL on runtime entry.
+          python3 native/tools/verify_pc_collision_routes.py
+          ./build-native/ys-pc-collision-routes-tests "$RUNNER_TEMP/ys-pc9-collision.bin"
+          # PC-12: continue the ACTUAL source execution after verified
+          # M45 PC=$0C92, with natural CPU/IRQ/input. Observe but NEVER
+          # synthesize a scene or assume an unreachable collision event.
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc12-watch "$RUNNER_TEMP/ys-pc12-watch.json"
+          python3 native/tools/verify_pc12_watch.py "$RUNNER_TEMP/ys-pc12-watch.json"
+          # PC-15: source-only bank6 sprite producer opcode provenance.
+          # Continue real unchanged original CPU/VDP/IRQ state after M45
+          # and record C199/C210/C211 ONLY if physical bank6 is mapped.
+          python3 native/tools/verify_pc15_sprite_source.py
+          ./build-native/ys-pc-sprite-watch-tests
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc15-sprite-watch "$RUNNER_TEMP/ys-pc15-watch.json"
+          python3 native/tools/verify_pc15_sprite_watch.py "$RUNNER_TEMP/ys-pc15-watch.json"
+          # PC-25 separate opt-in 300k passive source research; legacy
+          # PC-12 and PC-15 observers and their 150k bounds are unchanged.
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc25-collision-watch "$RUNNER_TEMP/ys-pc25-extended.json" "$RUNNER_TEMP/ys-pc26-input.json"
+          python3 native/tools/verify_pc25_collision_watch.py "$RUNNER_TEMP/ys-pc25-extended.json"
+          # PC-26 uses the SAME untouched PC-25 CPU run for read-only
+          # verified Phase2 input/dispatch evidence, no artificial input.
+          python3 native/tools/verify_pc26_input_audit.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc26-input.json"
+          # PC-27: separate OPT-IN experimental button-1 pulse, armed by
+          # genuine $0CBD wait + $0773 sampler. Not game/Alpha evidence.
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc27-button-probe "$RUNNER_TEMP/ys-pc27-button.json"
+          python3 native/tools/verify_pc27_button_probe.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc27-button.json"
+          # PC-28: independently validate original $0CC2 ED 7B stack
+          # reload; the PC-27 source trace now continues past that opcode.
+          python3 native/tools/verify_pc28_selector_stack.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-29: original fixed-bank $0F8E/$0F9B RL C provenance.
+          python3 native/tools/verify_pc29_rl_c.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-30: immutable original bank0 $0FEC RR C and indexed arithmetic context.
+          python3 native/tools/verify_pc30_rr_c.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-31 source bank8 $23F18 store DE to $C1A1, observed at mapper slot2=8.
+          python3 native/tools/verify_pc31_bank8_pointer.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-32: original fixed-bank0 $265B ED 43 $C210 source pointer save.
+          python3 native/tools/verify_pc32_store_bc.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-33: separate source-armed controller continuation AFTER the
+          # authentic $0773 release IN executes; PC27 stays unchanged.
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc33-postrelease-watch "$RUNNER_TEMP/ys-pc33-postrelease.json"
+          python3 native/tools/verify_pc33_postrelease_watch.py "$RUNNER_TEMP/ys-pc33-postrelease.json"
+          # PC-34 separate 300k budget, SAME source-armed button press/release,
+          # no mapper/PC/WRAM forcing; watch for mapped sprite/collision calls.
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc34-extended-postrelease "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc35-video.json" "$RUNNER_TEMP/ys-pc36-sat.json"
+          python3 native/tools/verify_pc34_extended_postrelease.py "$RUNNER_TEMP/ys-pc34-postrelease.json"
+          # PC-35: separate read-only VDP/selector sidecar for the SAME
+          # original controller experiment and unchanged PC34 bound.
+          python3 native/tools/verify_pc35_video_dispatch.py "$RUNNER_TEMP/ys-pc35-video.json" "$RUNNER_TEMP/ys-pc34-postrelease.json"
+          # PC-36: original 64+128-byte Y/X-tile VRAM SAT transfer in
+          # same original controller-run; independent source SHA/listing.
+          python3 native/tools/verify_pc36_sat_upload.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc36-sat.json"
+          python3 -c 'import json,os,pathlib; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc12-watch.json"; v=json.loads(p.read_text()); print("PC-12 bounded result:", v["stop_reason"], "PC", v["stop_pc"], "calls", v["observed_collision_calls"])'
+          ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin"
+          ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin" --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin"
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc9-bad-collision.bin"
+          if ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-bad-collision.bin"; then
+            echo "PC-9 invalid collision source was accepted" >&2
+            exit 1
+          fi
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --vdp-at-m44 "$RUNNER_TEMP/ys-pc8-m44.vdp"
+          ./build-native/ys-pc-vdp-probe "$RUNNER_TEMP/ys-pc8-m44.vdp" "$RUNNER_TEMP/ys-pc-init-patterns.bin" "$RUNNER_TEMP/ys-pc-init-nt.bin" "$RUNNER_TEMP/ys-pc8-m44.ppm"
+          python3 -c 'import pathlib,os; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc8-m44.ppm"; b=p.read_bytes(); assert b[:15]==bytes([80,54,10,50,53,54,32,49,57,50,10,50,53,53,10]) and len(b)==147471, (p,len(b)); print("PASS PC-8 source M44 RGB framebuffer:",len(b),"bytes")'
+          ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-init-patterns.bin" --vdp-checkpoint "$RUNNER_TEMP/ys-pc8-m44.vdp"
+          printf 'bad' > "$RUNNER_TEMP/ys-pc8-bad.vdp"
+          if ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-init-patterns.bin" --vdp-checkpoint "$RUNNER_TEMP/ys-pc8-bad.vdp"; then
+            echo "PC-8 corrupt snapshot accepted" >&2
+            exit 1
+          fi
+          printf 'broken' > "$RUNNER_TEMP/ys-pc-bad-init-patterns.bin"
+          if ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --patterns "$RUNNER_TEMP/ys-pc-bad-init-patterns.bin"; then
+            echo "Corrupt source pattern asset was accepted" >&2
+            exit 1
+          fi
+          if ./build-native/ys-native-game --smoke --patterns "$RUNNER_TEMP/ys-pc-init-patterns.bin"; then
+            echo "Pattern renderer accepted missing name-table provenance" >&2
+            exit 1
+          fi
+          ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-init-nt.bin" --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin" --records "$RUNNER_TEMP/ys-pc-source-records.bin"
+          printf 'broken' > "$RUNNER_TEMP/ys-pc-bad-init-nt.bin"
+          if ./build-native/ys-native-game --smoke --nametable "$RUNNER_TEMP/ys-pc-bad-init-nt.bin"; then
+            echo "Corrupt initialization VRAM name-table was accepted" >&2
+            exit 1
+          fi
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid-scenes.bin"
+          if ./build-native/ys-native-game --smoke --scenes "$RUNNER_TEMP/ys-pc-invalid-scenes.bin"; then
+            echo "Invalid source scene directory was accepted" >&2
+            exit 1
+          fi
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid-records.bin"
+          if ./build-native/ys-native-game --smoke --records "$RUNNER_TEMP/ys-pc-invalid-records.bin"; then
+            echo "Invalid bank7 source record file was accepted" >&2
+            exit 1
+          fi
+          printf 'corrupt' > "$RUNNER_TEMP/ys-pc-invalid.bin"
+          if ./build-native/ys-native-game --smoke --tiles "$RUNNER_TEMP/ys-pc-invalid.bin"; then
+            echo "Invalid tile source was accepted" >&2
+            exit 1
+          fi
       - name: Verify cartridge startup only when explicitly requested
         if: ${{ (github.event_name == 'workflow_dispatch' && inputs.rom_trace) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[rom-check]')) }}
         run: |

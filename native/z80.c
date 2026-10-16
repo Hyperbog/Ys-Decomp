@@ -170,8 +170,8 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         return timed_condition(opcode,f_before) ? 17u : 10u; /* CALL cc */
     if ((opcode&0xC7u)==0xC2u) return 10u; /* JP cc */
     switch(opcode) {
-    case 0x00: case 0x07: case 0x08: case 0x0F:
-    case 0x2F: case 0xD9:
+    case 0x00: case 0x07: case 0x08: case 0x0F: case 0x1F:
+    case 0x2F: case 0xD9: case 0xEB: /* EX DE,HL */
     case 0xF3: case 0xFB: return 4u;
     case 0xCB: return (sub&7u)==6u ?
         ((sub&0xC0u)==0x40u ? 12u : 15u) : 8u; /* BIT/RES b,r */
@@ -180,6 +180,15 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0xE5: return 15u; /* PUSH IX/IY */
         case 0xE1: return 14u; /* POP IX/IY */
         case 0x21: return 14u; /* LD IX/IY,nn */
+        case 0x23: case 0x2B: return 10u; /* INC/DEC IX/IY */
+        case 0x46: case 0x4E: /* LD B/C,(IX/IY+d) */
+        case 0x56: case 0x5E: /* LD D/E,(IX/IY+d): bank2 $84F1 */
+        case 0x66: case 0x6E: /* LD H/L,(IX/IY+d), not index halves */
+        case 0x70: case 0x71: case 0x72: case 0x73:
+        case 0x74: case 0x75: case 0x77: /* indexed register stores */
+        case 0x7E: case 0x86: case 0x96: case 0xB6: return 19u; /* indexed memory */
+        case 0x34: return 23u; /* INC (IX/IY+d): read/modify/write */
+        case 0x36: return 19u; /* LD (IX/IY+d),n */
         case 0x09: case 0x19: case 0x29: case 0x39:
             return 15u;       /* ADD IX/IY,rr */
         case 0xCB: return 20u;/* BIT b,(IX/IY+d) */
@@ -191,7 +200,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0x0B: case 0x1B: case 0x2B: return 6u;
     case 0x22: case 0x2A: return 16u;
     case 0x32: case 0x3A: return 13u;
-    case 0xE6: case 0xF6: case 0xFE: return 7u;
+    case 0xC6: case 0xD6: case 0xE6: case 0xF6: case 0xFE: return 7u;
     case 0xC3: return 10u;
     case 0xE9: return 4u;
     case 0xC9: return 10u;
@@ -208,7 +217,9 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0xED:
         if (sub==0x56u) return 8u; /* IM 1 */
         if (sub==0x45u || sub==0x4Du) return 14u; /* RETN/RETI */
-        if (sub==0x73u) return 20u; /* LD (nn),SP */
+        if (sub==0x43u || sub==0x53u ||
+            sub==0x73u || sub==0x7Bu)
+            return 20u; /* LD (nn),BC/DE/SP; LD SP,(nn) */
         if (sub==0x6Fu) return 18u; /* RLD */
         if (sub==0xA0u || sub==0xA3u || sub==0xABu) return 16u;
         if (sub==0xB0u) return cpu->pc==start ? 21u : 16u; /* LDIR */
@@ -304,9 +315,41 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                            (cpu->a&(Z80_F_3|Z80_F_5)) | (prior&1u));
         break;
     }
+    case 0x1F: { /* RRA: old carry enters bit7; new carry=old bit0.
+                      Original bank2 $8191-$8194 executes 4 RRA. */
+        const uint8_t prior=cpu->a;
+        const uint8_t carry=cpu->f&Z80_F_C;
+        cpu->a=(uint8_t)((prior>>1)|(carry<<7));
+        cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
+                           (cpu->a&(Z80_F_3|Z80_F_5)) | (prior&1u));
+        break;
+    }
     case 0xCB: {
         uint8_t operation=fetch(cpu);
-        if ((operation&0xC0u)==0x40u) {
+        if ((operation&0xF8u)==0x10u) {
+            /* PC-29: fixed bank0 $0F8E/$0F9B CB 11, RL C.
+               Z80 RL r/(HL) shifts bit 7 into carry, prior carry
+               into bit 0; S,Z,P/V,5,3 from result; H,N cleared. */
+            unsigned reg=(unsigned)(operation&7u);
+            uint8_t prior=r8(cpu,reg);
+            uint8_t result=(uint8_t)((prior<<1)|(cpu->f&Z80_F_C));
+            if(!w8(cpu,reg,result)) goto fail; /* Fail closed ROM. */
+            cpu->f=(uint8_t)(sz53(result) |
+                (parity(result)?Z80_F_PV:0u) |
+                ((prior&0x80u)?Z80_F_C:0u));
+        } else if ((operation&0xF8u)==0x18u) {
+            /* PC-30: original bank0 $0FEC CB 19, RR C.
+               RR r/(HL): old carry to bit 7, bit 0 to carry;
+               S/Z/P/V/3/5 from result, H/N cleared. */
+            unsigned reg=(unsigned)(operation&7u);
+            uint8_t prior=r8(cpu,reg);
+            uint8_t result=(uint8_t)((prior>>1)|
+                                      ((cpu->f&Z80_F_C)<<7));
+            if(!w8(cpu,reg,result)) goto fail;
+            cpu->f=(uint8_t)(sz53(result) |
+                (parity(result)?Z80_F_PV:0u) |
+                ((prior&1u)?Z80_F_C:0u));
+        } else if ((operation&0xC0u)==0x40u) {
             uint8_t value=r8(cpu,operation&7u);
             cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,value);
         } else if ((operation&0xC0u)==0x80u) {
@@ -314,6 +357,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                uses CB B8 (RES 7,B) for interleaved VRAM RLE. */
             uint8_t value=(uint8_t)(r8(cpu,operation&7u) &
                                    ~(1u<<((operation>>3)&7u)));
+            if(!w8(cpu,operation&7u,value)) goto fail;
+        } else if ((operation&0xC0u)==0xC0u) {
+            /* Original $0AAD CB EB (SET 5,E) and $0AB5 CB F3
+               (SET 6,E). General CB SET b,r/(HL), flags unchanged.
+               Interpreter-only source validation, not PC gameplay. */
+            uint8_t value=(uint8_t)(r8(cpu,operation&7u) |
+                                   (1u<<((operation>>3)&7u)));
             if(!w8(cpu,operation&7u,value)) goto fail;
         } else {
             cpu->status=Z80_UNSUPPORTED;goto fail;
@@ -329,6 +379,10 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         exchange(&cpu->a,&cpu->a_alt);
         exchange(&cpu->f,&cpu->f_alt);
         break; /* EX AF,AF' */
+    case 0xEB: /* EX DE,HL: original physical bank 2 $8307. */
+        exchange(&cpu->d,&cpu->h);
+        exchange(&cpu->e,&cpu->l);
+        break; /* 4 T-states; AF, flags, stack and memory untouched. */
     case 0xD9:
         exchange(&cpu->b,&cpu->b_alt); exchange(&cpu->c,&cpu->c_alt);
         exchange(&cpu->d,&cpu->d_alt); exchange(&cpu->e,&cpu->e_alt);
@@ -343,6 +397,79 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             *index=pop16(cpu);
         } else if(sub==0x21) {
             *index=fetch16(cpu);
+        } else if(sub==0x23) {
+            /* Original bank0 $0DB2 FD 23: INC IY, flags unchanged. */
+            *index=(uint16_t)(*index+1u);
+        } else if(sub==0x2B) {
+            /* DEC IX/IY: 16-bit wrap, Z80 flags unaffected. */
+            *index=(uint16_t)(*index-1u);
+        } else if(sub==0x36) {
+            /* Original bank2 $88FF DD 36 07 00.
+               Index displacement precedes immediate data.
+               LD (IX/IY+d),n does not change any flags. */
+            int8_t displacement=(int8_t)fetch(cpu);
+            uint8_t data=fetch(cpu);
+            uint16_t at=(uint16_t)(*index+displacement);
+            if(!store(cpu,at,data)) goto fail;
+        } else if(sub==0x34 || sub==0x46 || sub==0x4E ||
+                  sub==0x56 || sub==0x5E || sub==0x66 ||
+                  sub==0x6E || sub==0x70 || sub==0x71 ||
+                  sub==0x72 || sub==0x73 || sub==0x74 ||
+                  sub==0x75 || sub==0x77 || sub==0x7E ||
+                  sub==0x86 || sub==0x96 || sub==0xB6) {
+            /* Original bank2: $84F1 LD E,(IX+3), $84F4 LD D,(IX+4),
+               $85D3 ADD A,(IX+5), $8947 INC (IX+11),
+               $894D SUB (IX+11),
+               $8A4B LD A,(IX+8), and $8A50 OR (IX+1).
+               Signed displacement, wrapping 16-bit effective address,
+               live SMS mapper and fail-closed ROM writes. */
+            int8_t displacement=(int8_t)fetch(cpu);
+            uint16_t addr=(uint16_t)(*index+displacement);
+            uint8_t value=ys_sms_bus_read(cpu->bus,addr);
+            if(sub==0x70 || sub==0x71 || sub==0x72 ||
+               sub==0x73 || sub==0x74 || sub==0x75 ||
+               sub==0x77) {
+                /* Original bank2 $8510/$8515 LD (IX+d),A,
+                   $8563/$8566 E/D and $8587/$858A L/H.
+                   Indexed-memory + H/L uses ordinary H/L, NOT
+                   IXH/IXL (Zilog CPU manual indexed operand rule).
+                   Failed ROM writes preserve flags and instructions. */
+                if(!store(cpu,addr,r8(cpu,sub&7u))) goto fail;
+            } else if(sub==0x34) {
+                /* INC (IX/IY+d) keeps carry; update flags only after
+                   a successful write (ROM is never patched). */
+                uint8_t next=(uint8_t)(value+1u);
+                if(!store(cpu,addr,next)) goto fail;
+                cpu->f=inc_flags(value,next,cpu->f&Z80_F_C);
+            } else if(sub==0x46) {
+                cpu->b=value; /* LD B,(IX/IY+d): flags unchanged. */
+            } else if(sub==0x4E) {
+                cpu->c=value; /* LD C,(IX/IY+d): flags unchanged. */
+            } else if(sub==0x56) {
+                cpu->d=value; /* LD D,(IX/IY+d): no flags changed. */
+            } else if(sub==0x5E) {
+                cpu->e=value; /* LD E,(IX/IY+d): no flags changed. */
+            } else if(sub==0x66) {
+                cpu->h=value; /* $89D4: LD H,(IX+d), NOT IXH. */
+            } else if(sub==0x6E) {
+                cpu->l=value; /* $89D1: LD L,(IX+d), NOT IXL. */
+            } else if(sub==0x7E) {
+                cpu->a=value; /* LD A,(IX/IY+d): flags unchanged. */
+            } else if(sub==0x86) {
+                /* Original bank2 $85D3: ADD A,(IX+5) */
+                uint8_t old=cpu->a;
+                unsigned full=(unsigned)old+value;
+                cpu->a=(uint8_t)full;
+                cpu->f=add8_flags(old,value,cpu->a,full);
+            } else if(sub==0x96) {
+                uint8_t old=cpu->a;
+                cpu->a=(uint8_t)(old-value);
+                cpu->f=sub_flags(old,value,cpu->a);
+            } else {
+                cpu->a=(uint8_t)(cpu->a|value);
+                cpu->f=(uint8_t)(sz53(cpu->a)|
+                                 (parity(cpu->a)?Z80_F_PV:0));
+            }
         } else if(sub==0x09 || sub==0x19 || sub==0x29 || sub==0x39) {
             uint16_t rhs=sub==0x09?pair(cpu->b,cpu->c):
                          sub==0x19?pair(cpu->d,cpu->e):
@@ -404,6 +531,20 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     case 0xF6: cpu->a=(uint8_t)(cpu->a | fetch(cpu));
         cpu->f=(uint8_t)(sz53(cpu->a)|(parity(cpu->a)?Z80_F_PV:0));
         break;
+    case 0xC6: { /* ADD A,n. Original bank2 PSG $8A53: C6 10. */
+        uint8_t rhs=fetch(cpu), old=cpu->a;
+        unsigned full=(unsigned)old+rhs;
+        cpu->a=(uint8_t)full;
+        cpu->f=add8_flags(old,rhs,cpu->a,full);
+        break;
+    }
+    case 0xD6: { /* SUB n. Original bank2 $8204: D6 81;
+                     original Z80 S flag controls RET M at $8206. */
+        uint8_t rhs=fetch(cpu),old=cpu->a;
+        cpu->a=(uint8_t)(old-rhs);
+        cpu->f=sub_flags(old,rhs,cpu->a);
+        break;
+    }
     case 0xBE: {
         uint8_t rhs=ys_sms_bus_read(cpu->bus,pair(cpu->h,cpu->l));
         cpu->f=sub_flags(cpu->a,rhs,(uint8_t)(cpu->a-rhs));break;
@@ -493,6 +634,38 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         if (sub==0x45 || sub==0x4D) {
             cpu->pc=pop16(cpu);
             if(sub==0x45) cpu->iff1=cpu->iff2; /* RETN */
+            break;
+        }
+        if (sub==0x7Bu) {
+            /* PC-28: original fixed bank0 $0CC2 ED 7B 2E C0.
+               LD SP,(nn): fetch 16-bit pointer, read through SMS bus.
+               Address wraps at $FFFF; all flags and registers except
+               SP are preserved, 20 nominal Z80 T-states. */
+            uint16_t source=fetch16(cpu);
+            uint8_t lo=ys_sms_bus_read(cpu->bus,source);
+            uint8_t hi=ys_sms_bus_read(cpu->bus,(uint16_t)(source+1u));
+            cpu->sp=pair(hi,lo);
+            break;
+        }
+        if (sub==0x43u) {
+            /* PC-32: original fixed bank0 $265B ED 43 10 C2.
+               LD (nn),BC; writes low C then high B to SMS bus.
+               Nominal 20 T, flags and all registers unaffected. */
+            uint16_t dest=fetch16(cpu);
+            if(!store(cpu,dest,cpu->c) ||
+               !store(cpu,(uint16_t)(dest+1u),cpu->b))
+                goto fail;
+            break;
+        }
+        if (sub==0x53u) {
+            /* PC-31: source physical bank8 $23F18 ED 53 A1 C1.
+               LD (nn),DE stores E low and D high, 20 nominal T,
+               mapper-qualified address wrap and fail-closed ROM writes.
+               No register or flag changes. */
+            uint16_t dest=fetch16(cpu);
+            if(!store(cpu,dest,cpu->e) ||
+               !store(cpu,(uint16_t)(dest+1u),cpu->d))
+                goto fail;
             break;
         }
         if (sub==0x73u) { /* LD (nn),SP: little-endian, flags unchanged. */
