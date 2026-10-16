@@ -1186,7 +1186,7 @@ static void test_pc30_rr_register_memory_and_guard(void) {
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
     assert(cpu.b==0x80u && cpu.f==(Z80_F_S|Z80_F_C));
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
-    assert(cpu.e==0x82u && cpu.f==Z80_F_S);
+    assert(cpu.e==0x82u && cpu.f==(Z80_F_S|Z80_F_PV));
     assert(ys_z80_step(&cpu)==Z80_RUNNING);
     assert(cpu.a==0x01u && cpu.f==0u &&
            cpu.pc==6u && cpu.total_tstates==24u);
