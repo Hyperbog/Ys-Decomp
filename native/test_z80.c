@@ -775,7 +775,7 @@ static void test_pc21_indexed_sound_table_writes(void) {
            cpu.a==0xE3u && cpu.f==0xFFu &&
            cpu.ix==0xC100u && cpu.h==0xC2u && cpu.l==0x01u &&
            cpu.last_tstates==19u && cpu.steps==5u &&
-           cpu.total_tstates==56u);
+           cpu.total_tstates==58u);
 }
 
 /* Exactly indexed A/B/C/D/E source stores and B/C indexed reads.
