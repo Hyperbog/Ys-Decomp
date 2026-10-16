@@ -10,6 +10,118 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+/* PC-26 source-only fixed-bank input/selector observation.
+   This is a passive audit of known Phase2 sampler opcodes, never
+   an input injection, menu-state inference or game progression. */
+enum { PC26_SITES=6 };
+static const uint16_t pc26_sites[PC26_SITES]={
+    0x0126u,0x012Du,0x0773u,0x077Du,0x0780u,0x0138u
+};
+typedef struct {
+    uint64_t count, first_step, last_step;
+    uint8_t first_selector, last_selector, last_pressed, last_edges;
+} Pc26Site;
+typedef struct {
+    Pc26Site sites[PC26_SITES];
+    uint64_t samples, selector_changes, nonzero_pressed, nonzero_edges;
+    uint8_t initial_selector, initial_pressed, initial_edges, last_selector;
+} Pc26Audit;
+static bool pc26_sample(Pc26Audit *out,const YsSmsRuntime *rt) {
+    if(!out || !rt || !rt->cpu || !rt->cpu->bus ||
+       !rt->cpu->input || !rt->cpu->vdp ||
+       out->samples==UINT64_MAX) return false;
+    const YsZ80 *cpu=rt->cpu;
+    uint8_t selector=ys_sms_bus_read(cpu->bus,0xC01Fu);
+    uint8_t pressed=ys_sms_bus_read(cpu->bus,0xC01Bu);
+    uint8_t edges=ys_sms_bus_read(cpu->bus,0xC01Cu);
+    if(out->samples==0u) {
+        out->initial_selector=selector;
+        out->initial_pressed=pressed;
+        out->initial_edges=edges;
+    } else if(selector!=out->last_selector) {
+        ++out->selector_changes;
+    }
+    out->last_selector=selector;
+    if(pressed!=0u) ++out->nonzero_pressed;
+    if(edges!=0u) ++out->nonzero_edges;
+    ++out->samples;
+    for(unsigned i=0;i<PC26_SITES;++i) {
+        if(cpu->pc!=pc26_sites[i]) continue;
+        Pc26Site *p=&out->sites[i];
+        if(p->count==0u) {
+            p->first_step=cpu->steps;
+            p->first_selector=selector;
+        }
+        if(p->count!=UINT64_MAX) ++p->count;
+        p->last_step=cpu->steps;
+        p->last_selector=selector;
+        p->last_pressed=pressed;
+        p->last_edges=edges;
+        break;
+    }
+    return true;
+}
+static bool pc26_write(FILE *file,const Pc26Audit *audit,
+                       const YsSmsRuntime *rt,
+                       const char *reason,unsigned long executed) {
+    if(!file || !audit || !audit->samples || !rt || !rt->cpu ||
+       !rt->cpu->bus || !rt->cpu->input || !rt->cpu->vdp ||
+       !reason) return false;
+    const YsZ80 *cpu=rt->cpu;
+    const YsSmsInput *input=cpu->input;
+    if(fprintf(file,
+       "{\n  \"schema\":\"ys-pc26-original-input-audit-v1\",\n"
+       "  \"start_pc\":\"0C92\",\"stop_reason\":\"%s\",\n"
+       "  \"continued_steps\":%lu,\"samples\":%llu,\n"
+       "  \"stop_pc\":\"%04X\",\"stop_slot1\":%u,\"stop_slot2\":%u,\n"
+       "  \"stop_irq\":%llu,\"stop_vblank\":%llu,\n"
+       "  \"input_dc\":%u,\"input_dd\":%u,"
+       "\"reads_dc\":%llu,\"reads_dd\":%llu,\n"
+       "  \"initial_selector\":%u,\"last_selector\":%u,"
+       "\"initial_pressed\":%u,\"initial_edges\":%u,\n"
+       "  \"last_pressed\":%u,\"last_edges\":%u,\n"
+       "  \"selector_changes\":%llu,\"nonzero_pressed_samples\":%llu,"
+       "\"nonzero_edge_samples\":%llu,\n"
+       "  \"vram_writes\":%llu,\"cram_writes\":%llu,"
+       "\"display_reg1\":%u,\n  \"sites\":[\n",
+       reason,executed,(unsigned long long)audit->samples,cpu->pc,
+       (unsigned)cpu->bus->mapped_bank[1],
+       (unsigned)cpu->bus->mapped_bank[2],
+       (unsigned long long)rt->recognized_irqs,
+       (unsigned long long)rt->clock.vblank_events,
+       (unsigned)input->dc,(unsigned)input->dd,
+       (unsigned long long)input->reads_dc,
+       (unsigned long long)input->reads_dd,
+       (unsigned)audit->initial_selector,
+       (unsigned)audit->last_selector,
+       (unsigned)audit->initial_pressed,
+       (unsigned)audit->initial_edges,
+       (unsigned)ys_sms_bus_read(cpu->bus,0xC01Bu),
+       (unsigned)ys_sms_bus_read(cpu->bus,0xC01Cu),
+       (unsigned long long)audit->selector_changes,
+       (unsigned long long)audit->nonzero_pressed,
+       (unsigned long long)audit->nonzero_edges,
+       (unsigned long long)cpu->vdp->vram_writes,
+       (unsigned long long)cpu->vdp->cram_writes,
+       (unsigned)cpu->vdp->registers[1])<0) return false;
+    for(unsigned i=0;i<PC26_SITES;++i) {
+        const Pc26Site *p=&audit->sites[i];
+        if(fprintf(file,
+          "    {\"pc\":\"%04X\",\"count\":%llu,"
+          "\"first_step\":%llu,\"last_step\":%llu,"
+          "\"first_selector\":%u,\"last_selector\":%u,"
+          "\"last_pressed\":%u,\"last_edges\":%u}%s\n",
+          pc26_sites[i],(unsigned long long)p->count,
+          (unsigned long long)p->first_step,
+          (unsigned long long)p->last_step,
+          (unsigned)p->first_selector,(unsigned)p->last_selector,
+          (unsigned)p->last_pressed,(unsigned)p->last_edges,
+          i+1u<PC26_SITES?",":"")<0) return false;
+    }
+    return fputs("  ]\n}\n",file)>=0 && ferror(file)==0;
+}
+
 static int fail(const char *message, const YsSmsRuntime *rt) {
     const YsZ80 *cpu=rt->cpu;
     fprintf(stderr,"FAIL timed source-ROM %s: steps=%llu PC=$%04X"
@@ -201,9 +313,10 @@ int main(int argc,char **argv) {
            strcmp(argv[2],"--vdp-at-m44")==0 ||
            strcmp(argv[2],"--pc12-watch")==0 ||
            strcmp(argv[2],"--pc15-sprite-watch")==0 ||
-           strcmp(argv[2],"--pc25-collision-watch")==0)))) {
+           strcmp(argv[2],"--pc25-collision-watch")==0))) ||
+          (argc==5 && strcmp(argv[2],"--pc25-collision-watch")==0)) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
-              "Default stops at source $0C92; --pc12-watch/--pc15-sprite-watch use the original 150k bounds; --pc25-collision-watch is separate 300k read-only research (not gameplay proof).\n",
+              "Default stops at source $0C92; PC12/15 retain 150k bounds; PC25 accepts a fifth path for an optional read-only PC26 input audit.\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1678,16 +1791,23 @@ int main(int argc,char **argv) {
         else
             puts("BLOCKED PC-15: no original mapped bank6 sprite"
                  " producer observed; no original player/scene proof");
-    } else if(argc==4 && strcmp(argv[2],"--pc25-collision-watch")==0) {
+    } else if((argc==4 || argc==5) &&
+              strcmp(argv[2],"--pc25-collision-watch")==0) {
         /* PC-25 is a SEPARATE opt-in research bound, not a change to
            PC-12/15 regression observers, original ROM or test oracles.
            Keep source CPU/IRQ/controller/RAM/mapper untouched. */
         enum { PC25_STEPS=300000u,PC25_EXTRA_VBLANKS=120u };
         const uint64_t start_blank=runtime.clock.vblank_events;
         YsPcSourceWatch watch={0};
+        Pc26Audit audit={0};
+        const bool audit_enabled=(argc==5);
         const char *why="budget";
         unsigned long steps=0ul;
         for(;steps<PC25_STEPS;++steps) {
+            if(audit_enabled && !pc26_sample(&audit,&runtime)) {
+                fputs("PC-26 invalid read-only input observation\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
             if(!ys_pc_source_watch_sample(&watch,&runtime)) {
                 fputs("PC-25 invalid read-only collision observer state\n",stderr);
                 free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
@@ -1710,6 +1830,28 @@ int main(int argc,char **argv) {
         if(!ok) {
             fputs("PC-25 cannot write extended collision observation\n",stderr);
             free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        if(audit_enabled) {
+            FILE *audit_file=fopen(argv[4],"wb");
+            bool audit_ok=audit_file &&
+                pc26_write(audit_file,&audit,&runtime,why,steps);
+            if(audit_file && fclose(audit_file)!=0) audit_ok=false;
+            if(!audit_ok) {
+                fputs("PC-26 cannot write read-only input report\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-26 original input sampler audit:"
+                   " sites_0773=%llu reads_DC=%llu reads_DD=%llu"
+                   " selector_changes=%llu pressed_samples=%llu"
+                   " C01F=$%02X C01B=$%02X C01C=$%02X\n",
+                   (unsigned long long)audit.sites[2].count,
+                   (unsigned long long)input.reads_dc,
+                   (unsigned long long)input.reads_dd,
+                   (unsigned long long)audit.selector_changes,
+                   (unsigned long long)audit.nonzero_pressed,
+                   (unsigned)ys_sms_bus_read(bus,0xC01Fu),
+                   (unsigned)ys_sms_bus_read(bus,0xC01Bu),
+                   (unsigned)ys_sms_bus_read(bus,0xC01Cu));
         }
         printf("PC-25 extended original source collision research:"
                " reason=%s continuation_steps=%lu PC=$%04X"
