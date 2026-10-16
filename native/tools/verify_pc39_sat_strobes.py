@@ -36,12 +36,12 @@ def verify_original_opcodes(source):
         expect=bytes.fromhex(raw)
         assert rom[pos:pos+len(expect)]==expect,(hex(pos),"original ROM")
     listing=(ROOT/"Ys/phase6/code.lst").read_text(encoding="utf-8")
-    assert len(re.findall(r"^00AA1\\s+0AA1\\s+32\\s+00\\s+DD"
-                          r"\\s+ld \\(\\$DD00\\),a\\s*$",
+    assert len(re.findall(r"^00AA1\s+0AA1\s+32\s+00\s+DD"
+                          r"\s+ld \(\$DD00\),a\s*$",
                           listing,re.I|re.M))==1
     asm=(ROOT/"Ys/src/wholebank00/bank00_complete.asm").read_text(encoding="utf-8")
-    assert asm.count("    ld hl,$C010\\n    ld de,$C011\\n"
-                     "    ld bc,$1E4F\\n    ld (hl),$00\\n    ldir")==1
+    assert asm.count("    ld hl,$C010\n    ld de,$C011\n"
+                     "    ld bc,$1E4F\n    ld (hl),$00\n    ldir")==1
 
 def validate(source, output, pc34, pc36, pc37, pc38):
     verify_original_opcodes(source)
