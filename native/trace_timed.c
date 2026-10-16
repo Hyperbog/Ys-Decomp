@@ -11,6 +11,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* PC-37 fingerprints read-only VDP state and its rendered RGB snapshot. */
+static uint32_t pc37_crc32(const uint8_t *p,size_t count) {
+    uint32_t crc=0xFFFFFFFFu;
+    for(size_t i=0;i<count;++i) {
+        crc^=p[i];
+        for(unsigned bit=0;bit<8u;++bit)
+            crc=(crc>>1u)^(0xEDB88320u&(0u-(crc&1u)));
+    }
+    return ~crc;
+}
+
 
 /* PC-26 source-only fixed-bank input/selector observation.
    This is a passive audit of known Phase2 sampler opcodes, never
@@ -321,7 +332,7 @@ int main(int argc,char **argv) {
           (argc==5 &&
            (strcmp(argv[2],"--pc25-collision-watch")==0 ||
             strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
-          (argc==6 &&
+          ((argc==6 || argc==8) &&
            strcmp(argv[2],"--pc34-extended-postrelease")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
               "PC12/15 use 150k idle input; PC25 adds a 300k idle-only audit; PC27 is the source-armed button1 probe; PC33 runs 150k post-M45, PC34 separately extends to 300k after genuine release. Neither proves gameplay.\n",
@@ -1880,7 +1891,7 @@ int main(int argc,char **argv) {
               (strcmp(argv[2],"--pc27-button-probe")==0 ||
                strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
-              ((argc==5 || argc==6) &&
+              ((argc==5 || argc==6 || argc==8) &&
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
@@ -1896,7 +1907,16 @@ int main(int argc,char **argv) {
         const bool extended=
             strcmp(argv[2],"--pc34-extended-postrelease")==0;
         const bool video_audit=extended && argc>=5;
-        const bool upload_audit=extended && argc==6;
+        const bool upload_audit=extended && argc>=6;
+        const bool frame_audit=extended && argc==8;
+        /* Captured after the SECOND natural $053F return for each upload;
+           there are no writes back into the running source machine. */
+        YsSmsVdp pc37_vdp={0};
+        unsigned pc37_captures=0u,pc37_enabled=0u;
+        bool pc37_have=false,pc37_selected_enabled=false;
+        unsigned long pc37_step=0ul;
+        uint64_t pc37_irq=0u,pc37_vblank=0u;
+        uint8_t pc37_slot2=0u,pc37_selector=0u;
         /* PC-35 independently samples the exact same source CPU run:
            controller state and PC/WRAM/VDP/mapper are never modified. */
         uint64_t display_enabled_samples=0u,display_transitions=0u;
@@ -1923,6 +1943,7 @@ int main(int argc,char **argv) {
         uint64_t press_step=0u,release_step=0u,mode2_step=0u;
         unsigned edge_10_hits=0u;
         for(;steps<step_budget;++steps) {
+            const unsigned pc37_prev_completed=upload.completed;
             if(!ys_pc_source_watch_sample(&collision,&runtime) ||
                (postrelease && !ys_pc_sprite_watch_sample(&sprite,&runtime)) ||
                (upload_audit && !ys_pc_sprite_upload_watch_sample(&upload,&runtime))) {
@@ -1930,6 +1951,32 @@ int main(int argc,char **argv) {
                 free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
             }
             const uint8_t selector=ys_sms_bus_read(bus,0xC01Fu);
+            if(frame_audit && upload.completed!=pc37_prev_completed) {
+                /* PC-36 proved this event completes exactly 64+128 OUTI;
+                   take a full VDP snapshot without changing the interpreter. */
+                if(upload.completed!=pc37_prev_completed+1u ||
+                   cpu.pc!=0x053Fu || pc37_captures==UINT32_MAX) {
+                    fputs("PC-37 invalid completion sequence\n",stderr);
+                    free(rom);free(bus);free(vdp);free(sound);
+                    return EXIT_FAILURE;
+                }
+                ++pc37_captures;
+                const bool enabled=(vdp->registers[0]&4u)!=0u &&
+                                   (vdp->registers[1]&0x40u)!=0u;
+                if(enabled) ++pc37_enabled;
+                /* Prefer the latest Mode-4 display-enabled sample, or
+                   the latest upload if no such sample was observed. */
+                if(enabled || pc37_enabled==0u) {
+                    pc37_vdp=*vdp;
+                    pc37_have=true;
+                    pc37_selected_enabled=enabled;
+                    pc37_step=steps;
+                    pc37_irq=runtime.recognized_irqs;
+                    pc37_vblank=runtime.clock.vblank_events;
+                    pc37_slot2=bus->mapped_bank[2];
+                    pc37_selector=selector;
+                }
+            }
             if(video_audit) {
                 const uint8_t visible=(uint8_t)
                     ((vdp->registers[1] & 0x40u)!=0u);
@@ -1992,6 +2039,73 @@ int main(int argc,char **argv) {
                 why="unsupported";break;
             }
             if(execute_release) release_sampled=true;
+        }
+        if(frame_audit) {
+            if(!pc37_have || pc37_captures!=upload.completed) {
+                fputs("PC-37 missing original complete SAT snapshot\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            uint8_t *rgb=malloc(YS_SMS_RGB_BYTES);
+            YsSmsFrameStats stats={0};
+            bool frame_ok=rgb &&
+                ys_sms_video_render(&pc37_vdp,rgb,YS_SMS_RGB_BYTES,&stats);
+            FILE *frame=frame_ok?fopen(argv[6],"wb"):NULL;
+            if(!frame) frame_ok=false;
+            if(frame_ok &&
+               !ys_sms_video_write_ppm(frame,rgb,YS_SMS_RGB_BYTES))
+                frame_ok=false;
+            if(frame && fclose(frame)!=0) frame_ok=false;
+            FILE *metadata=frame_ok?fopen(argv[7],"wb"):NULL;
+            if(!metadata) frame_ok=false;
+            if(frame_ok) {
+                const uint8_t *reg=pc37_vdp.registers;
+                frame_ok= fprintf(metadata,
+                    "{\n"
+                    " \"schema\":\"ys-pc37-original-vdp-frame-v1\",\n"
+                    " \"source\":\"pc34-same-run\","
+                    "\"continued_steps\":%lu,\n"
+                    " \"stop_pc\":\"%04X\",\"stop_irq\":%llu,"
+                    "\"stop_vblank\":%llu,\n"
+                    " \"captures\":%u,\"completed\":%u,"
+                    "\"display_enabled_captures\":%u,\n"
+                    " \"selected_pc\":\"053F\","
+                    "\"selected_step\":%lu,"
+                    "\"selected_irq\":%llu,\"selected_vblank\":%llu,\n"
+                    " \"selected_slot2\":%u,\"selected_selector\":%u,"
+                    "\"selected_display_enabled\":%s,\n"
+                    " \"reg0\":%u,\"reg1\":%u,"
+                    "\"reg5\":%u,\"reg6\":%u,\n"
+                    " \"vram_crc32\":%u,\"cram_crc32\":%u,"
+                    "\"registers_crc32\":%u,\"rgb_crc32\":%u,\n"
+                    " \"sprite_overflow_lines\":%u,"
+                    "\"sprite_collision_pixels\":%u\n}\n",
+                    steps,cpu.pc,
+                    (unsigned long long)runtime.recognized_irqs,
+                    (unsigned long long)runtime.clock.vblank_events,
+                    pc37_captures,upload.completed,pc37_enabled,
+                    pc37_step,(unsigned long long)pc37_irq,
+                    (unsigned long long)pc37_vblank,
+                    (unsigned)pc37_slot2,(unsigned)pc37_selector,
+                    pc37_selected_enabled?"true":"false",
+                    (unsigned)reg[0],(unsigned)reg[1],
+                    (unsigned)reg[5],(unsigned)reg[6],
+                    pc37_crc32(pc37_vdp.vram,YS_VRAM_BYTES),
+                    pc37_crc32(pc37_vdp.cram,YS_CRAM_BYTES),
+                    pc37_crc32(reg,YS_VDP_REGISTERS),
+                    pc37_crc32(rgb,YS_SMS_RGB_BYTES),
+                    stats.sprite_overflow_lines,
+                    stats.sprite_collision_pixels)>0;
+            }
+            if(metadata && fclose(metadata)!=0) frame_ok=false;
+            free(rgb);
+            if(!frame_ok) {
+                fputs("PC-37 cannot write source VDP snapshot\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-37 passive VDP frame: SAT=%u display_enabled=%u"
+                   " selected_step=%lu selected_enabled=%u\n",
+                   pc37_captures,pc37_enabled,pc37_step,
+                   (unsigned)pc37_selected_enabled);
         }
         if(upload_audit) {
             FILE *upload_file=fopen(argv[5],"wb");
