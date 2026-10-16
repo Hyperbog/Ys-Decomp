@@ -20,6 +20,14 @@ bool ys_sms_bus_init(YsSmsBus *bus, const uint8_t *rom, size_t rom_length) {
     return true;
 }
 
+bool ys_sms_bus_set_wram_hook(YsSmsBus *bus,YsSmsWramWriteHook hook,
+                             void *user) {
+    if(!bus || (hook && !user) || (!hook && user)) return false;
+    bus->wram_hook=hook;
+    bus->wram_hook_user=user;
+    return true;
+}
+
 uint8_t ys_sms_bus_read(const YsSmsBus *bus, uint16_t address) {
     if (address >= 0xC000u) {
         if (bus->mapper_control & 0x10u)
@@ -48,8 +56,14 @@ bool ys_sms_bus_write(YsSmsBus *bus, uint16_t address, uint8_t value) {
     /* Mapper register writes ALSO update the visible RAM mirror. */
     if (bus->mapper_control & 0x10u)
         bus->cart_ram[address - 0xC000u] = value;
-    else
-        bus->wram[address & 0x1FFFu] = value;
+    else {
+        uint16_t physical=(uint16_t)(address & 0x1FFFu);
+        uint8_t before=bus->wram[physical];
+        bus->wram[physical]=value;
+        if(bus->wram_hook)
+            bus->wram_hook(bus->wram_hook_user,address,physical,
+                           before,value);
+    }
 
     if (address == 0xFFFCu) {
         bus->mapper_control = value;

@@ -8,6 +8,7 @@
 #include "pc_sprite_watch.h"
 #include "pc_sprite_upload_watch.h"
 #include "pc_sat_provenance.h"
+#include "pc_sat_strobes.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -333,7 +334,7 @@ int main(int argc,char **argv) {
           (argc==5 &&
            (strcmp(argv[2],"--pc25-collision-watch")==0 ||
             strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
-          ((argc==6 || argc==8 || argc==9) &&
+          ((argc==6 || argc==8 || argc==9 || argc==10) &&
            strcmp(argv[2],"--pc34-extended-postrelease")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
               "PC12/15 use 150k idle input; PC25 adds a 300k idle-only audit; PC27 is the source-armed button1 probe; PC33 runs 150k post-M45, PC34 separately extends to 300k after genuine release. Neither proves gameplay.\n",
@@ -371,6 +372,18 @@ int main(int argc,char **argv) {
     ys_z80_attach_input(&cpu,&input);
     YsSmsRuntime runtime;
     if(!ys_sms_runtime_bind(&runtime,&cpu,YS_SMS_NTSC)) {
+        free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+    }
+    /* PC-39 records ALL actual original Z80 SAT WRAM stores from reset
+       through M45, then through the existing PC-34 300k-step input run.
+       Opt-in only, no change to bus writes or CPU execution. */
+    const bool pc39_mode=(argc==10 &&
+        strcmp(argv[2],"--pc34-extended-postrelease")==0);
+    YsPcSatStrobeAudit pc39={0};
+    pc39.cpu=&cpu;
+    if(pc39_mode &&
+       !ys_sms_bus_set_wram_hook(bus,ys_pc_sat_strobes_hook,&pc39)) {
+        fputs("PC-39 failed to attach passive WRAM strobe observer\n",stderr);
         free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
     }
     unsigned long iterations=0;
@@ -1892,7 +1905,7 @@ int main(int argc,char **argv) {
               (strcmp(argv[2],"--pc27-button-probe")==0 ||
                strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
-              ((argc==5 || argc==6 || argc==8 || argc==9) &&
+              ((argc==5 || argc==6 || argc==8 || argc==9 || argc==10) &&
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
@@ -1911,7 +1924,11 @@ int main(int argc,char **argv) {
         const bool video_audit=extended && argc>=5;
         const bool upload_audit=extended && argc>=6;
         const bool frame_audit=extended && argc>=8;
-        const bool provenance_audit=extended && argc==9;
+        const bool provenance_audit=extended && argc>=9;
+        if(pc39_mode && !ys_pc_sat_strobes_set_phase(&pc39,1u)) {
+            fputs("PC-39 cannot enter post-M45 observation phase\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
         /* Captured after the SECOND natural $053F return for each upload;
            there are no writes back into the running source machine. */
         YsSmsVdp pc37_vdp={0};
@@ -2052,6 +2069,23 @@ int main(int argc,char **argv) {
                 why="unsupported";break;
             }
             if(execute_release) release_sampled=true;
+        }
+        if(pc39_mode) {
+            FILE *strobe=fopen(argv[9],"wb");
+            bool ok=strobe && ys_pc_sat_strobes_write(strobe,&pc39,
+                                                       &runtime,why,steps);
+            if(strobe && fclose(strobe)!=0) ok=false;
+            if(!ok) {
+                fputs("PC-39 cannot write source WRAM strobe audit\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-39 actual source SAT WRAM stores:"
+                   " pre=%llu (same=%llu) post=%llu (same=%llu)"
+                   " source-sites=%u\n",
+                   (unsigned long long)pc39.count[0],
+                   (unsigned long long)pc39.same[0],
+                   (unsigned long long)pc39.count[1],
+                   (unsigned long long)pc39.same[1],pc39.site_count);
         }
         if(provenance_audit) {
             FILE *file=fopen(argv[8],"wb");

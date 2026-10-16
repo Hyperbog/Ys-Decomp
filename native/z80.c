@@ -129,7 +129,10 @@ bool ys_z80_irq(YsZ80 *cpu) {
         return false;
     /* IM 1: maskable interrupt acknowledges IFF1, vectors to $0038.
        IFF2 is preserved for RETN/NMI semantics. */
-    if (!push16(cpu,cpu->pc)) {
+    cpu->irq_write_active=true;
+    bool pushed=push16(cpu,cpu->pc);
+    cpu->irq_write_active=false;
+    if(!pushed) {
         cpu->fault_pc=cpu->pc;
         return false;
     }
@@ -233,6 +236,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     if (!cpu || !cpu->bus) return Z80_UNSUPPORTED;
     if (cpu->status != Z80_RUNNING) return cpu->status;
     uint16_t start = cpu->pc;
+    /* Latch physical opcode provenance before any operand fetch or
+       mapper side effect; passive WRAM callbacks may inspect it. */
+    cpu->instruction_pc=start;
+    cpu->instruction_bank=(uint8_t)(
+        start>=0xC000u ? 255u :
+        (start>=0x8000u && (cpu->bus->mapper_control & 8u)) ? 254u :
+        start<0x0400u ? 0u : cpu->bus->mapped_bank[start>>14u]);
     cpu->last_tstates=0u;
     uint8_t f_before=cpu->f, b_before=cpu->b;
     uint8_t opcode = fetch(cpu);

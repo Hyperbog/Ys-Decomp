@@ -12,7 +12,14 @@ enum {
     YS_CART_RAM_BYTES = 32 * 1024
 };
 
+/* Invoked only for successful console-WRAM stores. The hook is an
+   observer: it must never change the machine or suppress the write. */
+typedef void (*YsSmsWramWriteHook)(void *user,uint16_t logical_address,
+                                    uint16_t physical_offset,
+                                    uint8_t before,uint8_t after);
 typedef struct {
+    YsSmsWramWriteHook wram_hook;
+    void *wram_hook_user;
     const uint8_t *rom;             /* Caller owns immutable 256 KiB image. */
     uint8_t wram[YS_WRAM_BYTES];
     uint8_t cart_ram[YS_CART_RAM_BYTES];
@@ -21,6 +28,9 @@ typedef struct {
     uint8_t mapped_bank[3];         /* Effective banks, including bank shift. */
 } YsSmsBus;
 
+/* Attach only to an initialized bus. Passing (NULL,NULL) detaches. */
+bool ys_sms_bus_set_wram_hook(YsSmsBus *bus,YsSmsWramWriteHook hook,
+                             void *user);
 /* In-memory ROM ownership remains with caller; does not read files. */
 bool ys_sms_bus_init(YsSmsBus *bus, const uint8_t *rom, size_t rom_length);
 uint8_t ys_sms_bus_read(const YsSmsBus *bus, uint16_t address);
