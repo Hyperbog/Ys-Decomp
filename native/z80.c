@@ -217,7 +217,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0xED:
         if (sub==0x56u) return 8u; /* IM 1 */
         if (sub==0x45u || sub==0x4Du) return 14u; /* RETN/RETI */
-        if (sub==0x73u) return 20u; /* LD (nn),SP */
+        if (sub==0x73u || sub==0x7Bu) return 20u; /* LD (nn),SP / LD SP,(nn) */
         if (sub==0x6Fu) return 18u; /* RLD */
         if (sub==0xA0u || sub==0xA3u || sub==0xABu) return 16u;
         if (sub==0xB0u) return cpu->pc==start ? 21u : 16u; /* LDIR */
@@ -609,6 +609,17 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         if (sub==0x45 || sub==0x4D) {
             cpu->pc=pop16(cpu);
             if(sub==0x45) cpu->iff1=cpu->iff2; /* RETN */
+            break;
+        }
+        if (sub==0x7Bu) {
+            /* PC-28: original fixed bank0 $0CC2 ED 7B 2E C0.
+               LD SP,(nn): fetch 16-bit pointer, read through SMS bus.
+               Address wraps at $FFFF; all flags and registers except
+               SP are preserved, 20 nominal Z80 T-states. */
+            uint16_t source=fetch16(cpu);
+            uint8_t lo=ys_sms_bus_read(cpu->bus,source);
+            uint8_t hi=ys_sms_bus_read(cpu->bus,(uint16_t)(source+1u));
+            cpu->sp=pair(hi,lo);
             break;
         }
         if (sub==0x73u) { /* LD (nn),SP: little-endian, flags unchanged. */

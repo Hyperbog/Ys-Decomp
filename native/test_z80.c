@@ -993,6 +993,76 @@ static void test_pc24_original_fixedbank_pointer_loop_step(void) {
     assert(ys_sms_bus_read(&bus,0xC161u)==0u);
 }
 
+
+/* PC-28 original $0CC2: ED 7B 2E C0 LD SP,($C02E).
+   WRAM is a controlled CPU fixture, not an original runtime snapshot.
+   Source suffix $0CC6-$0CCB writes selector $02 and jumps to $0B56. */
+static void test_pc28_original_button_dispatch_transition(void) {
+    setup();
+    LOAD(0,0xED,0x7B,0x2E,0xC0,
+           0x3E,0x02,
+           0x32,0x1F,0xC0,
+           0xC3,0x56,0x0B);
+    cpu.sp=0xDFF0u;
+    cpu.a=0x5Eu;cpu.f=0xFFu;
+    cpu.b=0xA7u;cpu.c=0x20u;cpu.d=0xC3u;cpu.e=0x42u;
+    cpu.h=0x18u;cpu.l=0x81u;cpu.ix=0xBEEFu;cpu.iy=0xC150u;
+    assert(ys_sms_bus_write(&bus,0xC02Eu,0x00u));
+    assert(ys_sms_bus_write(&bus,0xC02Fu,0xC8u));
+    assert(ys_sms_bus_write(&bus,0xC01Fu,0x01u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.sp==0xC800u && cpu.pc==4u &&
+           cpu.last_tstates==20u && cpu.total_tstates==20u &&
+           cpu.f==0xFFu && cpu.a==0x5Eu &&
+           cpu.b==0xA7u && cpu.c==0x20u &&
+           cpu.d==0xC3u && cpu.e==0x42u &&
+           cpu.h==0x18u && cpu.l==0x81u &&
+           cpu.ix==0xBEEFu && cpu.iy==0xC150u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x02u && cpu.pc==6u && cpu.f==0xFFu &&
+           cpu.last_tstates==7u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC01Fu)==0x02u &&
+           cpu.pc==9u && cpu.last_tstates==13u && cpu.f==0xFFu);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==0x0B56u && cpu.sp==0xC800u &&
+           cpu.steps==4u && cpu.total_tstates==50u &&
+           cpu.f==0xFFu);
+}
+
+/* Correct low/high byte order, mapper-qualified reads, 16-bit wrap,
+   and non-modifying Z80 flags when source bytes are zero or $FFFF. */
+static void test_pc28_indirect_stack_pointer_bus_boundaries(void) {
+    setup();
+    LOAD(0,0xED,0x7B,0xFF,0xBF);
+    cpu.sp=0xA001u; cpu.f=Z80_F_S|Z80_F_Z|Z80_F_C;
+    rom[2u*0x4000u+0x3FFFu]=0x34u;
+    assert(ys_sms_bus_write(&bus,0xC000u,0x12u));
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.sp==0x1234u && cpu.pc==4u &&
+           cpu.f==(Z80_F_S|Z80_F_Z|Z80_F_C) &&
+           cpu.last_tstates==20u);
+    setup();
+    LOAD(0,0xED,0x7B,0x11,0x90);
+    cpu.sp=0xFFFFu;cpu.f=0xFFu;
+    rom[5u*0x4000u+0x1011u]=0xFEu;
+    rom[5u*0x4000u+0x1012u]=0xCAu;
+    assert(ys_sms_bus_write(&bus,0xFFFFu,5u));
+    assert(bus.mapped_bank[2]==5u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.sp==0xCAFEu && cpu.f==0xFFu &&
+           cpu.pc==4u && cpu.last_tstates==20u &&
+           bus.mapped_bank[2]==5u);
+    setup();
+    LOAD(0,0xED,0x7B,0xFF,0xFF);
+    cpu.f=Z80_F_C|Z80_F_N;
+    rom[0]=0xEDu; /* high byte read wraps to source ROM at $0000. */
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    /* $FFFF reports current mapper bank select2, initial 2. */
+    assert(cpu.sp==0xED02u && cpu.f==(Z80_F_C|Z80_F_N) &&
+           cpu.pc==4u && cpu.total_tstates==20u);
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1020,6 +1090,8 @@ int main(void) {
     test_pc23_indexed_immediate_boundary();
     test_pc24_indexed_inc_dec_16();
     test_pc24_original_fixedbank_pointer_loop_step();
+    test_pc28_original_button_dispatch_transition();
+    test_pc28_indirect_stack_pointer_bus_boundaries();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
