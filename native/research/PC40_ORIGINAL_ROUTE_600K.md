@@ -37,6 +37,66 @@ CPU PC coincidences. A read-only watch does not imply a call occurred,
 a sprite was drawn, collision logic was reached, or an actual player
 was identified. The original-ROM source SHA is verified externally.
 
+## Verified original-source result
+
+The unmodified PC-34 experimental press/release sequence passed its
+**300,000-iteration prefix comparison** against the existing
+separately generated PC-34 source report. A longer bounded reference
+Z80 run, with **no additional controller events or machine-state
+forcing**, naturally reached:
+
+| Observation | Verified PC-40 |
+| --- | ---: |
+| Continued iterations after M45 | **525,358** |
+| Natural stop | Unsupported opcode at CPU `$1A0A` (`88`) |
+| Accepted IRQ / VBlank at stop | **132 / 136** |
+| Final mapper slot1 / slot2 | **1 / 7** |
+| Final raw `$C01F` selector | **6** (300k prefix: 2) |
+| Physical bank-0 `$26B6` selector-site hits | **1** |
+| Physical bank-1 `$4773` collision-associated-site hits | **1** |
+| Actual `$26DA` selector stores seen by route watch | **0** |
+| Actual mapped bank-6 `$9932/$9966` route entries | **0** |
+| Mapper-qualified original bank-1 collision calls | **0** |
+| Naturally visited bank-0 `$0427` SAT upload entries | **40** |
+
+The **first 27** `$0427` visits in the independent 300k PC-36
+experiment were already proven to complete 64+128-byte source WRAM→VRAM
+uploads. PC-40 does **not** independently compare full VRAM for the
+13 additional `$0427` visits. Do not silently promote 40 uploader
+entries to 40 verified full sprite uploads, animation frames, or
+gameplay states.
+
+The source path was initially blocked at fixed-bank `$267E`
+(`ED 44`, `NEG`); after implementing original Z80 instruction
+semantics it naturally progressed through additional graphics/caller
+code and the mapper-selected sound/control code. The new native Z80
+coverage is verified against the original source-ROM SHA and,
+where available, the committed fixed-bank Phase6 instruction listing:
+
+- `ED 44` `NEG` at `$267E` (complete Z80 flags, 8 T-states)
+- `ED 52` `SBC HL,DE` at `$2693` (general rr forms, 15 T-states)
+- `ED 4B 10 C2` `LD BC,($C210)` at `$26C3` (20 T-states)
+- `ED A8` `LDD` at `$2AFE/$2B4B` (16 T-states, source/destination decrement)
+- `DD 35 09` `DEC (IX+9)` in physical bank2 `$87C6`
+  (signed displacement, carry-preserving flags, 23 T-states)
+- `CB 3F` `SRL A` in physical bank1 `$61B1` (full flags)
+- `ED 5B A1 C1` `LD DE,($C1A1)` in physical bank1 `$62DD`
+  (mapped little-endian word read, 20 T-states).
+
+Individual unit fixtures include zero/overflow/borrow flag edges,
+memory mapper reads, signed IX/IY displacement, WRAM wrap,
+ROM-write failure and documented timing. The fixed result is
+**golden-pinned**, not inferred solely from a self-consistent trace.
+No original ROM, music, tile or framebuffer bytes were committed.
+
+This is important execution research, **not a gameplay breakthrough**.
+No verified player, world traversal, actual bank-6 sprite production,
+original collision or independently authenticated emulator frame has
+been recovered. PC-40 cannot count as one of the five original-game
+Alpha gates. The next unsupported CPU byte `88` at `$1A0A` must be
+validated against the physical bank mapping before implementing
+further Z80 instructions.
+
 ## Reproduction
 
 Build the strict C11 native runtime and reconstruct the user's original
