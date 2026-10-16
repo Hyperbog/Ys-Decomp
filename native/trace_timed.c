@@ -313,10 +313,11 @@ int main(int argc,char **argv) {
            strcmp(argv[2],"--vdp-at-m44")==0 ||
            strcmp(argv[2],"--pc12-watch")==0 ||
            strcmp(argv[2],"--pc15-sprite-watch")==0 ||
-           strcmp(argv[2],"--pc25-collision-watch")==0)) ||
+           strcmp(argv[2],"--pc25-collision-watch")==0 ||
+           strcmp(argv[2],"--pc27-button-probe")==0)) ||
           (argc==5 && strcmp(argv[2],"--pc25-collision-watch")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
-              "Default stops at source $0C92; PC12/15 retain 150k bounds; PC25 accepts a fifth path for an optional read-only PC26 input audit.\n",
+              "PC12/15 use 150k idle input; PC25 adds a 300k idle-only audit; PC27 is an opt-in, source-armed button1 controller experiment, NOT gameplay evidence.\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1867,6 +1868,124 @@ int main(int argc,char **argv) {
         else
             puts("BLOCKED PC-25: no source collision call within this"
                  " larger original unpressed-input research horizon");
+
+    } else if(argc==4 && strcmp(argv[2],"--pc27-button-probe")==0) {
+        /* Independent opt-in source-backed input experiment, not a
+           hardware/emulator-match claim. Idle until original CPU
+           reaches PC $0CBD (Phase5 wait loop) with C01F==$01.
+           Deliver active-low DC bit4 at first subsequent ORIGINAL
+           IN A,($DC) at $0773. Release at NEXT $0773 sampling.
+           Never edit Z80 PC, WRAM, mapper, timing, or IRQ state. */
+        enum { PC27_STEPS=150000u,PC27_EXTRA_VBLANKS=90u };
+        const uint64_t start_blank=runtime.clock.vblank_events;
+        YsPcSourceWatch collision={0};
+        const uint8_t start_selector=ys_sms_bus_read(bus,0xC01Fu);
+        const char *why="budget";
+        unsigned long steps=0ul;
+        bool armed=false,pressed=false,released=false;
+        bool saw_mode_write=false,saw_mode2=false;
+        unsigned hits_wait=0u,hits_edge=0u,hits_mode_write=0u;
+        uint8_t last_edge=0u;
+        uint64_t press_step=0u,release_step=0u,mode2_step=0u;
+        unsigned edge_10_hits=0u;
+        for(;steps<PC27_STEPS;++steps) {
+            if(!ys_pc_source_watch_sample(&collision,&runtime)) {
+                fputs("PC-27 invalid read-only collision observer\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            const uint8_t selector=ys_sms_bus_read(bus,0xC01Fu);
+            if(cpu.pc==0x0CBDu && selector==0x01u) {
+                armed=true;
+                if(hits_wait!=UINT32_MAX) ++hits_wait;
+            }
+            if(cpu.pc==0x0CD1u) {
+                last_edge=ys_sms_bus_read(bus,0xC01Cu);
+                if(hits_edge!=UINT32_MAX) ++hits_edge;
+                if((last_edge&0x10u)!=0u && edge_10_hits!=UINT32_MAX)
+                    ++edge_10_hits;
+            }
+            if(cpu.pc==0x0CC8u && hits_mode_write!=UINT32_MAX) {
+                ++hits_mode_write;
+                saw_mode_write=true;
+            }
+            if(pressed && saw_mode_write && selector==0x02u) {
+                if(!saw_mode2) mode2_step=cpu->steps;
+                saw_mode2=true;
+            }
+            if(armed && !pressed && cpu.pc==0x0773u) {
+                input.dc=0xEFu; /* Button 1, port DC bit 4 active low. */
+                pressed=true;press_step=cpu.steps;
+            } else if(pressed && !released && cpu.pc==0x0773u) {
+                input.dc=0xFFu; /* Release before second sampled IN. */
+                released=true;release_step=cpu.steps;
+            }
+            if(saw_mode2 && released) {
+                why="mode2_after_release";break;
+            }
+            if(collision.observed_collision_calls>0u) {
+                why="collision_observed";break;
+            }
+            if(runtime.clock.vblank_events-start_blank>=PC27_EXTRA_VBLANKS) {
+                why="vblank_limit";break;
+            }
+            Z80Status state=ys_sms_runtime_step_auto(&runtime);
+            if(state!=Z80_RUNNING && state!=Z80_HALTED) {
+                why="unsupported";break;
+            }
+        }
+        FILE *output=fopen(argv[3],"wb");
+        bool ok=output &&
+            fprintf(output,
+             "{\n"
+             "  \"schema\":\"ys-pc27-original-button-probe-v1\",\n"
+             "  \"start_pc\":\"0C92\",\"start_selector\":%u,\n"
+             "  \"stop_reason\":\"%s\",\"continued_steps\":%lu,\n"
+             "  \"stop_pc\":\"%04X\",\"stop_selector\":%u,\n"
+             "  \"stop_slot1\":%u,\"stop_slot2\":%u,\n"
+             "  \"stop_irq\":%llu,\"stop_vblank\":%llu,\n"
+             "  \"wait_hits\":%u,\"edge_check_hits\":%u,\n"
+             "  \"edge_bit4_hits\":%u,\"last_edge\":%u,\n"
+             "  \"mode_write_hits\":%u,\"mode2_seen\":%s,\n"
+             "  \"pressed\":%s,\"released\":%s,\n"
+             "  \"press_pc\":\"0773\",\"release_pc\":\"0773\",\n"
+             "  \"press_step\":%llu,\"release_step\":%llu,\n"
+             "  \"mode2_step\":%llu,\n"
+             "  \"port_dc\":%u,\"port_dd\":%u,\n"
+             "  \"input_reads_dc\":%llu,\"input_reads_dd\":%llu,\n"
+             "  \"observed_collision_calls\":%u\n}\n",
+             (unsigned)start_selector,why,steps,cpu.pc,
+             (unsigned)ys_sms_bus_read(bus,0xC01Fu),
+             (unsigned)bus->mapped_bank[1],(unsigned)bus->mapped_bank[2],
+             (unsigned long long)runtime.recognized_irqs,
+             (unsigned long long)runtime.clock.vblank_events,
+             hits_wait,hits_edge,edge_10_hits,(unsigned)last_edge,
+             hits_mode_write,saw_mode2?"true":"false",
+             pressed?"true":"false",released?"true":"false",
+             (unsigned long long)press_step,
+             (unsigned long long)release_step,
+             (unsigned long long)mode2_step,
+             (unsigned)input.dc,(unsigned)input.dd,
+             (unsigned long long)input.reads_dc,
+             (unsigned long long)input.reads_dd,
+             collision.observed_collision_calls)>0;
+        if(output && fclose(output)!=0) ok=false;
+        if(!ok) {
+            fputs("PC-27 cannot write original controller experiment\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        printf("PC-27 source-armed controller experiment:"
+               " reason=%s steps=%lu selector=%u->%u"
+               " wait=%u sampled_edges_bit4=%u pressed=%u released=%u"
+               " IRQ=%llu VBlank=%llu collisions=%u\n",
+               why,steps,(unsigned)start_selector,
+               (unsigned)ys_sms_bus_read(bus,0xC01Fu),
+               hits_wait,edge_10_hits,(unsigned)pressed,(unsigned)released,
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events,
+               collision.observed_collision_calls);
+        puts("PC-27 research only: controller pulse is an experimental"
+             " source-armed stimulus, NOT a hardware-matched original"
+             " title transition, authentic player or Alpha gate");
     } else {
         puts("Stop before source $0C92 video setup, not playable.");
     }
