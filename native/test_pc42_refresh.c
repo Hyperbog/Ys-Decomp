@@ -119,11 +119,45 @@ static void interrupt_delay_and_repeat_r(void) {
     assert(ys_z80_irq(&cpu));
     assert(cpu.r==7u && !cpu.iff1 && !cpu.iff2);
 }
+static void xor_immediate_all_input_flags(void) {
+    reset();
+    CODE(0x100u,0xEEu,0x80u);
+    for(unsigned lhs=0u;lhs<256u;++lhs)
+        for(unsigned imm=0u;imm<256u;++imm) {
+            rom[0x101u]=(uint8_t)imm;
+            cpu.pc=0x100u;
+            cpu.a=(uint8_t)lhs;
+            cpu.f=0xFFu; /* XOR clears carry, half-carry, subtraction */
+            uint8_t prev_r=cpu.r;
+            assert(ys_z80_step(&cpu)==Z80_RUNNING);
+            unsigned result=lhs^imm;
+            unsigned count=0u;
+            for(unsigned b=0u;b<8u;++b) count+=(result>>b)&1u;
+            unsigned flags=(result&(Z80_F_S|Z80_F_3|Z80_F_5)) |
+                           (result==0u?Z80_F_Z:0u) |
+                           ((count&1u)==0u?Z80_F_PV:0u);
+            assert(cpu.a==result && cpu.f==flags);
+            assert(cpu.pc==0x102u && cpu.last_tstates==7u);
+            assert(cpu.r==(uint8_t)((prev_r&0x80u) |
+                                    ((prev_r+1u)&0x7Fu)));
+        }
+    /* Authentic source $13F5 (EE 80) on bank 0, with carry set. */
+    reset();
+    CODE(0x13F5u,0xEEu,0x80u);
+    cpu.pc=0x13F5u;cpu.a=0x0Eu;cpu.f=0xFFu;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.a==0x8Eu);
+    assert(cpu.f==0x8Cu); /* S + bit 3 + even parity */
+    assert(cpu.pc==0x13F7u && cpu.last_tstates==7u);
+    puts("PASS PC-42: exhaustive 65536 XOR immediate values/flags,"
+         " real original $13F5 and R count");
+}
 int main(void) {
     basic_m1_and_prefix();
     r_write_bit7_low7_wrap_and_flags();
     irq_halt_refresh_and_fail_closed();
     interrupt_delay_and_repeat_r();
+    xor_immediate_all_input_flags();
     puts("PASS PC-42: real Z80 M1 refresh, two-fetch ED/CB/DDCB,"
          " HALT, IM1, IFF2, R7 preservation and LD A,R/I flags");
     return 0;
