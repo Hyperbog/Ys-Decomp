@@ -111,12 +111,12 @@ int main(void) {
     exact[4]=41u;
     watch.events[1][7].hits=1u;
     watch.events[1][8].hits=2u;
-    assert(ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u)==false);
-    /* The prior synthetic fixture has zero source ROM; install ED 5F
-       in physical fixed bank0 and prove the stricter opcode assertion. */
+    /* Never read a synthetic ROM before attaching its backing bytes.
+       First test a wrong opcode on a VALID backing ROM, then ED 5F. */
     static uint8_t source_rom[YS_ROM_BYTES]={0};
-    source_rom[0x141Au]=0xEDu;source_rom[0x141Bu]=0x5Fu;
     bus.rom=source_rom;
+    assert(!ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
+    source_rom[0x141Au]=0xEDu;source_rom[0x141Bu]=0x5Fu;
     assert(ys_pc42_historical_checkpoint(&watch,&rt,531478ul,exact,0u));
     assert(!ys_pc42_historical_checkpoint(&watch,&rt,531479ul,exact,0u));
     exact[4]=40u;
