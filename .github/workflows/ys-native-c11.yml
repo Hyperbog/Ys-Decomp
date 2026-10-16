@@ -184,6 +184,7 @@ jobs:
           # PC-39: read-only actual CPU bus-write strobes in physical
           # SAT source WRAM, from real reset to M45 and same 300k PC34.
           python3 native/tools/verify_pc39_sat_strobes.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc39-strobes.json" "$RUNNER_TEMP/ys-pc34-postrelease.json" "$RUNNER_TEMP/ys-pc36-sat.json" "$RUNNER_TEMP/ys-pc37-source.json" "$RUNNER_TEMP/ys-pc38-provenance.json"
+          # PC-42: original LD A,R refresh, preserve exact PC41 pre-R stop
           # PC-41: same bounded source run; prevent a pre-ADC PC-40
           # regression at the exact 525358-iteration historical stop.
           # PC-40's independent verifier remains available in-tree.
@@ -191,10 +192,10 @@ jobs:
           # prefix must be bitwise-observation identical to PC-34.
           # Pure event observation; no injected mapper, PC, WRAM or VDP.
           ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc40-source-route "$RUNNER_TEMP/ys-pc40-source.json" "$RUNNER_TEMP/ys-pc40-route.json"
-          python3 native/tools/verify_pc41_route.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc40-source.json" "$RUNNER_TEMP/ys-pc40-route.json" "$RUNNER_TEMP/ys-pc34-postrelease.json"
+          python3 native/tools/verify_pc42_route.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc40-source.json" "$RUNNER_TEMP/ys-pc40-route.json" "$RUNNER_TEMP/ys-pc34-postrelease.json"
           printf 'tampered' > "$RUNNER_TEMP/ys-pc40-bad.json"
-          if python3 native/tools/verify_pc41_route.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc40-source.json" "$RUNNER_TEMP/ys-pc40-bad.json" "$RUNNER_TEMP/ys-pc34-postrelease.json"; then
-            echo "PC-41 corrupt original route accepted" >&2
+          if python3 native/tools/verify_pc42_route.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc40-source.json" "$RUNNER_TEMP/ys-pc40-bad.json" "$RUNNER_TEMP/ys-pc34-postrelease.json"; then
+            echo "PC-42 corrupt original route accepted" >&2
             exit 1
           fi
           printf 'corrupt' > "$RUNNER_TEMP/ys-pc39-bad.json"
