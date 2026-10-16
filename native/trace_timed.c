@@ -10,6 +10,7 @@
 #include "pc_sat_provenance.h"
 #include "pc_sat_strobes.h"
 #include "pc40_route.h"
+#include "pc43_sprite_gate.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1909,7 +1910,8 @@ int main(int argc,char **argv) {
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
               ((argc==5 || argc==6 || argc==8 || argc==9 || argc==10) &&
                strcmp(argv[2],"--pc34-extended-postrelease")==0) ||
-              (argc==5 && strcmp(argv[2],"--pc40-source-route")==0)) {
+              ((argc==5 || argc==6) &&
+               strcmp(argv[2],"--pc40-source-route")==0)) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
            reaches PC $0CD1 (observed Phase5 C01C edge test) with C01F==$01.
@@ -1923,6 +1925,9 @@ int main(int argc,char **argv) {
         YsPcSpriteUploadWatch upload={0};
         YsPcSatProvenance provenance={0};
         YsPc40Route route={0};
+        YsPc43SpriteGate gate={0};
+        const bool gate_audit=(argc==6 &&
+            strcmp(argv[2],"--pc40-source-route")==0);
         const bool route_long=strcmp(argv[2],"--pc40-source-route")==0;
         const bool extended=
             strcmp(argv[2],"--pc34-extended-postrelease")==0;
@@ -2005,6 +2010,7 @@ int main(int argc,char **argv) {
             const unsigned pc37_prev_completed=upload.completed;
             const unsigned pc38_prev_entries=upload.entries;
             if((route_long && !ys_pc40_route_sample(&route,&runtime,steps)) ||
+               (gate_audit && !ys_pc43_gate_pre(&gate,&runtime,steps)) ||
                (provenance_audit &&
                 !ys_pc_sat_provenance_sample(&provenance,&runtime)) ||
                !ys_pc_source_watch_sample(&collision,&runtime) ||
@@ -2105,6 +2111,10 @@ int main(int argc,char **argv) {
                 postrelease && released && !release_sampled &&
                 cpu.pc==0x0773u;
             Z80Status state=ys_sms_runtime_step_auto(&runtime);
+            if(gate_audit && !ys_pc43_gate_post(&gate,&runtime,steps)) {
+                fputs("PC-43 invalid original gate JR successor observation\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
             if(state!=Z80_RUNNING && state!=Z80_HALTED) {
                 why="unsupported";break;
             }
@@ -2130,6 +2140,24 @@ int main(int argc,char **argv) {
                    steps,why,cpu.pc,route.prefix_pc,
                    (unsigned long long)runtime.recognized_irqs,
                    (unsigned long long)runtime.clock.vblank_events);
+        }
+        if(gate_audit) {
+            FILE *gate_file=fopen(argv[5],"wb");
+            bool gate_ok=gate_file &&
+                ys_pc43_gate_write(gate_file,&gate,&runtime,why,steps);
+            if(gate_file && fclose(gate_file)!=0) gate_ok=false;
+            if(!gate_ok) {
+                fputs("PC-43 cannot serialize actual bank6 C198 gate\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            printf("PC-43 original source sprite gate:"
+                   " entries=%u OR=%u JR=%u zero=%u nonzero=%u"
+                   " calls=%u producer=%u skips=%u mismatches=%u"
+                   " IRQ-on-branch=%u\n",
+                   gate.count,gate.or_hits,gate.gate_hits,
+                   gate.branch_zero,gate.branch_nonzero,
+                   gate.call_sites,gate.producer_entries,
+                   gate.skip_targets,gate.branch_mismatch,gate.irq_gate);
         }
         if(pc39_mode) {
             FILE *strobe=fopen(argv[9],"wb");
