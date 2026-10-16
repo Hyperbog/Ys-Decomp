@@ -337,6 +337,7 @@ int main(int argc,char **argv) {
            (strcmp(argv[2],"--pc25-collision-watch")==0 ||
             strcmp(argv[2],"--pc34-extended-postrelease")==0 ||
             strcmp(argv[2],"--pc40-source-route")==0)) ||
+          (argc==6 && strcmp(argv[2],"--pc40-source-route")==0) ||
           ((argc==6 || argc==8 || argc==9 || argc==10) &&
            strcmp(argv[2],"--pc34-extended-postrelease")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
