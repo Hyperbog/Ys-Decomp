@@ -35,6 +35,12 @@ def validate(path, p34, p36, p37):
     assert a["changed_bytes"]==a["changed_y"]+a["changed_xt"]
     assert a["changed_uploads"]+a["equal_uploads"]==26
     assert 0<=a["upload_diff_bytes"]<=26*192
+    # Golden original-cartridge result: 300k-step fixed PC-34 input schedule.
+    # Structural self-consistency alone must not bless a changing trace.
+    assert (a["changed_bytes"],a["changed_y"],a["changed_xt"],
+            a["unique_bytes"],a["site_count"],a["changed_uploads"],
+            a["equal_uploads"],a["upload_diff_bytes"]) == (0,0,0,0,0,0,26,0)
+    assert others[1]["first_source_crc32"]==others[1]["last_source_crc32"]
     assert a["changed_bytes"]>=a["unique_bytes"]
     seen=set()
     summed=0
