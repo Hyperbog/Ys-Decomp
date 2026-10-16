@@ -12,13 +12,22 @@ def check(rom,source_path,route_path,pc34):
     assert Path(rom).read_bytes()[0x141A:0x141E]==bytes.fromhex("ED 5F E6 0F")
     assert Path(rom).read_bytes()[0x13F5:0x13F7]==bytes.fromhex("EE 80")
     assert Path(rom).read_bytes()[0x1A77]==0x3F
-    assert route["continued_steps"]>531478
-    assert route["stop_reason"] in ("budget","unsupported","vblank_limit","collision_observed")
-    assert source["observed_collision_calls"]>=0
-    print("PASS PC-42 original refresh-route integrity: steps=%d reason=%s"
-          " PC=$%s IRQ=%d VBlank=%d" % (
-              route["continued_steps"],route["stop_reason"],
-              route["stop_pc"],route["stop_irq"],route["stop_vblank"]))
+    # Golden measured in passing original ROM-backed native CI
+    # 38961300656. Any new interpreter semantics must preserve the
+    # entire trace, not just reach the budget with plausible counters.
+    state=(route["continued_steps"],route["stop_reason"],
+           route["stop_pc"],route["stop_irq"],route["stop_vblank"],
+           route["stop_slot1"],route["stop_slot2"],route["stop_selector"])
+    assert state==(600000,"budget","0046",144,148,1,6,6),state
+    assert source["observed_collision_calls"]==0
+    assert source["sprite_counts"]==[0,0,0,0,52]
+    expected_sites={(1,"26B6",0):1,(1,"9966",6):13,(1,"4773",1):13}
+    for site in route["events"]:
+        assert site["hits"]==expected_sites.get(
+            (site["phase"],site["pc"],site["bank"]),0),site
+    print("PASS PC-42 original source golden: 600000 budget PC=$0046,"
+          " IRQ=144 VBlank=148, slot2=6, mapped $9966=13,"
+          " mapped $4773=13, SAT entry sites=52, collisions=0")
     for site in route["events"]:
         if site["hits"]:
             print("  bank=%d PC=$%s phase=%d hits=%d" % (
