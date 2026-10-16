@@ -1923,7 +1923,7 @@ int main(int argc,char **argv) {
                strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
               ((argc==5 || argc==6 || argc==8 || argc==9 || argc==10) &&
                strcmp(argv[2],"--pc34-extended-postrelease")==0) ||
-              ((argc==5 || argc==6) &&
+              ((argc==5 || argc==6 || argc==7) &&
                strcmp(argv[2],"--pc40-source-route")==0)) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
