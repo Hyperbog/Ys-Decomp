@@ -1475,6 +1475,34 @@ static void test_pc40_original_bank2_indexed_dec(void) {
     assert(cpu.f==0xA5u && cpu.ix==0xC000u);
     assert(cpu.last_tstates==0u && rom[0xBFFFu]==0u);
 }
+static void test_pc40_original_bank1_srl(void) {
+    static const struct {uint8_t initial,result,flags;} cases[]={
+        {0x00u,0x00u,0x44u},{0x01u,0x00u,0x45u},
+        {0x80u,0x40u,0x00u},{0xFFu,0x7Fu,0x29u}
+    };
+    for(unsigned i=0;i<sizeof(cases)/sizeof(cases[0]);++i) {
+        setup();
+        LOAD(0x100u,0xCBu,0x3Fu); /* original $61B1 SRL A */
+        cpu.pc=0x100u;cpu.a=cases[i].initial;cpu.f=0xFFu;
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        assert(cpu.a==cases[i].result && cpu.f==cases[i].flags);
+        assert(cpu.pc==0x102u && cpu.last_tstates==8u);
+    }
+    setup();
+    LOAD(0x100u,0xCBu,0x3Eu); /* SRL (HL) */
+    assert(ys_sms_bus_write(&bus,0xC000u,0x01u));
+    cpu.pc=0x100u;cpu.h=0xC0u;cpu.l=0u;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(ys_sms_bus_read(&bus,0xC000u)==0u);
+    assert(cpu.f==0x45u && cpu.last_tstates==15u);
+    /* Memory-operand ROM write must fail without clobbering flags. */
+    setup();
+    LOAD(0x100u,0xCBu,0x3Eu);
+    cpu.pc=0x100u;cpu.h=0x40u;cpu.l=0u;cpu.f=0xA5u;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.pc==0x100u && cpu.fault_pc==0x100u);
+    assert(cpu.f==0xA5u && cpu.last_tstates==0u);
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1517,6 +1545,7 @@ int main(void) {
     test_pc40_original_ld_bc_indirect();
     test_pc40_original_graphics_ldd();
     test_pc40_original_bank2_indexed_dec();
+    test_pc40_original_bank1_srl();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
