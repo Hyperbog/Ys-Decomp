@@ -1702,6 +1702,65 @@ static void test_pc41_original_indexed_set_res(void) {
     puts("PASS PC-41: 128 indexed RES/SET bit/register combinations,"
          " original DD CB 01 C6, IY signed d, mapped timing/ROM guard");
 }
+static void test_pc42_refresh_ld_a_r_and_irq(void) {
+    /* Real source bank0 $141A ED 5F observes the R value after
+       BOTH ED and 5F M1 fetches, including bit7 preservation. */
+    for(unsigned r=0;r<256u;++r) for(unsigned iff=0;iff<2u;++iff) {
+        setup();
+        LOAD(0x100u,0xEDu,0x5Fu);
+        cpu.pc=0x100u;cpu.r=(uint8_t)r;
+        cpu.iff2=iff!=0;cpu.f=Z80_F_C|Z80_F_H|Z80_F_N;
+        assert(ys_z80_step(&cpu)==Z80_RUNNING);
+        uint8_t expect=(uint8_t)((r&0x80u)|((r+2u)&0x7Fu));
+        uint8_t flags=(uint8_t)((expect&(Z80_F_S|Z80_F_3|Z80_F_5))|
+            (expect==0?Z80_F_Z:0u)|(iff?Z80_F_PV:0u)|Z80_F_C);
+        assert(cpu.r==expect && cpu.a==expect && cpu.f==flags);
+        assert(cpu.pc==0x102u && cpu.last_tstates==9u);
+    }
+    /* Normal opcodes fetch M1 once; CB/ED and DD/FD prefixed opcodes
+       each fetch two; indexed DD CB d operation byte is NOT M1. */
+    setup();
+    LOAD(0x100u,0x00u,0xCBu,0x3Fu,0xDDu,0x21u,0x00u,0xC0u,
+         0xDDu,0xCBu,0x01u,0xC6u);
+    cpu.pc=0x100u;cpu.r=0xFEu;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.r==0xFFu);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.r==0x81u); /* low7 wraps from 127 through 0 to 1 */
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.ix==0xC000u && cpu.r==0x83u);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.r==0x85u && cpu.last_tstates==23u);
+    assert(ys_sms_bus_read(&bus,0xC001u)==1u);
+    /* HALT performs an M1 on entry and one on each subsequent 4T
+       refresh; it does not increment completed Z80 instructions. */
+    setup();
+    LOAD(0x100u,0x76u);
+    cpu.pc=0x100u;cpu.r=0x7Eu;
+    assert(ys_z80_step(&cpu)==Z80_HALTED);
+    assert(cpu.r==0x7Fu && cpu.steps==1u);
+    ys_z80_refresh_halt(&cpu);
+    assert(cpu.r==0u && cpu.steps==1u);
+    ys_z80_refresh_halt(&cpu);
+    assert(cpu.r==1u && cpu.steps==1u);
+    cpu.status=Z80_RUNNING;
+    ys_z80_refresh_halt(&cpu);
+    assert(cpu.r==1u); /* non-HALT callback must not tick */
+    /* IM1 acknowledge is an M1; it resets BOTH IFFs and must not
+       pretend RETN restores IFF1 after a maskable interrupt. */
+    setup();
+    LOAD(0x0038u,0xEDu,0x45u); /* RETN */
+    cpu.pc=0x1234u;cpu.sp=0xC200u;cpu.r=0x7Fu;
+    cpu.iff1=true;cpu.iff2=true;cpu.interrupt_mode=1u;
+    assert(ys_z80_irq(&cpu));
+    assert(cpu.pc==0x0038u && cpu.r==0u);
+    assert(!cpu.iff1 && !cpu.iff2 && cpu.sp==0xC1FEu);
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.pc==0x1234u && !cpu.iff1 && !cpu.iff2);
+    assert(cpu.r==2u && cpu.last_tstates==14u);
+    puts("PASS PC-42: 512 LD A,R combinations, bit7 wrap, prefixes,"
+         " HALT M1, IM1 IFF1/IFF2 and RETN");
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1748,6 +1807,7 @@ int main(void) {
     test_pc40_original_bank1_ld_de_indirect();
     test_pc41_alu_oracle_exhaustive();
     test_pc41_original_indexed_set_res();
+    test_pc42_refresh_ld_a_r_and_irq();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
