@@ -313,8 +313,8 @@ int main(int argc,char **argv) {
            strcmp(argv[2],"--vdp-at-m44")==0 ||
            strcmp(argv[2],"--pc12-watch")==0 ||
            strcmp(argv[2],"--pc15-sprite-watch")==0 ||
-           strcmp(argv[2],"--pc25-collision-watch")==0))) ||
-          (argc==5 && strcmp(argv[2],"--pc25-collision-watch")==0)) {
+           strcmp(argv[2],"--pc25-collision-watch")==0)) ||
+          (argc==5 && strcmp(argv[2],"--pc25-collision-watch")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
               "Default stops at source $0C92; PC12/15 retain 150k bounds; PC25 accepts a fifth path for an optional read-only PC26 input audit.\n",
               stderr);
