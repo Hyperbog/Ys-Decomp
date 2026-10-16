@@ -29,6 +29,9 @@ def verify(rom_path,source_json,route_json,pc34_json,milestone='pc40'):
     rom=Path(rom_path).read_bytes()
     assert len(rom)==262144
     assert hashlib.sha256(rom).hexdigest()==ORIGINAL_SHA
+    # PC-41 natural historical stop: fixed bank0 $1A0A begins with
+    # 88 (ADC A,B). Original M45-reconstructed ROM SHA is checked above.
+    assert rom[0x1A0A]==0x88
     # Source-only fixed bank 0: actual failing NEG, following 16-bit SBC,
     # source selector gate and bank-6 producer call. Match physical bytes
     # AND existing independently committed Z80 listing mnemonics.
