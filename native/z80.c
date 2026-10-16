@@ -221,7 +221,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         if (sub==0x56u) return 8u; /* IM 1 */
         if (sub==0x44u) return 8u; /* NEG */
         if ((sub&0xCFu)==0x42u) return 15u; /* SBC HL,rr */
-        if (sub==0x4Bu) return 20u; /* LD BC,(nn) */
+        if (sub==0x4Bu || sub==0x5Bu) return 20u; /* LD BC/DE,(nn) */
         if (sub==0x45u || sub==0x4Du) return 14u; /* RETN/RETI */
         if (sub==0x43u || sub==0x53u ||
             sub==0x73u || sub==0x7Bu)
@@ -701,13 +701,16 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                 ((unsigned)prior<rhs?Z80_F_C:0u));
             break;
         }
-        if (sub==0x4Bu) {
-            /* Original bank0 $26C3 ED 4B 10 C2:
-               LD BC,(nn) little-endian mapped source, no flags. */
+        if (sub==0x4Bu || sub==0x5Bu) {
+            /* Original bank0 $26C3 ED 4B 10 C2 loads BC.
+               PC-40 natural bank1 $62DD ED 5B A1 C1 loads DE.
+               Both read low/high from the current mapped SMS bus,
+               wrap the source address and leave flags unchanged. */
             uint16_t address=fetch16(cpu);
             uint8_t lo=ys_sms_bus_read(cpu->bus,address);
             uint8_t hi=ys_sms_bus_read(cpu->bus,(uint16_t)(address+1u));
-            cpu->b=hi;cpu->c=lo;
+            if(sub==0x4Bu) {cpu->b=hi;cpu->c=lo;}
+            else {cpu->d=hi;cpu->e=lo;}
             break;
         }
         if (sub==0x7Bu) {
