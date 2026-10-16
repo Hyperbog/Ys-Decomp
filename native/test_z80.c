@@ -778,8 +778,8 @@ static void test_pc21_indexed_sound_table_writes(void) {
            cpu.total_tstates==58u);
 }
 
-/* Exactly indexed A/B/C/D/E source stores and B/C indexed reads.
-   Neither 0x74 nor 0x75 is admitted before IXH/IXL source review. */
+/* Exact indexed A/B/C/D/E source stores and B/C indexed reads.
+   Ordinary H/L variants are independently covered by PC-22 tests. */
 static void test_pc21_indexed_register_store_read(void) {
     setup();
     LOAD(0,0xDD,0x70,0x05,0xDD,0x71,0x06,
@@ -802,18 +802,6 @@ static void test_pc21_indexed_register_store_read(void) {
            cpu.d==0xA3u && cpu.e==0xB6u &&
            cpu.ix==0xC100u && cpu.iy==0xC202u &&
            cpu.f==(Z80_F_C|Z80_F_Z|Z80_F_N|Z80_F_PV));
-    setup();
-    LOAD(0,0xDD,0x74,0x03);
-    cpu.ix=0xC100u;
-    assert(ys_z80_step(&cpu)==Z80_UNSUPPORTED);
-    assert(cpu.pc==0u && cpu.fault_pc==0u &&
-           cpu.steps==0u && cpu.last_tstates==0u);
-    setup();
-    LOAD(0,0xFD,0x75,0x03);
-    cpu.iy=0xC100u;
-    assert(ys_z80_step(&cpu)==Z80_UNSUPPORTED);
-    assert(cpu.pc==0u && cpu.fault_pc==0u &&
-           cpu.steps==0u && cpu.last_tstates==0u);
 }
 
 static void test_pc21_indexed_rom_write_guard(void) {
