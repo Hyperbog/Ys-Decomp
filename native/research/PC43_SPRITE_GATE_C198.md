@@ -58,6 +58,43 @@ immediate JR successor and the previous exact PC-42 600k
 CPU/mapper/IRQ/source-site golden. A malformed report must be
 rejected by CI.
 
+## Observed result: original source-ROM PC-43
+
+The [first successful original-ROM execution run](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38966030340)
+passed all 35 native CTest cases and preserved the separate
+PC-42 original-ROM golden exactly: **600,000 post-M45 continuation
+iterations, 144 IRQs, 148 VBlanks, CPU PC $0046**, physical bank-6
+`$9966` source entries **13** and producer `$9932` entries **0**.
+
+In the separate PC-43 trace, every **real** `$9966` visit
+was physically qualified to cartridge ROM bank 6. All 13
+observed `$C198=0` at entry **and at the real `JR Z` gate**,
+`A=0`, the Z flag set, and next CPU PC **$99C6**.
+No IRQ fired during any of the 13 branch instructions.
+There were exactly 13 `OR A` operations and 13 `JR Z`
+operations, **zero** visits to source `$996C` CALL or
+`$9932` producer, and **13** visits to the skip target.
+No unexpected next PC or orphan gate was recorded.
+
+The source enters `$9966` at these measured exact
+original continuation iterations:
+
+`526991, 535842, 539067, 545367, 551112, 557033,
+562765, 569046, 574795, 580833, 586432, 592714, 598479`.
+
+The independent strict verifier now golden-pins every one
+of those source entry iterations, raw `$C198`, `A`, Z-flag,
+actual successor and negative event count. It checks the
+exact source bytes, the bank-6 recovered assembler and the
+full independently rerun PC-42 ROM/mapper/source golden,
+and rejects tampered JSON.
+
+**Conclusion supported by this experiment:** on these 13
+specific natural visits, the authentic original Z80 program
+skipped `ProduceSpriteBuffer` because the tested `$C198`
+value was zero. The reason **why** the state remains zero
+is not established here.
+
 ## Evidence limits
 
 Observing a zero `$C198` and a taken branch would explain
