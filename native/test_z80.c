@@ -1503,6 +1503,27 @@ static void test_pc40_original_bank1_srl(void) {
     assert(cpu.pc==0x100u && cpu.fault_pc==0x100u);
     assert(cpu.f==0xA5u && cpu.last_tstates==0u);
 }
+static void test_pc40_original_bank1_ld_de_indirect(void) {
+    setup();
+    LOAD(0x100u,0xEDu,0x5Bu,0xA1u,0xC1u);
+    assert(ys_sms_bus_write(&bus,0xC1A1u,0xCDu));
+    assert(ys_sms_bus_write(&bus,0xC1A2u,0xABu));
+    cpu.pc=0x100u;cpu.d=0u;cpu.e=0u;cpu.f=0xA5u;
+    cpu.b=0x12u;cpu.c=0x34u;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.d==0xABu && cpu.e==0xCDu);
+    assert(cpu.b==0x12u && cpu.c==0x34u && cpu.f==0xA5u);
+    assert(cpu.pc==0x104u && cpu.last_tstates==20u);
+    /* Low/high bytes cross the WRAM mirror E000 boundary naturally. */
+    setup();
+    LOAD(0x100u,0xEDu,0x5Bu,0xFFu,0xDFu);
+    assert(ys_sms_bus_write(&bus,0xDFFFu,0xEFu));
+    assert(ys_sms_bus_write(&bus,0xE000u,0xBEu));
+    cpu.pc=0x100u;cpu.f=0xFFu;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.d==0xBEu && cpu.e==0xEFu);
+    assert(cpu.f==0xFFu && cpu.last_tstates==20u);
+}
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -1546,6 +1567,7 @@ int main(void) {
     test_pc40_original_graphics_ldd();
     test_pc40_original_bank2_indexed_dec();
     test_pc40_original_bank1_srl();
+    test_pc40_original_bank1_ld_de_indirect();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();
