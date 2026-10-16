@@ -324,7 +324,18 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     }
     case 0xCB: {
         uint8_t operation=fetch(cpu);
-        if ((operation&0xC0u)==0x40u) {
+        if ((operation&0xF8u)==0x10u) {
+            /* PC-29: fixed bank0 $0F8E/$0F9B CB 11, RL C.
+               Z80 RL r/(HL) shifts bit 7 into carry, prior carry
+               into bit 0; S,Z,P/V,5,3 from result; H,N cleared. */
+            unsigned reg=(unsigned)(operation&7u);
+            uint8_t prior=r8(cpu,reg);
+            uint8_t result=(uint8_t)((prior<<1)|(cpu->f&Z80_F_C));
+            if(!w8(cpu,reg,result)) goto fail; /* Fail closed ROM. */
+            cpu->f=(uint8_t)(sz53(result) |
+                (parity(result)?Z80_F_PV:0u) |
+                ((prior&0x80u)?Z80_F_C:0u));
+        } else if ((operation&0xC0u)==0x40u) {
             uint8_t value=r8(cpu,operation&7u);
             cpu->f=bit_flags(cpu->f,value,(operation>>3)&7u,value);
         } else if ((operation&0xC0u)==0x80u) {
