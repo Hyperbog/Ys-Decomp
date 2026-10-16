@@ -42,9 +42,9 @@ def verify(rom_path,source_json,route_json,pc34_json):
     for pc,hexbytes,mnemonic in source_rows:
         raw=bytes.fromhex(hexbytes)
         assert rom[pc:pc+len(raw)]==raw,hex(pc)
-        pattern=(rf"^{pc:05X}\\s+{pc:04X}\\s+"+
-                 r"\\s+".join(hexbytes.split())+
-                 r"\\s+"+re.escape(mnemonic)+r"\\s*$")
+        pattern=(rf"^{pc:05X}\s+{pc:04X}\s+"+
+                 r"\s+".join(hexbytes.split())+
+                 r"\s+"+re.escape(mnemonic)+r"\s*$")
         assert len(re.findall(pattern,listing,re.I|re.M))==1,hex(pc)
     a=json.loads(Path(source_json).read_text(encoding="utf-8"))
     r=json.loads(Path(route_json).read_text(encoding="utf-8"))
