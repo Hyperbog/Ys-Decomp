@@ -75,6 +75,34 @@ int main(void) {
     assert(strstr(output,"\"prefix_sprite\":[1,2,3,4,5]"));
     assert(strstr(output,"\"phase\":1,\"pc\":\"9932\""));
     assert(!ys_pc40_route_sample(&watch,&rt,300000ul)); /* duplicate */
+    /* PC-41 must preserve the full ORIGINAL PC-40 pre-ADC checkpoint,
+       not merely 300k control observations or same stop PC. */
+    reset_fixture();
+    watch.prefix_seen=true;
+    watch.seen_iterations=525358ul;
+    watch.events[1][0].hits=1u; /* physical bank0 $26B6 */
+    watch.events[1][8].hits=1u; /* physical bank1 $4773 */
+    cpu.pc=0x1A0Au;cpu.steps=1234567u;
+    bus.mapped_bank[1]=1u;bus.mapped_bank[2]=7u;
+    assert(ys_sms_bus_write(&bus,0xC01Fu,6u));
+    rt.recognized_irqs=132u;rt.clock.vblank_events=136u;
+    uint32_t exact[5]={0u,0u,0u,0u,40u};
+    assert(ys_pc41_historical_checkpoint(&watch,&rt,525358ul,exact,0u));
+    assert(!ys_pc41_historical_checkpoint(&watch,&rt,525357ul,exact,0u));
+    assert(!ys_pc41_historical_checkpoint(&watch,&rt,525358ul,exact,1u));
+    exact[4]=39u;
+    assert(!ys_pc41_historical_checkpoint(&watch,&rt,525358ul,exact,0u));
+    exact[4]=40u;
+    bus.mapped_bank[2]=8u;
+    assert(!ys_pc41_historical_checkpoint(&watch,&rt,525358ul,exact,0u));
+    bus.mapped_bank[2]=7u;
+    assert(ys_sms_bus_write(&bus,0xC01Fu,5u));
+    assert(!ys_pc41_historical_checkpoint(&watch,&rt,525358ul,exact,0u));
+    assert(ys_sms_bus_write(&bus,0xC01Fu,6u));
+    watch.events[1][8].hits=0u;
+    assert(!ys_pc41_historical_checkpoint(&watch,&rt,525358ul,exact,0u));
+    watch.events[1][8].hits=1u;
+    assert(ys_pc41_historical_checkpoint(&watch,&rt,525358ul,exact,0u));
     puts("PASS PC-40: bank-qualified original route, prefix boundary,"
          " negative mapper hits, source route serialization");
     return 0;
