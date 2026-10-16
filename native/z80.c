@@ -117,6 +117,15 @@ static uint16_t pop16(YsZ80 *cpu) {
 static void exchange(uint8_t *left, uint8_t *right) {
     uint8_t old=*left; *left=*right; *right=old;
 }
+/* Every ordinary opcode or prefix M1 increments R bits 0..6.
+   Bit 7 is preserved; operand and DD/FD CB displacement/opcode
+   data reads do not increment R. */
+static void z80_refresh_m1(YsZ80 *cpu) {
+    cpu->r=(uint8_t)((cpu->r&0x80u)|((cpu->r+1u)&0x7Fu));
+}
+void ys_z80_refresh_halt(YsZ80 *cpu) {
+    if(cpu && cpu->status==Z80_HALTED) z80_refresh_m1(cpu);
+}
 void ys_z80_reset(YsZ80 *cpu, YsSmsBus *bus) {
     memset(cpu, 0, sizeof(*cpu));
     cpu->bus = bus;
@@ -153,7 +162,11 @@ bool ys_z80_irq(YsZ80 *cpu) {
         cpu->fault_pc=cpu->pc;
         return false;
     }
+    /* Maskable INT clears both flip-flops; IFF2 holds a prior
+       snapshot only across NMI, not ordinary IM 1 interrupts. */
     cpu->iff1=false;
+    cpu->iff2=false;
+    z80_refresh_m1(cpu); /* interrupt acknowledge M1 */
     cpu->ei_delay=0;
     cpu->pc=0x0038u;
     cpu->status=Z80_RUNNING;
@@ -241,6 +254,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0xD3: case 0xDB: return 11u;
     case 0xED:
         if (sub==0x56u) return 8u; /* IM 1 */
+        if (sub==0x5Fu) return 9u; /* LD A,R */
         if (sub==0x44u) return 8u; /* NEG */
         if ((sub&0xCFu)==0x42u) return 15u; /* SBC HL,rr */
         if (sub==0x4Bu || sub==0x5Bu) return 20u; /* LD BC/DE,(nn) */
@@ -271,6 +285,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         start<0x0400u ? 0u : cpu->bus->mapped_bank[start>>14u]);
     cpu->last_tstates=0u;
     uint8_t f_before=cpu->f, b_before=cpu->b;
+    z80_refresh_m1(cpu);
     uint8_t opcode = fetch(cpu);
     uint8_t timing_sub=(opcode==0xCBu || opcode==0xDDu ||
                         opcode==0xFDu || opcode==0xEDu) ?
@@ -381,6 +396,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         break;
     }
     case 0xCB: {
+        z80_refresh_m1(cpu);
         uint8_t operation=fetch(cpu);
         if ((operation&0xF8u)==0x10u) {
             /* PC-29: fixed bank0 $0F8E/$0F9B CB 11, RL C.
@@ -456,6 +472,7 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         exchange(&cpu->h,&cpu->h_alt); exchange(&cpu->l,&cpu->l_alt);
         break; /* EXX */
     case 0xDD: case 0xFD: {
+        z80_refresh_m1(cpu); /* DD/FD second opcode fetch is M1. */
         uint8_t sub=fetch(cpu);
         uint16_t *index=opcode==0xDD ? &cpu->ix : &cpu->iy;
         if(sub==0xE5) {
@@ -557,6 +574,8 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                 (sum>0xFFFFu?Z80_F_C:0));
             *index=next;
         } else if(sub==0xCB) {
+            /* DD/FD CB d op: CB is an M1; displacement and the
+               final operation byte are plain memory reads. */
             int8_t displacement=(int8_t)fetch(cpu);
             uint8_t operation=fetch(cpu);
             uint16_t addr=(uint16_t)(*index+displacement);
@@ -735,8 +754,18 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     case 0xF3: cpu->iff1=false;cpu->iff2=false;break;
     case 0xFB: cpu->iff1=true;cpu->iff2=true;cpu->ei_delay=2;break;
     case 0xED: {
+        z80_refresh_m1(cpu);
         uint8_t sub=fetch(cpu);
         if (sub==0x56) {cpu->interrupt_mode=1;break;}
+        if (sub==0x5Fu) {
+            /* Source fixed bank0 $141A ED 5F: LD A,R. Flags:
+               S/Z/3/5 from R; P/V from IFF2; carry preserved.
+               Both ED and 5F opcode M1 fetches have advanced R. */
+            cpu->a=cpu->r;
+            cpu->f=(uint8_t)(sz53(cpu->a) |
+                 (cpu->iff2?Z80_F_PV:0u) | (cpu->f&Z80_F_C));
+            break;
+        }
         if (sub==0x45 || sub==0x4D) {
             cpu->pc=pop16(cpu);
             if(sub==0x45) cpu->iff1=cpu->iff2; /* RETN */
