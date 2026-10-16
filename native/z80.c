@@ -243,7 +243,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     case 0x22: case 0x2A: return 16u;
     case 0x32: case 0x3A: return 13u;
     case 0xC6: case 0xCE: case 0xD6: case 0xDE:
-    case 0xE6: case 0xF6: case 0xFE: return 7u;
+    case 0xE6: case 0xEE: case 0xF6: case 0xFE: return 7u;
     case 0xC3: return 10u;
     case 0xE9: return 4u;
     case 0xC9: return 10u;
@@ -639,6 +639,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
     case 0xE6: cpu->a=(uint8_t)(cpu->a & fetch(cpu));
         cpu->f=(uint8_t)(sz53(cpu->a)|Z80_F_H|(parity(cpu->a)?Z80_F_PV:0));
         break;
+    case 0xEE: { /* PC-42 original bank0 $13F5 EE 80: XOR $80.
+                      Z80 S/Z/PV/3/5 follow result; H/N/C clear. */
+        cpu->a=(uint8_t)(cpu->a^fetch(cpu));
+        cpu->f=(uint8_t)(sz53(cpu->a) |
+                         (parity(cpu->a)?Z80_F_PV:0u));
+        break;
+    }
     case 0xF6: cpu->a=(uint8_t)(cpu->a | fetch(cpu));
         cpu->f=(uint8_t)(sz53(cpu->a)|(parity(cpu->a)?Z80_F_PV:0));
         break;
