@@ -8,6 +8,8 @@ execution evidence, not independent hardware equivalence.
 import json
 from pathlib import Path
 import sys
+import hashlib
+import re
 
 FIELDS={"schema","source","continued_steps","stop_reason","stop_pc",
         "stop_irq","stop_vblank","site_count","phases","sites"}
@@ -20,7 +22,29 @@ def uint(n, maximum=None):
         assert n<=maximum
     return n
 
-def validate(output, pc34, pc36, pc37, pc38):
+ROM_SHA="02e9404e81bddd4ca21fef2b2711dfe562c3bd7b230bf042df3142362e29a6a9"
+ROOT=Path(__file__).resolve().parents[2]
+def verify_original_opcodes(source):
+    rom=Path(source).read_bytes()
+    assert len(rom)==262144 and hashlib.sha256(rom).hexdigest()==ROM_SHA
+    # Fixed-bank0 $00B4 LDIR: preceding HL=C010, DE=C011,
+    # BC=1E4F, and LD (HL),00. It clears the broad WRAM arena,
+    # including all 192 original SAT staging bytes.
+    for pos,raw in ((0x00A9,"21 10 C0"),(0x00AC,"11 11 C0"),
+                    (0x00AF,"01 4F 1E"),(0x00B2,"36 00"),
+                    (0x00B4,"ED B0"),(0x0AA1,"32 00 DD")):
+        expect=bytes.fromhex(raw)
+        assert rom[pos:pos+len(expect)]==expect,(hex(pos),"original ROM")
+    listing=(ROOT/"Ys/phase6/code.lst").read_text(encoding="utf-8")
+    assert len(re.findall(r"^00AA1\\s+0AA1\\s+32\\s+00\\s+DD"
+                          r"\\s+ld \\(\\$DD00\\),a\\s*$",
+                          listing,re.I|re.M))==1
+    asm=(ROOT/"Ys/src/wholebank00/bank00_complete.asm").read_text(encoding="utf-8")
+    assert asm.count("    ld hl,$C010\\n    ld de,$C011\\n"
+                     "    ld bc,$1E4F\\n    ld (hl),$00\\n    ldir")==1
+
+def validate(source, output, pc34, pc36, pc37, pc38):
+    verify_original_opcodes(source)
     a=json.loads(Path(output).read_text(encoding="utf-8"))
     old=[json.loads(Path(p).read_text(encoding="utf-8"))
          for p in (pc34,pc36,pc37,pc38)]
@@ -76,6 +100,19 @@ def validate(output, pc34, pc36, pc37, pc38):
         assert phase["unique"]<=192
         assert phase["unique"]<=phase["count"]
     assert old[3]["changed_bytes"]==0
+    # Golden from native ROM-backed source run 38855605003.
+    # A self-consistent but modified audit must not pass silently.
+    expected_phases=((193,192,1,65,128,0,0,192),
+                     (1,1,0,1,0,0,0,1))
+    keys=("count","same","changed","y","xt","alias","irq","unique")
+    for p,expected in enumerate(expected_phases):
+        assert tuple(a["phases"][p][k] for k in keys)==expected,p
+    actual_sites=sorted((s["phase"],s["pc"],s["bank"],s["irq"],
+                         s["count"],s["same"]) for s in a["sites"])
+    expected_sites=sorted(((0,"00B4",0,False,192,192),
+                           (0,"0AA1",0,False,1,0),
+                           (1,"0AA1",0,False,1,1)))
+    assert actual_sites==expected_sites,actual_sites
     print("PASS PC-39: real WRAM bus strobes reconcile by opcode bank,"
           " same-value stores, IRQs and two source phases")
     for phase in a["phases"]:
@@ -91,9 +128,10 @@ def validate(output, pc34, pc36, pc37, pc38):
 
 if __name__=="__main__":
     try:
-        if len(sys.argv)!=6:
+        if len(sys.argv)!=7:
             raise ValueError("usage: verify_pc39_sat_strobes.py "
-                             "PC39.json PC34.json PC36.json PC37.json PC38.json")
+                             "SOURCE.sms PC39.json PC34.json PC36.json "
+                             "PC37.json PC38.json")
         validate(*sys.argv[1:])
     except (AssertionError,ValueError,TypeError,OSError,KeyError) as err:
         sys.exit("FAIL PC-39 original SAT WRAM strobe audit: "+str(err))
