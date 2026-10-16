@@ -26,6 +26,35 @@ not proof that its instruction is a game sprite producer. Exact
 `$9932` invocation, player identity, map location and collision remain
 separate unverified goals.
 
+## Measured original-cartridge result
+
+[Native ROM-backed CI on the corrected observer](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38853963234)
+passed **32/32 CTest** and the unchanged PC-34/35/36/37 checks:
+
+| Fixed 300,000-step experiment | Observed |
+| --- | ---: |
+| Complete source SAT uploads | **27** |
+| Monitored visible source-buffer byte changes | **0** |
+| Y-byte changes | **0** |
+| X/tile-byte changes | **0** |
+| Unique source byte positions changed | **0 of 192** |
+| Bank-qualified preceding-step candidate change sites | **0** |
+| Upload pairs with changed source bytes | **0** |
+| Upload pairs with identical source bytes | **26** |
+
+This rules out **changing visible source-buffer values** during this
+specific experimental path, not same-value stores or activity outside
+the bounded window. PC-36's first and last source CRC32 agree; the
+independent PC-38 validator pins the zero-change golden measurements.
+The 27 SAT **uploads** must not be mistaken for 27 generated animated
+sprite tables or for authentic game frames.
+
+The next source-grounded investigation is to instrument **actual bus
+write strobes** (including writes of unchanged values) and compare the
+same-run VDP frame against a trusted independent emulator capture.
+Do not force bank 6 `$9932`, fabricate world coordinates or promote
+a playable original-game Alpha.
+
 ## Implementation and reproducibility
 
 - `native/pc_sat_provenance.{h,c}`: bounded 192-byte source-memory
