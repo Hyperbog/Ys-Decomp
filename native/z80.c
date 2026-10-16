@@ -190,7 +190,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0x70: case 0x71: case 0x72: case 0x73:
         case 0x74: case 0x75: case 0x77: /* indexed register stores */
         case 0x7E: case 0x86: case 0x96: case 0xB6: return 19u; /* indexed memory */
-        case 0x34: return 23u; /* INC (IX/IY+d): read/modify/write */
+        case 0x34: case 0x35: return 23u; /* INC/DEC (IX/IY+d) */
         case 0x36: return 19u; /* LD (IX/IY+d),n */
         case 0x09: case 0x19: case 0x29: case 0x39:
             return 15u;       /* ADD IX/IY,rr */
@@ -425,7 +425,8 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             uint8_t data=fetch(cpu);
             uint16_t at=(uint16_t)(*index+displacement);
             if(!store(cpu,at,data)) goto fail;
-        } else if(sub==0x34 || sub==0x46 || sub==0x4E ||
+        } else if(sub==0x34 || sub==0x35 ||
+                  sub==0x46 || sub==0x4E ||
                   sub==0x56 || sub==0x5E || sub==0x66 ||
                   sub==0x6E || sub==0x70 || sub==0x71 ||
                   sub==0x72 || sub==0x73 || sub==0x74 ||
@@ -455,6 +456,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                 uint8_t next=(uint8_t)(value+1u);
                 if(!store(cpu,addr,next)) goto fail;
                 cpu->f=inc_flags(value,next,cpu->f&Z80_F_C);
+            } else if(sub==0x35) {
+                /* PC-40 natural original bank2 $87C6 DD 35 09:
+                   DEC (IX+9). Signed d; flags update only on a
+                   successful SMS memory write. Prior carry kept. */
+                uint8_t next=(uint8_t)(value-1u);
+                if(!store(cpu,addr,next)) goto fail;
+                cpu->f=dec_flags(value,next,cpu->f&Z80_F_C);
             } else if(sub==0x46) {
                 cpu->b=value; /* LD B,(IX/IY+d): flags unchanged. */
             } else if(sub==0x4E) {
