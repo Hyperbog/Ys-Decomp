@@ -210,7 +210,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
     if ((opcode&0xC7u)==0xC2u) return 10u; /* JP cc */
     switch(opcode) {
     case 0x00: case 0x07: case 0x08: case 0x0F: case 0x1F:
-    case 0x2F: case 0xD9: case 0xEB: /* EX DE,HL */
+    case 0x2F: case 0x3F: case 0xD9: case 0xEB: /* EX DE,HL */
     case 0xF3: case 0xFB: return 4u;
     case 0xCB: return (sub&7u)==6u ?
         ((sub&0xC0u)==0x40u ? 12u : 15u) : 8u; /* BIT/RES b,r */
@@ -455,6 +455,15 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         } else {
             cpu->status=Z80_UNSUPPORTED;goto fail;
         }
+        break;
+    }
+    case 0x3F: { /* PC-42 original $1A77 CCF.
+                        Complement C; H=old C; N=0, S/Z/PV held,
+                        F3/F5 from A, A itself untouched. 4 T. */
+        uint8_t old_c=(uint8_t)(cpu->f&Z80_F_C);
+        cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV)) |
+                         (cpu->a&(Z80_F_3|Z80_F_5)) |
+                         (old_c?Z80_F_H:Z80_F_C));
         break;
     }
     case 0x2F: /* CPL: SZPV/C unchanged; set H/N, 3/5 from A. */
