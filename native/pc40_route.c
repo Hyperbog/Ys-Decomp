@@ -70,6 +70,9 @@ bool ys_pc42_historical_checkpoint(const YsPc40Route *w,
        !sprite_counts || !w->prefix_seen ||
        step!=531478ul || w->seen_iterations!=step ||
        rt->cpu->pc!=0x141Au ||
+       /* First fully observed native reference R: 0x7C BEFORE ED 5F,
+          IFF2=1. Never invent R from a step counter. */
+       rt->cpu->r!=0x7Cu || !rt->cpu->iff2 ||
        rt->recognized_irqs!=133u ||
        rt->clock.vblank_events!=137u ||
        rt->cpu->bus->mapped_bank[1]!=1u ||
