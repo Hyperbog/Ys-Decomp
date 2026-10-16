@@ -88,6 +88,41 @@ int main(void) {
     assert(strstr(buffer,"\"pc\":\"2041\""));
     assert(strstr(buffer,"\"pc\":\"2281\""));
     assert(ys_sms_bus_set_wram_hook(&bus,NULL,NULL));
+    /* Source bank0 $0B1A LDI copies (HL) to (DE); A is unrelated.
+       The bus callback executes before incrementing HL/DE/BC. */
+    YsPc44Writer copy={0};copy.cpu=&cpu;
+    assert(ys_sms_bus_set_wram_hook(&bus,ys_pc44_c198_hook,&copy));
+    rom[0x0B1Au]=0xEDu;rom[0x0B1Bu]=0xA0u;
+    assert(ys_sms_bus_write(&bus,0xC180u,0x6Du));
+    cpu.h=0xC1u;cpu.l=0x80u;
+    cpu.d=0xC1u;cpu.e=0x98u;
+    cpu.b=0u;cpu.c=1u;
+    step_at(0x0B1Au,0xCCu);
+    assert(copy.count==1u);
+    assert(copy.writes[0].pc==0x0B1Au);
+    assert(copy.writes[0].hl==0xC180u &&
+           copy.writes[0].de==0xC198u && copy.writes[0].bc==1u);
+    assert(copy.writes[0].before==7u &&
+           copy.writes[0].after==0x6Du && copy.writes[0].a==0xCCu);
+    assert(cpu.h==0xC1u && cpu.l==0x81u &&
+           cpu.d==0xC1u && cpu.e==0x99u &&
+           cpu.b==0u && cpu.c==0u);
+    /* Original reset $00B4 LDIR must carry identical pre-copy
+       register provenance, including the byte value from HL. */
+    rom[0x00B4u]=0xEDu;rom[0x00B5u]=0xB0u;
+    assert(ys_sms_bus_write(&bus,0xC190u,0x3Du));
+    cpu.h=0xC1u;cpu.l=0x90u;
+    cpu.d=0xC1u;cpu.e=0x98u;
+    cpu.b=0u;cpu.c=1u;
+    step_at(0x00B4u,0xEEu);
+    assert(copy.count==2u);
+    assert(copy.writes[1].pc==0x00B4u &&
+           copy.writes[1].hl==0xC190u &&
+           copy.writes[1].de==0xC198u &&
+           copy.writes[1].bc==1u &&
+           copy.writes[1].before==0x6Du &&
+           copy.writes[1].after==0x3Du);
+    assert(ys_sms_bus_set_wram_hook(&bus,NULL,NULL));
     puts("PASS PC-44: source opcodes $2041/$2281, identical WRAM"
          " stores, aliases, SRAM exclusion, ROM refusal and phases");
     return 0;
