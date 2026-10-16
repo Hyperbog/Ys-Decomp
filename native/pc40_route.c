@@ -65,7 +65,13 @@ bool ys_pc40_route_write(FILE *file,const YsPc40Route *w,
                           const YsSmsRuntime *rt,const char *reason,
                           unsigned long steps) {
     if(!file || !w || !rt || !rt->cpu || !rt->cpu->bus ||
-       !reason || !w->prefix_seen || steps!=w->seen_iterations ||
+       !reason || !w->prefix_seen ||
+       /* A stop inside the iteration occurs AFTER the read-only
+          sample but BEFORE for-loop ++steps. A budget stop does not. */
+       (strcmp(reason,"budget")==0 ?
+        steps!=w->seen_iterations :
+        !(w->seen_iterations==steps ||
+          (steps<600000ul && w->seen_iterations==steps+1ul))) ||
        steps<300000ul || steps>600000ul ||
        (strcmp(reason,"budget")!=0 &&
         strcmp(reason,"unsupported")!=0 &&
