@@ -315,10 +315,11 @@ int main(int argc,char **argv) {
            strcmp(argv[2],"--pc15-sprite-watch")==0 ||
            strcmp(argv[2],"--pc25-collision-watch")==0 ||
            strcmp(argv[2],"--pc27-button-probe")==0 ||
-           strcmp(argv[2],"--pc33-postrelease-watch")==0)) ||
+           strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
+           strcmp(argv[2],"--pc34-extended-postrelease")==0)) ||
           (argc==5 && strcmp(argv[2],"--pc25-collision-watch")==0))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
-              "PC12/15 use 150k idle input; PC25 adds a 300k idle-only audit; PC27 is the source-armed button1 probe; PC33 separately continues after the genuine release sample. Neither proves gameplay.\n",
+              "PC12/15 use 150k idle input; PC25 adds a 300k idle-only audit; PC27 is the source-armed button1 probe; PC33 runs 150k post-M45, PC34 separately extends to 300k after genuine release. Neither proves gameplay.\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1872,7 +1873,8 @@ int main(int argc,char **argv) {
 
     } else if(argc==4 &&
               (strcmp(argv[2],"--pc27-button-probe")==0 ||
-               strcmp(argv[2],"--pc33-postrelease-watch")==0)) {
+               strcmp(argv[2],"--pc33-postrelease-watch")==0 ||
+               strcmp(argv[2],"--pc34-extended-postrelease")==0)) {
         /* Independent opt-in source-backed input experiment, not a
            hardware/emulator-match claim. Idle until original CPU
            reaches PC $0CD1 (observed Phase5 C01C edge test) with C01F==$01.
@@ -1883,8 +1885,12 @@ int main(int argc,char **argv) {
         const uint64_t start_blank=runtime.clock.vblank_events;
         YsPcSourceWatch collision={0};
         YsPcSpriteWatch sprite={0};
-        const bool postrelease=
+        const bool extended=
+            strcmp(argv[2],"--pc34-extended-postrelease")==0;
+        const bool postrelease=extended ||
             strcmp(argv[2],"--pc33-postrelease-watch")==0;
+        const unsigned step_budget=extended?300000u:150000u;
+        const uint64_t blank_budget=extended?120u:90u;
         bool release_sampled=false;
         const uint8_t start_selector=ys_sms_bus_read(bus,0xC01Fu);
         const char *why="budget";
@@ -1895,7 +1901,7 @@ int main(int argc,char **argv) {
         uint8_t last_edge=0u;
         uint64_t press_step=0u,release_step=0u,mode2_step=0u;
         unsigned edge_10_hits=0u;
-        for(;steps<PC27_STEPS;++steps) {
+        for(;steps<step_budget;++steps) {
             if(!ys_pc_source_watch_sample(&collision,&runtime) ||
                (postrelease && !ys_pc_sprite_watch_sample(&sprite,&runtime))) {
                 fputs("PC-27/33 invalid source event observer\n",stderr);
@@ -1933,7 +1939,7 @@ int main(int argc,char **argv) {
             if(collision.observed_collision_calls>0u) {
                 why="collision_observed";break;
             }
-            if(runtime.clock.vblank_events-start_blank>=PC27_EXTRA_VBLANKS) {
+            if(runtime.clock.vblank_events-start_blank>=blank_budget) {
                 why="vblank_limit";break;
             }
             const bool execute_release=
@@ -1981,6 +1987,7 @@ int main(int argc,char **argv) {
              "  \"port_dc\":%u,\"port_dd\":%u,\n"
              "  \"input_reads_dc\":%llu,\"input_reads_dd\":%llu,\n"
              "  \"observed_collision_calls\":%u%s\n}\n",
+             extended?"ys-pc34-extended-postrelease-source-watch-v1":
              postrelease?"ys-pc33-postrelease-source-watch-v1":
                          "ys-pc27-original-button-probe-v1",
              (unsigned)start_selector,why,steps,cpu.pc,
@@ -2025,7 +2032,7 @@ int main(int argc,char **argv) {
                (unsigned long long)runtime.clock.vblank_events,
                collision.observed_collision_calls);
         if(postrelease) {
-            printf("PC-33 source post-release research:"
+            printf("PC-33/34 source post-release research:"
                    " sampled_release=%u step=%lu"
                    " sprite_caller26F3=%u sprite_mapper26F5=%u"
                    " sprite_upload0427=%u bank6_9932=%u"
@@ -2035,7 +2042,7 @@ int main(int argc,char **argv) {
                    sprite.counts[4],sprite.counts[3],
                    collision.observed_collision_calls);
         }
-        puts("PC-27/33 research only: controller pulse is experimental;"
+        puts("PC-27/33/34 research only: controller pulse is experimental;"
              " even a source-proven transition is NOT independent"
              " emulator-match, original gameplay or an Alpha gate");
     } else {

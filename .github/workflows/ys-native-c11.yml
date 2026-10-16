@@ -164,6 +164,10 @@ jobs:
           # authentic $0773 release IN executes; PC27 stays unchanged.
           ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc33-postrelease-watch "$RUNNER_TEMP/ys-pc33-postrelease.json"
           python3 native/tools/verify_pc33_postrelease_watch.py "$RUNNER_TEMP/ys-pc33-postrelease.json"
+          # PC-34 separate 300k budget, SAME source-armed button press/release,
+          # no mapper/PC/WRAM forcing; watch for mapped sprite/collision calls.
+          ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc34-extended-postrelease "$RUNNER_TEMP/ys-pc34-postrelease.json"
+          python3 native/tools/verify_pc34_extended_postrelease.py "$RUNNER_TEMP/ys-pc34-postrelease.json"
           python3 -c 'import json,os,pathlib; p=pathlib.Path(os.environ["RUNNER_TEMP"])/"ys-pc12-watch.json"; v=json.loads(p.read_text()); print("PC-12 bounded result:", v["stop_reason"], "PC", v["stop_pc"], "calls", v["observed_collision_calls"])'
           ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin"
           ./build-native/ys-native-game --smoke --collision "$RUNNER_TEMP/ys-pc9-collision.bin" --scenes "$RUNNER_TEMP/ys-pc-source-scenes.bin"
