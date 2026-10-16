@@ -204,7 +204,7 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         return timed_condition(opcode,f_before) ? 17u : 10u; /* CALL cc */
     if ((opcode&0xC7u)==0xC2u) return 10u; /* JP cc */
     switch(opcode) {
-    case 0x00: case 0x07: case 0x08: case 0x0F: case 0x1F:
+    case 0x00: case 0x07: case 0x08: case 0x0F: case 0x1F: case 0x3F:
     case 0x2F: case 0xD9: case 0xEB: /* EX DE,HL */
     case 0xF3: case 0xFB: return 4u;
     case 0xCB: return (sub&7u)==6u ?
@@ -754,6 +754,13 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                     opcode==0x28 ? !!(cpu->f & Z80_F_Z) :
                     opcode==0x30 ? !(cpu->f & Z80_F_C) : !!(cpu->f & Z80_F_C);
         if(take) cpu->pc=(uint16_t)(cpu->pc+displacement);
+        break;
+    }
+    case 0x3F: { /* Original fixed bank0 $1A77 3F: CCF, 4 T-states */
+        uint8_t old_c=(uint8_t)(cpu->f&Z80_F_C);
+        cpu->f=(uint8_t)((cpu->f&(Z80_F_S|Z80_F_Z|Z80_F_PV))|
+            (cpu->a&(Z80_F_3|Z80_F_5))|
+            (old_c?Z80_F_H:Z80_F_C));
         break;
     }
     case 0xF3: cpu->iff1=false;cpu->iff2=false;break;
