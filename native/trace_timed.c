@@ -200,9 +200,10 @@ int main(int argc,char **argv) {
           (strcmp(argv[2],"--frame")==0 ||
            strcmp(argv[2],"--vdp-at-m44")==0 ||
            strcmp(argv[2],"--pc12-watch")==0 ||
-           strcmp(argv[2],"--pc15-sprite-watch")==0)))) {
+           strcmp(argv[2],"--pc15-sprite-watch")==0 ||
+           strcmp(argv[2],"--pc25-collision-watch")==0)))) {
         fputs("usage: ys-native-timed-rom source-Ys.sms [--frame snapshot.ppm | --vdp-at-m44 source.vdp | --pc12-watch watch.json | --pc15-sprite-watch sprite-watch.json]\n"
-              "Default stops at source $0C92; --pc12-watch/--pc15-sprite-watch continue bounded source execution without controller input (not gameplay proof).\n",
+              "Default stops at source $0C92; --pc12-watch/--pc15-sprite-watch use the original 150k bounds; --pc25-collision-watch is separate 300k read-only research (not gameplay proof).\n",
               stderr);
         return EXIT_FAILURE;
     }
@@ -1677,6 +1678,53 @@ int main(int argc,char **argv) {
         else
             puts("BLOCKED PC-15: no original mapped bank6 sprite"
                  " producer observed; no original player/scene proof");
+    } else if(argc==4 && strcmp(argv[2],"--pc25-collision-watch")==0) {
+        /* PC-25 is a SEPARATE opt-in research bound, not a change to
+           PC-12/15 regression observers, original ROM or test oracles.
+           Keep source CPU/IRQ/controller/RAM/mapper untouched. */
+        enum { PC25_STEPS=300000u,PC25_EXTRA_VBLANKS=120u };
+        const uint64_t start_blank=runtime.clock.vblank_events;
+        YsPcSourceWatch watch={0};
+        const char *why="budget";
+        unsigned long steps=0ul;
+        for(;steps<PC25_STEPS;++steps) {
+            if(!ys_pc_source_watch_sample(&watch,&runtime)) {
+                fputs("PC-25 invalid read-only collision observer state\n",stderr);
+                free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+            }
+            if(watch.observed_collision_calls!=0u) {
+                why="observed";break; /* BEFORE executing source call. */
+            }
+            if(runtime.clock.vblank_events-start_blank>=PC25_EXTRA_VBLANKS) {
+                why="vblank_limit";break;
+            }
+            Z80Status state=ys_sms_runtime_step_auto(&runtime);
+            if(state!=Z80_RUNNING && state!=Z80_HALTED) {
+                why="unsupported";break;
+            }
+        }
+        FILE *file=fopen(argv[3],"wb");
+        bool ok=file && ys_pc_source_watch_write(file,&watch,&runtime,
+                                                  why,steps);
+        if(file && fclose(file)!=0) ok=false;
+        if(!ok) {
+            fputs("PC-25 cannot write extended collision observation\n",stderr);
+            free(rom);free(bus);free(vdp);free(sound);return EXIT_FAILURE;
+        }
+        printf("PC-25 extended original source collision research:"
+               " reason=%s continuation_steps=%lu PC=$%04X"
+               " slot1=%u slot2=%u original_calls=%u"
+               " IRQ=%llu VBlank=%llu\n",
+               why,steps,cpu.pc,(unsigned)bus->mapped_bank[1],
+               (unsigned)bus->mapped_bank[2],watch.observed_collision_calls,
+               (unsigned long long)runtime.recognized_irqs,
+               (unsigned long long)runtime.clock.vblank_events);
+        if(watch.observed_collision_calls>0u)
+            puts("OBSERVED PC-25: mapper-qualified source collision call"
+                 " before execution; source player and scene still unverified");
+        else
+            puts("BLOCKED PC-25: no source collision call within this"
+                 " larger original unpressed-input research horizon");
     } else {
         puts("Stop before source $0C92 video setup, not playable.");
     }
