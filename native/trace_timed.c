@@ -1973,6 +1973,17 @@ int main(int argc,char **argv) {
             /* Prior PC-40 stopped naturally at this instruction on
                UNSUPPORTED 88. PC-41 may now execute ADC A,B, but MUST
                arrive at identical source-machine state first. */
+            if(route_long && steps==531478ul) {
+                if(!ys_pc42_historical_checkpoint(&route,&runtime,steps,
+                                                   sprite.counts,
+                                                   collision.observed_collision_calls)) {
+                    fputs("PC-42 original 531478-step checkpoint drift\n",stderr);
+                    free(rom);free(bus);free(vdp);free(sound);
+                    return EXIT_FAILURE;
+                }
+                puts("PC-42 PASS original pre-LD A,R 531478-step"
+                     " CPU/mapper/IRQ/selector/sprite checkpoint");
+            }
             if(route_long && steps==525358ul) {
                 if(!ys_pc41_historical_checkpoint(&route,&runtime,steps,
                                                     sprite.counts,
