@@ -32,6 +32,11 @@ def verify(rom_path,source_json,route_json,pc34_json,milestone='pc40'):
     # PC-41 natural historical stop: fixed bank0 $1A0A begins with
     # 88 (ADC A,B). Original M45-reconstructed ROM SHA is checked above.
     assert rom[0x1A0A]==0x88
+    assert rom[0x1AC4:0x1AC8]==bytes.fromhex("DD CB 01 C6")
+    bank0=(Path(__file__).resolve().parents[2]/
+           "Ys/src/wholebank00/bank00_complete.asm").read_text(
+               encoding="utf-8")
+    assert bank0.count("    set 0,(ix+1)")>=1
     # Source-only fixed bank 0: actual failing NEG, following 16-bit SBC,
     # source selector gate and bank-6 producer call. Match physical bytes
     # AND existing independently committed Z80 listing mnemonics.
