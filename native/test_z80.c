@@ -842,6 +842,63 @@ static void test_pc21_indexed_rom_write_guard(void) {
            cpu.f==0xFFu && cpu.last_tstates==19u);
 }
 
+
+/* PC-22: $89D1 DD 6E 0E / $89D4 DD 66 0F. The independent
+   Zilog documented indexed-(HL) rule targets H/L, NOT IXH/IXL.
+   The Phase5 mnemonics saying ixl/ixh are historical listing labels,
+   not a reason to mutate the index register. */
+static void test_pc22_indexed_hl_source_sequence(void) {
+    setup();
+    LOAD(0,0xDD,0x6E,0x0E,0xDD,0x66,0x0F,
+           0xDD,0x75,0x10,0xDD,0x74,0x11);
+    cpu.ix=0xC100u;
+    cpu.h=0xA1u;cpu.l=0xB2u;cpu.a=0x55u;
+    cpu.f=0xFFu;
+    assert(ys_sms_bus_write(&bus,0xC10Eu,0x34u));
+    assert(ys_sms_bus_write(&bus,0xC10Fu,0xC2u));
+    run(6u,2u);
+    assert(cpu.h==0xC2u && cpu.l==0x34u &&
+           cpu.ix==0xC100u && cpu.f==0xFFu &&
+           cpu.last_tstates==19u && cpu.total_tstates==38u);
+    run(12u,2u);
+    assert(ys_sms_bus_read(&bus,0xC110u)==0x34u &&
+           ys_sms_bus_read(&bus,0xC111u)==0xC2u &&
+           cpu.h==0xC2u && cpu.l==0x34u &&
+           cpu.ix==0xC100u && cpu.f==0xFFu &&
+           cpu.steps==4u && cpu.last_tstates==19u &&
+           cpu.total_tstates==76u);
+}
+
+static void test_pc22_indexed_hl_iy_and_write_guards(void) {
+    setup();
+    LOAD(0,0xFD,0x66,0xFE,0xFD,0x6E,0xFF,
+           0xFD,0x74,0x01,0xFD,0x75,0x02);
+    cpu.iy=0xC102u;
+    cpu.h=0x6Au; cpu.l=0x29u;cpu.f=Z80_F_C|Z80_F_Z;
+    assert(ys_sms_bus_write(&bus,0xC100u,0xFEu));
+    assert(ys_sms_bus_write(&bus,0xC101u,0xDCu));
+    run(12u,4u);
+    assert(cpu.h==0xFEu && cpu.l==0xDCu &&
+           cpu.iy==0xC102u && cpu.f==(Z80_F_C|Z80_F_Z) &&
+           ys_sms_bus_read(&bus,0xC103u)==0xFEu &&
+           ys_sms_bus_read(&bus,0xC104u)==0xDCu &&
+           cpu.total_tstates==76u);
+    setup();
+    LOAD(0,0xDD,0x66,0x01); /* IX+1 wraps $FFFF to ROM $0000 */
+    cpu.ix=0xFFFFu;cpu.h=0u;cpu.f=0xFFu;
+    assert(ys_z80_step(&cpu)==Z80_RUNNING);
+    assert(cpu.h==0xDDu && cpu.ix==0xFFFFu &&
+           cpu.f==0xFFu && cpu.last_tstates==19u);
+    setup();
+    LOAD(0,0xDD,0x75,0x01); /* fail-closed ROM store */
+    cpu.ix=0xFFFFu;cpu.l=0x76u;cpu.f=0xFFu;
+    assert(ys_z80_step(&cpu)==Z80_BAD_WRITE);
+    assert(cpu.fault_pc==0u && cpu.pc==0u &&
+           cpu.ix==0xFFFFu && cpu.l==0x76u &&
+           cpu.f==0xFFu && rom[0]==0xDDu &&
+           cpu.steps==0u && cpu.total_tstates==0u);
+}
+
 int main(void) {
     test_first_boot_dispatch_and_palette_copy();
     test_rld_nibble_rotation_and_rom_guard();
@@ -863,6 +920,8 @@ int main(void) {
     test_pc21_indexed_sound_table_writes();
     test_pc21_indexed_register_store_read();
     test_pc21_indexed_rom_write_guard();
+    test_pc22_indexed_hl_source_sequence();
+    test_pc22_indexed_hl_iy_and_write_guards();
     test_bank2_audio_io_and_block_transfer();
     test_extended_startup_instructions();
     test_vdp_cpu_ports_and_rst();

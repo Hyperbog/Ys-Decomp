@@ -109,6 +109,8 @@ jobs:
           python3 native/tools/verify_pc20_sound_table.py "$RUNNER_TEMP/ys-pc8-source.sms"
           # PC-21: verified bank2 sound indexed register writes/reads.
           python3 native/tools/verify_pc21_sound_stores.py "$RUNNER_TEMP/ys-pc8-source.sms"
+          # PC-22: bank2 indexed H/L bytes preserved, hardware meaning tested.
+          python3 native/tools/verify_pc22_indexed_hl.py "$RUNNER_TEMP/ys-pc8-source.sms"
           # PC-9: validate authentic bank4 $807C collision predicate,
           # three bank1 candidate callers, and 3968 original Z80 cases.
           python3 native/tools/export_pc_collision.py --out "$RUNNER_TEMP/ys-pc9-collision.bin"

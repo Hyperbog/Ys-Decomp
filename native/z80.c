@@ -182,7 +182,9 @@ static uint8_t opcode_tstates(const YsZ80 *cpu, uint8_t opcode,
         case 0x21: return 14u; /* LD IX/IY,nn */
         case 0x46: case 0x4E: /* LD B/C,(IX/IY+d) */
         case 0x56: case 0x5E: /* LD D/E,(IX/IY+d): bank2 $84F1 */
-        case 0x70: case 0x71: case 0x72: case 0x73: case 0x77: /* indexed register stores */
+        case 0x66: case 0x6E: /* LD H/L,(IX/IY+d), not index halves */
+        case 0x70: case 0x71: case 0x72: case 0x73:
+        case 0x74: case 0x75: case 0x77: /* indexed register stores */
         case 0x7E: case 0x86: case 0x96: case 0xB6: return 19u; /* indexed memory */
         case 0x34: return 23u; /* INC (IX/IY+d): read/modify/write */
         case 0x09: case 0x19: case 0x29: case 0x39:
@@ -369,9 +371,10 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
         } else if(sub==0x21) {
             *index=fetch16(cpu);
         } else if(sub==0x34 || sub==0x46 || sub==0x4E ||
-                  sub==0x56 || sub==0x5E ||
-                  sub==0x70 || sub==0x71 || sub==0x72 ||
-                  sub==0x73 || sub==0x77 || sub==0x7E ||
+                  sub==0x56 || sub==0x5E || sub==0x66 ||
+                  sub==0x6E || sub==0x70 || sub==0x71 ||
+                  sub==0x72 || sub==0x73 || sub==0x74 ||
+                  sub==0x75 || sub==0x77 || sub==0x7E ||
                   sub==0x86 || sub==0x96 || sub==0xB6) {
             /* Original bank2: $84F1 LD E,(IX+3), $84F4 LD D,(IX+4),
                $85D3 ADD A,(IX+5), $8947 INC (IX+11),
@@ -383,10 +386,12 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
             uint16_t addr=(uint16_t)(*index+displacement);
             uint8_t value=ys_sms_bus_read(cpu->bus,addr);
             if(sub==0x70 || sub==0x71 || sub==0x72 ||
-               sub==0x73 || sub==0x77) {
-                /* Original bank2 $8510/$8515 LD (IX+d),A and
-                   $8563/$8566 LD (IX+d),E/D. Keep index H/L
-                   aliases unsupported until independently verified.
+               sub==0x73 || sub==0x74 || sub==0x75 ||
+               sub==0x77) {
+                /* Original bank2 $8510/$8515 LD (IX+d),A,
+                   $8563/$8566 E/D and $8587/$858A L/H.
+                   Indexed-memory + H/L uses ordinary H/L, NOT
+                   IXH/IXL (Zilog CPU manual indexed operand rule).
                    Failed ROM writes preserve flags and instructions. */
                 if(!store(cpu,addr,r8(cpu,sub&7u))) goto fail;
             } else if(sub==0x34) {
@@ -403,6 +408,10 @@ Z80Status ys_z80_step(YsZ80 *cpu) {
                 cpu->d=value; /* LD D,(IX/IY+d): no flags changed. */
             } else if(sub==0x5E) {
                 cpu->e=value; /* LD E,(IX/IY+d): no flags changed. */
+            } else if(sub==0x66) {
+                cpu->h=value; /* $89D4: LD H,(IX+d), NOT IXH. */
+            } else if(sub==0x6E) {
+                cpu->l=value; /* $89D1: LD L,(IX+d), NOT IXL. */
             } else if(sub==0x7E) {
                 cpu->a=value; /* LD A,(IX/IY+d): flags unchanged. */
             } else if(sub==0x86) {
