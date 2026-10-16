@@ -16,6 +16,9 @@ static void init_fixture(void) {
     ys_z80_reset(&cpu,&bus);
     rt.cpu=&cpu;
     bus.mapped_bank[2]=6u;
+    /* CALL $9932 must push on ordinary WRAM, not FFFE/FFFF
+       mapper registers when the reset SP would otherwise be 0. */
+    cpu.sp=0xDFF0u;
     /* Genuine original physical bank6 source opcodes; missing
        unrelated producer bytes never executed in this fixture. */
     const uint8_t op[]={0x3Au,0x98u,0xC1u,0xB7u,0x28u,0x5Au,
