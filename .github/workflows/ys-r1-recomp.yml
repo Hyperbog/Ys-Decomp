@@ -30,7 +30,7 @@ jobs:
       - name: Validate mandatory four-file output provenance
         run: python3 -m unittest discover -s shared_decomp/tests -p test_smsgg_recomp.py -v
       - name: Compile, link, execute mock generated ABI and run failure tests
-        run: python3 -m unittest discover -s recomp/tests -p test_compiled_runner.py -v
+        run: python3 -m unittest discover -s recomp/tests -p 'test_*.py' -v
       - name: Ensure tests did not modify tracked source
         run: git diff --exit-code
   real-generated-c-experiment:
@@ -60,11 +60,15 @@ jobs:
         run: |
           mkdir -p recomp/build
           python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner"
-      - name: Bounded real generated-C smoke (not a gameplay parity claim)
+      - name: Bounded 60-frame compiled Ys versus upstream Z80 interpreter
         shell: bash
         run: |
           cd recomp/build
-          timeout 45s ./ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 1 --vdp-trace "$RUNNER_TEMP/ys-r1-vdp.csv"
-          test -s "$RUNNER_TEMP/ys-r1-vdp.csv"
+          timeout 90s ./ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 60 --vdp-trace "$RUNNER_TEMP/ys-r1-compiled.csv" 2>"$RUNNER_TEMP/ys-r1-compiled.log"
+          timeout 90s ./ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --interp --frames 60 --vdp-trace "$RUNNER_TEMP/ys-r1-interpreter.csv" 2>"$RUNNER_TEMP/ys-r1-interpreter.log"
+          cat "$RUNNER_TEMP/ys-r1-compiled.log"
+          cat "$RUNNER_TEMP/ys-r1-interpreter.log"
+          cd "$GITHUB_WORKSPACE"
+          python3 recomp/verify_vdp_parity.py "$RUNNER_TEMP/ys-r1-compiled.csv" "$RUNNER_TEMP/ys-r1-interpreter.csv" --frames 60
       - name: Ensure original/cartridge artifacts remain untracked
         run: git diff --exit-code
