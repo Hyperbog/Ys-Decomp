@@ -30,6 +30,19 @@ do not create a second diverging digest authority. Generated output is
 always ignored by Git, even if produced from the byte-exact source rebuild.
 Do not import generated C into the semantic decompilation tree.
 
+## R1b: original instruction-boundary control-flow investigation
+
+The initial 60-frame SP comparison used a stale interpreter-side
+`g_z80.sp` value. A pinned **temporary external runner diagnostic**
+samples the live interpreter `g_hz.sp`, revealing a genuine remaining
+frame-6 stack-area WRAM difference (`$DFC6`) and vastly different
+execution frequencies at IM1 vector `$0038` (3 vs 56 hits).
+Independent PC watchpoints and same-start-state function tests now isolate
+the next target: mapper/IRQ/stack handoff around original frames 5–6.
+Full frame and gameplay equivalence remain blocked by the unchanged strict
+comparison. See [R1b evidence](research/R1B_STACK_AND_CONTROL_FLOW.md).
+The original game, reference images, generated C and decomp tree are unedited.
+
 ## R1a — compile/link integration (experimental)
 
 R1 introduces a fail-closed compiler driver at
