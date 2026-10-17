@@ -1,0 +1,3 @@
+# Native engine intermediate files and external content builds.
+/build/
+/generated/

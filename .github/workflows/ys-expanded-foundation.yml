@@ -1,0 +1,42 @@
+name: Ys Expanded - independent engine and recomp boundary
+on:
+  push:
+    branches: ['feature/ys-expanded-foundation']
+    paths:
+      - 'engine/**'
+      - 'recomp/**'
+      - 'decomp/**'
+      - 'PROJECT_DIRECTION.md'
+      - '.github/workflows/ys-expanded-foundation.yml'
+  pull_request:
+    branches: [Ys]
+    paths:
+      - 'engine/**'
+      - 'recomp/**'
+      - 'decomp/**'
+      - 'PROJECT_DIRECTION.md'
+      - '.github/workflows/ys-expanded-foundation.yml'
+permissions:
+  contents: read
+jobs:
+  engine-foundation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure strict C11 content registry
+        run: cmake -S engine -B "$RUNNER_TEMP/ys-expanded-build" -DCMAKE_BUILD_TYPE=Debug
+      - name: Compile engine foundation
+        run: cmake --build "$RUNNER_TEMP/ys-expanded-build" --parallel
+      - name: Verify deterministic resource IDs and atomic pack rejection
+        run: ctest --test-dir "$RUNNER_TEMP/ys-expanded-build" --output-on-failure
+      - name: Verify existing optional recomp adapter entrypoint
+        run: python3 shared_decomp/smsgg_recomp.py --help
+      - name: Prevent accidental commits of generated/ROM outputs
+        shell: bash
+        run: |
+          if git ls-files | grep -E '(^recomp/generated/|^engine/generated/|^Ys/recomp/generated/|\.(sms|nes|gg|sg)$)' ; then
+            echo 'Forbidden tracked original ROM or generated output' >&2
+            exit 1
+          fi
+      - name: Ensure independent checks did not change tracked source
+        run: git diff --exit-code
