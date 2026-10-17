@@ -6,7 +6,8 @@ on:
       - 'native/**'
       - '.github/workflows/ys-native-c11.yml'
   pull_request:
-    branches: [Ys]
+    # Validate stacked PC-45 PRs without changing the stable Ys release.
+    branches: [Ys, 'feature/pc44-c198-write-provenance']
     paths:
       - 'native/**'
       - '.github/workflows/ys-native-c11.yml'
