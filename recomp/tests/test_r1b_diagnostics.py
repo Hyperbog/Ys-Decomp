@@ -61,7 +61,7 @@ class R1bDiagnosticTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "watch.csv"
             columns = ["0", "100", *["0"]*14]
-            path.write_text(PC_HEADER + "\\n" + ",".join(columns) + "\\n")
+            path.write_text(PC_HEADER + "\n" + ",".join(columns) + "\n")
             values = read_watch(path)
             self.assertEqual(len(values), 1)
             self.assertEqual(difference(values, values), "MATCHED 1 hits in 16 fields")
@@ -79,7 +79,7 @@ class R1bDiagnosticTests(unittest.TestCase):
             for token in ("999", "bad", "-1"):
                 with self.subTest(value=token):
                     parts = [token, "100", *["0"]*14]
-                    p.write_text(PC_HEADER + "\\n" + ",".join(parts) + "\\n")
+                    p.write_text(PC_HEADER + "\n" + ",".join(parts) + "\n")
                     with self.assertRaises(ValueError):
                         read_watch(p)
 
