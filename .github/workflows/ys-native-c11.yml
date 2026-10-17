@@ -1,12 +1,14 @@
 name: Ys native C11 startup, VDP and sound
 on:
   push:
-    branches: [Ys]
+    # Stacked PRs target feature branches; run their independent gates on push.
+    branches: [Ys, 'feature/pc45-resource-route-audit']
     paths:
       - 'native/**'
       - '.github/workflows/ys-native-c11.yml'
   pull_request:
-    branches: [Ys]
+    # Validate stacked PC-45 PRs without changing the stable Ys release.
+    branches: [Ys, 'feature/pc44-c198-write-provenance']
     paths:
       - 'native/**'
       - '.github/workflows/ys-native-c11.yml'
@@ -200,6 +202,11 @@ jobs:
           ./build-native/ys-native-timed-rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc40-source-route "$RUNNER_TEMP/ys-pc43-source.json" "$RUNNER_TEMP/ys-pc43-route.json" "$RUNNER_TEMP/ys-pc43-gate.json" "$RUNNER_TEMP/ys-pc44-writes.json"
           python3 native/tools/verify_pc43_sprite_gate.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc43-source.json" "$RUNNER_TEMP/ys-pc43-route.json" "$RUNNER_TEMP/ys-pc43-gate.json" "$RUNNER_TEMP/ys-pc34-postrelease.json"
           python3 native/tools/verify_pc44_c198_writes.py "$RUNNER_TEMP/ys-pc8-source.sms" "$RUNNER_TEMP/ys-pc43-source.json" "$RUNNER_TEMP/ys-pc43-route.json" "$RUNNER_TEMP/ys-pc43-gate.json" "$RUNNER_TEMP/ys-pc44-writes.json" "$RUNNER_TEMP/ys-pc34-postrelease.json"
+          # PC-45: cover the full 41-state resource and handler route
+          # with independent source-ledger digests, original ROM opcode
+          # boundaries, and the authentic PC-44 physical WRAM write.
+          python3 -m unittest discover -s native/tools -p 'test_pc45_resource_routes.py' -v
+          python3 native/tools/pc45_resource_routes.py --rom "$RUNNER_TEMP/ys-pc8-source.sms" --pc44-writes "$RUNNER_TEMP/ys-pc44-writes.json" --out "$RUNNER_TEMP/ys-pc45-routes.json"
           # A syntactically valid falsified WRAM store must also
           # fail the exact physical byte/source data-flow oracle.
           python3 - "$RUNNER_TEMP/ys-pc44-writes.json" "$RUNNER_TEMP/ys-pc44-tampered.json" <<'PY'
