@@ -149,7 +149,10 @@ def execute(args):
     output = output_candidate.resolve()
     if output.name != "generated":
         raise RecompError("output directory must be named 'generated' (ROM-derived code)")
+    # Upstream cg_emit also emits a mandatory functions header included by both
+    # full and dispatch TUs; omitting it makes verified outputs unbuildable.
     names = [f"{prefix}_{suffix}.c" for suffix in ("full", "dispatch", "layout")]
+    names.append(f"{prefix}_funcs.h")
     if args.verify_generated:
         verify_generated(output, names, size, sha, crc, config, tool)
         return
