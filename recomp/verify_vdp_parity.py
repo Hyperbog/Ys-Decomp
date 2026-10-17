@@ -40,11 +40,21 @@ def compare(recomp_path, oracle_path, frames):
         raise ValueError("frame count out of range")
     actual = load(recomp_path, frames)
     expected = load(oracle_path, frames)
+    first = None
+    differences = [0] * len(FIELDS)
     for frame, (a, b) in enumerate(zip(actual, expected), 1):
         for field, (left, right) in enumerate(zip(a, b)):
             if left != right:
-                raise ValueError(f"first divergence frame={frame}, field={FIELDS[field]} "
-                                 f"recompiled={left}, oracle={right}")
+                differences[field] += 1
+                if first is None:
+                    first = (frame, field, left, right)
+    if first is not None:
+        frame, field, left, right = first
+        totals = ", ".join(f"{name}={differences[i]}" for i, name in
+                           enumerate(FIELDS) if differences[i])
+        raise ValueError(f"first divergence frame={frame}, field={FIELDS[field]} "
+                         f"recompiled={left}, oracle={right}; "
+                         f"divergent frame counts: {totals}")
     return f"PASS: {frames} complete frame VDP/WRAM/SP checkpoints match upstream interpreter"
 
 
