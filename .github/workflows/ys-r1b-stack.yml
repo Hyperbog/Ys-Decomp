@@ -39,17 +39,29 @@ jobs:
         shell: bash
         run: |
           mkdir -p recomp/build
-          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner"
+          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --trace-pc
           timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-before-compiled.csv" 2>"$RUNNER_TEMP/r1b-before-compiled.log"
           timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --interp --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-before-interp.csv" 2>"$RUNNER_TEMP/r1b-before-interp.log"
           cat "$RUNNER_TEMP/r1b-before-compiled.log"
           cat "$RUNNER_TEMP/r1b-before-interp.log"
           python3 recomp/diagnostics/frame_and_ram_probe.py "$RUNNER_TEMP/r1b-before-compiled.csv" "$RUNNER_TEMP/r1b-before-interp.csv" --frames 60 --runner "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --rom "$RUNNER_TEMP/ys-original-source.sms" --scratch "$RUNNER_TEMP/r1b-original-dump"
+      - name: Controlled same-state Z80 function/PC differential (experimental)
+        continue-on-error: true
+        shell: bash
+        env:
+          SMS_DIFF_ADDR: '079A,8803,0749,0BC5'
+          SMS_DIFF_TRACE: '1'
+          SMS_DIFF_LO: '0'
+          SMS_DIFF_HI: '8'
+          SMS_DIFF_MAX: '4'
+        run: |
+          timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 8 2>&1 | tee "$RUNNER_TEMP/r1b-function-diff.log"
+          grep -F '[diff]' "$RUNNER_TEMP/r1b-function-diff.log"
       - name: Diagnose live interpreter SP using pinned external-only overlay
         shell: bash
         run: |
           python3 recomp/diagnostics/live_sp_overlay.py --upstream "$RUNNER_TEMP/upstream"
-          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner"
+          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --trace-pc
           timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-live-compiled.csv" 2>"$RUNNER_TEMP/r1b-live-compiled.log"
           timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --interp --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-live-interp.csv" 2>"$RUNNER_TEMP/r1b-live-interp.log"
           cat "$RUNNER_TEMP/r1b-live-compiled.log"
