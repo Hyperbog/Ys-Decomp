@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from diagnostics.live_sp_overlay import PATCHES, apply_overlay
 from diagnostics.frame_and_ram_probe import first_ram_difference, mismatches, RAM_BYTES
+from diagnostics.watch_pc_probe import HEADER as PC_HEADER, read_watch, difference
 from verify_vdp_parity import HEADER, load
 
 
@@ -55,6 +56,32 @@ class R1bDiagnosticTests(unittest.TestCase):
         self.assertIsNone(first_ram_difference(data, bytes(data)))
         with self.assertRaisesRegex(ValueError, "8192"):
             first_ram_difference(b"bad", b"bad")
+
+    def test_matched_pc_watchpoint_registers_and_cycles(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "watch.csv"
+            columns = ["0", "100", *["0"]*14]
+            path.write_text(PC_HEADER + "\\n" + ",".join(columns) + "\\n")
+            values = read_watch(path)
+            self.assertEqual(len(values), 1)
+            self.assertEqual(difference(values, values), "MATCHED 1 hits in 16 fields")
+            changed = [list(values[0])]
+            changed[0][12] = 4
+            self.assertIn("field=sp", difference(values, changed))
+            changed = [list(values[0])]
+            changed[0][1] = 101
+            self.assertIn("field=cyc", difference(values, changed))
+            self.assertEqual(difference([], []), "NO_HITS")
+
+    def test_watchpoint_rejects_bad_hit_and_nondecimal_registers(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p = Path(tmp) / "watch.csv"
+            for token in ("999", "bad", "-1"):
+                with self.subTest(value=token):
+                    parts = [token, "100", *["0"]*14]
+                    p.write_text(PC_HEADER + "\\n" + ",".join(parts) + "\\n")
+                    with self.assertRaises(ValueError):
+                        read_watch(p)
 
     def test_trace_loader_rejects_bad_frame(self):
         with tempfile.TemporaryDirectory() as tmp:
