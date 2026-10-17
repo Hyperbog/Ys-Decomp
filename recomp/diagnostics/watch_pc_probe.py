@@ -43,12 +43,18 @@ def read_watch(path):
 def difference(a, b):
     if not a and not b:
         return "NO_HITS"
-    if len(a) != len(b):
-        return f"HIT_COUNT recomp={len(a)} interpreter={len(b)}"
+    first = None
     for index, (left, right) in enumerate(zip(a, b)):
-        for field, (x, y) in enumerate(zip(left, right)):
-            if x != y:
-                return f"hit={index} field={FIELDS[field]} recomp={x} interpreter={y}"
+        changed = [f"{FIELDS[field]}={x}/{y}" for field, (x, y) in
+                   enumerate(zip(left, right)) if x != y]
+        if changed:
+            first = f"first-differing-hit={index} " + " ".join(changed)
+            break
+    if len(a) != len(b):
+        return (f"HIT_COUNT recomp={len(a)} interpreter={len(b)}; "
+                f"{first or 'overlapping samples agree'}")
+    if first:
+        return first
     return f"MATCHED {len(a)} hits in {len(FIELDS)} fields"
 
 
