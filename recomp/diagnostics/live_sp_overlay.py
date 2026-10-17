@@ -19,7 +19,10 @@ PATCHES = (
         "static FILE *g_vdp_trace;\n"
         "/* R1b diagnostic only: the interpreter executes in g_hz, not g_z80. */\n"
         "static bool g_r1b_interp_live;\n"
-        "static uint16_t r1b_frame_live_sp(void);"
+        "static uint16_t r1b_frame_live_sp(void);\n"
+        "#ifdef SMS_CYC_WATCH\n"
+        "static void r1b_interp_watch_pc(void);\n"
+        "#endif"
     ),
     (
         "g_vdp.reg[8], g_vdp.reg[9], g_vdp.reg[0], g_vdp.reg[1], g_z80.sp);",
@@ -37,6 +40,31 @@ PATCHES = (
         "void glue_run_interp(void){\n    g_running = true;",
         "void glue_run_interp(void){\n    g_r1b_interp_live = true;\n"
         "    g_running = true;"
+    ),
+    (
+        "            z80_step(&g_hz); g_frame_ic++;\n"
+        "            advance_vdp(g_hz.cyc);",
+        "#ifdef SMS_CYC_WATCH\n"
+        "            r1b_interp_watch_pc();\n"
+        "#endif\n"
+        "            z80_step(&g_hz); g_frame_ic++;\n"
+        "            advance_vdp(g_hz.cyc);"
+    ),
+    (
+        "static uint64_t g_cyc_watch_hits = 0;\n"
+        "void sms_cyc_watch_hit(void){",
+        "static uint64_t g_cyc_watch_hits = 0;\n"
+        "/* Non-mutating at return: temporarily map the live interpreter CPU to\n"
+        " * the existing pinned CSV writer, then restore g_z80 bit-for-bit. */\n"
+        "static void r1b_interp_watch_pc(void){\n"
+        "    if (!g_cyc_watch_on || g_hz.pc != g_cyc_watch_addr) return;\n"
+        "    Z80State saved = g_z80;\n"
+        "    state_from_hz();\n"
+        "    g_z80.cyc = g_hz.cyc;\n"
+        "    sms_cyc_watch_hit();\n"
+        "    g_z80 = saved;\n"
+        "}\n"
+        "void sms_cyc_watch_hit(void){"
     ),
 )
 
