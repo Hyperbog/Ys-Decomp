@@ -1,0 +1,63 @@
+name: Ys R1b - live Z80 stack and WRAM differential diagnostic
+on:
+  push:
+    branches: ['feature/ys-expanded-r1b-stack-oracle-diagnostics']
+    paths:
+      - 'recomp/**'
+      - '.github/workflows/ys-r1b-stack.yml'
+  pull_request:
+    branches: ['feature/ys-expanded-r1-compiled-recomp']
+    paths:
+      - 'recomp/**'
+      - '.github/workflows/ys-r1b-stack.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  independent-diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run R1b overlay/WRAM/parser regression tests
+        run: python3 -m unittest discover -s recomp/tests -p test_r1b_diagnostics.py -v
+      - name: Obtain pinned upstream reference externally
+        run: |
+          git clone --no-checkout https://github.com/mstan/smsggrecomp.git "$RUNNER_TEMP/upstream"
+          git -C "$RUNNER_TEMP/upstream" checkout 224d5bb2c150a2c295033d35dec629ef9ee42940
+          git -C "$RUNNER_TEMP/upstream" submodule update --init --recursive
+      - name: Compile pinned upstream recompiler
+        run: |
+          cmake -S "$RUNNER_TEMP/upstream/recompiler" -B "$RUNNER_TEMP/upstream/recompiler/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$RUNNER_TEMP/upstream/recompiler/build" --parallel
+      - name: Reconstruct original Ys source-only ROM
+        run: python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-original-source.sms"
+      - name: Generate four files from authentic source ROM
+        run: |
+          python3 shared_decomp/smsgg_recomp.py --rom "$RUNNER_TEMP/ys-original-source.sms" --manifest Ys/manifest.json --config Ys/recomp/game.toml --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/generated"
+      - name: Build and run unmodified baseline first
+        shell: bash
+        run: |
+          mkdir -p recomp/build
+          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner"
+          timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-before-compiled.csv" 2>"$RUNNER_TEMP/r1b-before-compiled.log"
+          timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --interp --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-before-interp.csv" 2>"$RUNNER_TEMP/r1b-before-interp.log"
+          cat "$RUNNER_TEMP/r1b-before-compiled.log"
+          cat "$RUNNER_TEMP/r1b-before-interp.log"
+          python3 recomp/diagnostics/frame_and_ram_probe.py "$RUNNER_TEMP/r1b-before-compiled.csv" "$RUNNER_TEMP/r1b-before-interp.csv" --frames 60 --runner "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --rom "$RUNNER_TEMP/ys-original-source.sms" --scratch "$RUNNER_TEMP/r1b-original-dump"
+      - name: Diagnose live interpreter SP using pinned external-only overlay
+        shell: bash
+        run: |
+          python3 recomp/diagnostics/live_sp_overlay.py --upstream "$RUNNER_TEMP/upstream"
+          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner"
+          timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-live-compiled.csv" 2>"$RUNNER_TEMP/r1b-live-compiled.log"
+          timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --interp --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-live-interp.csv" 2>"$RUNNER_TEMP/r1b-live-interp.log"
+          cat "$RUNNER_TEMP/r1b-live-compiled.log"
+          cat "$RUNNER_TEMP/r1b-live-interp.log"
+          python3 recomp/diagnostics/frame_and_ram_probe.py "$RUNNER_TEMP/r1b-live-compiled.csv" "$RUNNER_TEMP/r1b-live-interp.csv" --frames 60 --runner "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --rom "$RUNNER_TEMP/ys-original-source.sms" --scratch "$RUNNER_TEMP/r1b-live-dump"
+      - name: Strict original-vs-recomp frame gate (must not waive mismatches)
+        run: |
+          python3 recomp/verify_vdp_parity.py "$RUNNER_TEMP/r1b-live-compiled.csv" "$RUNNER_TEMP/r1b-live-interp.csv" --frames 60
+      - name: Ensure all original source and test oracles are unchanged
+        if: always()
+        run: git diff --exit-code
