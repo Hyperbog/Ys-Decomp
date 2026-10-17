@@ -41,7 +41,8 @@ class SmsggAdapterTests(unittest.TestCase):
             "out = cfg.parent / 'generated'\n"
             "out.mkdir()\n"
             "for part in ('full', 'dispatch', 'layout'):\n"
-            "    (out / ('ystest_' + part + '.c')).write_text('/* fixture */\\n')\n",
+            "    (out / ('ystest_' + part + '.c')).write_text('/* fixture */\\n')\n"
+            "    (out / 'ystest_funcs.h').write_text('/* prototypes */\\n')\n",
             encoding="utf-8",
         )
         self.tool.chmod(0o755)
@@ -100,14 +101,14 @@ class SmsggAdapterTests(unittest.TestCase):
         self.assertIn(f"{crc:08X}", result.stdout)
 
     @unittest.skipIf(os.name == "nt", "mock executable is a POSIX script")
-    def test_generates_three_outputs_and_evidence(self):
+    def test_generates_four_outputs_and_evidence(self):
         result = self.invoke("--tool", str(self.tool))
         self.assertEqual(result.returncode, 0, result.stderr)
         out = self.root / "generated"
         report = json.loads((out / "report.json").read_text())
         self.assertEqual(report["stage"], "generated-c-only")
         self.assertFalse(report["runtime_verified"])
-        self.assertEqual(len(report["outputs"]), 3)
+        self.assertEqual(len(report["outputs"]), 4)
         self.assertEqual(report["rom_crc32"], f"{zlib.crc32(self.rom.read_bytes()):08X}")
         self.assertEqual(self.invoke("--tool", str(self.tool),
                                      "--verify-generated").returncode, 0)
@@ -145,6 +146,15 @@ class SmsggAdapterTests(unittest.TestCase):
         self.assertIn("did not produce ystest_dispatch.c", result.stderr)
         self.assertFalse((self.root / "generated").exists())
 
+
+    @unittest.skipIf(os.name == "nt", "mock executable is a POSIX script")
+    def test_missing_required_header_is_rejected(self):
+        self.tool.write_text(self.tool.read_text().replace(
+            "    (out / 'ystest_funcs.h').write_text('/* prototypes */\\n')\\n", ""))
+        result = self.invoke("--tool", str(self.tool))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("did not produce ystest_funcs.h", result.stderr)
+        self.assertFalse((self.root / "generated").exists())
 
     def test_manifest_boolean_size_rejected(self):
         self.identity["rom_bytes"] = True
