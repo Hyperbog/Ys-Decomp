@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p recomp/build
-          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --trace-pc
+          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --trace-pc --watch-pc
           timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-before-compiled.csv" 2>"$RUNNER_TEMP/r1b-before-compiled.log"
           timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --interp --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-before-interp.csv" 2>"$RUNNER_TEMP/r1b-before-interp.log"
           cat "$RUNNER_TEMP/r1b-before-compiled.log"
@@ -61,12 +61,15 @@ jobs:
         shell: bash
         run: |
           python3 recomp/diagnostics/live_sp_overlay.py --upstream "$RUNNER_TEMP/upstream"
-          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --trace-pc
+          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --trace-pc --watch-pc
           timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-live-compiled.csv" 2>"$RUNNER_TEMP/r1b-live-compiled.log"
           timeout 90s recomp/build/ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --interp --frames 60 --vdp-trace "$RUNNER_TEMP/r1b-live-interp.csv" 2>"$RUNNER_TEMP/r1b-live-interp.log"
           cat "$RUNNER_TEMP/r1b-live-compiled.log"
           cat "$RUNNER_TEMP/r1b-live-interp.log"
           python3 recomp/diagnostics/frame_and_ram_probe.py "$RUNNER_TEMP/r1b-live-compiled.csv" "$RUNNER_TEMP/r1b-live-interp.csv" --frames 60 --runner "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --rom "$RUNNER_TEMP/ys-original-source.sms" --scratch "$RUNNER_TEMP/r1b-live-dump"
+      - name: Compare live Z80 registers at identical instruction PC anchors
+        run: |
+          python3 recomp/diagnostics/watch_pc_probe.py --runner "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner" --rom "$RUNNER_TEMP/ys-original-source.sms" --folder "$RUNNER_TEMP/r1b-pc-watch" --frames 60 --anchors 079A 8803 0038 0749 0BC5
       - name: Strict original-vs-recomp frame gate (must not waive mismatches)
         run: |
           python3 recomp/verify_vdp_parity.py "$RUNNER_TEMP/r1b-live-compiled.csv" "$RUNNER_TEMP/r1b-live-interp.csv" --frames 60
