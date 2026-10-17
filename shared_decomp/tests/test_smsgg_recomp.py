@@ -149,8 +149,9 @@ class SmsggAdapterTests(unittest.TestCase):
 
     @unittest.skipIf(os.name == "nt", "mock executable is a POSIX script")
     def test_missing_required_header_is_rejected(self):
-        self.tool.write_text(self.tool.read_text().replace(
-            "    (out / 'ystest_funcs.h').write_text('/* prototypes */\\n')\\n", ""))
+        self.tool.write_text("".join(line for line in
+            self.tool.read_text().splitlines(keepends=True)
+            if "ystest_funcs.h" not in line))
         result = self.invoke("--tool", str(self.tool))
         self.assertEqual(result.returncode, 2)
         self.assertIn("did not produce ystest_funcs.h", result.stderr)
