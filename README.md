@@ -1,3 +1,18 @@
+## New direction: Ys Expanded (decomp + recomp + extensible engine)
+
+Development of the expandable native PC engine is organized in three separate
+workspaces: **[decomp](decomp/README.md)** (the preserved `Ys/` original
+source and evidence), **[recomp](recomp/README.md)** (new AOT-generated-C
+integration and parity tests), and **[engine](engine/README.md)** (native,
+mod-forward C11 gameplay and content contracts). See
+**[PROJECT_DIRECTION.md](PROJECT_DIRECTION.md)** for the ownership,
+evidence boundaries and next milestones. These are currently directories
+within one Git repository, not yet separate remote repositories.
+The stable `Ys` baseline and historical research branches are preserved;
+no playable static recompilation is claimed.
+
+---
+
 ## Ys PC builds: Development / Alpha / Beta / Final
 
 **Universal mod-forward development policy:** [MOD_FORWARD_METHODOLOGY.md](MOD_FORWARD_METHODOLOGY.md) sets the shared standard for replaceable content, stable resource IDs, extensible menus, deterministic mod resolution, save compatibility and editor-ready data across DOS, NES, SNES, SMS, Genesis and future ports. It is a development policy, not a claim that the current Ys native build has a mod loader or editor.
