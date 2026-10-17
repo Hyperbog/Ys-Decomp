@@ -1,0 +1,7 @@
+# Local owner-derived output is never source code or public evidence.
+/generated/
+/build/
+*.sms
+*.gg
+*.sg
+*.bin
