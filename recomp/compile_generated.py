@@ -71,6 +71,7 @@ def compile_recomp(args):
                    for part in ("full", "dispatch", "layout"))
     command = [
         args.cc, "-std=c11", "-O1", "-DSMSGG_HAVE_GAME_LAYOUT",
+        *(["-DSMS_TRACE_PC"] if args.trace_pc else []),
         "-I" + str(upstream / "runner"),
         "-I" + str(upstream / "runner/include"),
         "-I" + str(upstream / "runner/video"),
@@ -111,6 +112,8 @@ def main():
     ap.add_argument("--prefix", default="ys_sms")
     ap.add_argument("--output", type=Path, default=ROOT / "recomp/build/ys_sms_runner")
     ap.add_argument("--cc", default="cc")
+    ap.add_argument("--trace-pc", action="store_true",
+                    help="enable upstream instruction-entry diff tracer (experimental)")
     args = ap.parse_args()
     try:
         output = compile_recomp(args)
