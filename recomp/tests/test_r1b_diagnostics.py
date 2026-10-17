@@ -67,10 +67,10 @@ class R1bDiagnosticTests(unittest.TestCase):
             self.assertEqual(difference(values, values), "MATCHED 1 hits in 16 fields")
             changed = [list(values[0])]
             changed[0][12] = 4
-            self.assertIn("field=sp", difference(values, changed))
+            self.assertIn("sp=0/4", difference(values, changed))
             changed = [list(values[0])]
             changed[0][1] = 101
-            self.assertIn("field=cyc", difference(values, changed))
+            self.assertIn("cyc=100/101", difference(values, changed))
             self.assertEqual(difference([], []), "NO_HITS")
 
     def test_watchpoint_rejects_bad_hit_and_nondecimal_registers(self):
