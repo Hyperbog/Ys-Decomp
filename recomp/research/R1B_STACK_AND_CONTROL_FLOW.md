@@ -83,6 +83,31 @@ and SP at the **same guest instruction address**) reported over 60 frames:
 | `$0749` | first hit seen | first hit seen | At least refresh register R differed |
 | `$0BC5` | 1 hit | 14 hits | Different resource/staging control-flow frequency |
 
+On the first sampled visit to each listed PC, **all other sampled
+registers and the accumulated cycle count matched**; the recorded
+Z80 refresh register **R** was the first difference at `$8803`,
+`$0038`, `$0749` and `$0BC5`. The instruction-entry comparator
+subsequently recorded all first-hit differences (not only the first
+field) in
+[run 38999671281](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38999671281).
+
+The **first source-identified CPU-model inconsistency** is HALT refresh:
+
+- Upstream `runner/external/superzazu/z80.c` executes another
+  `exec_opcode(0x00)` on each halted `z80_step()`, and that opcode
+  calls `inc_r()`. Its halted Z80 therefore increments R through
+  repeated 4-cycle cycles of execution.
+- Upstream native `runner/glue.c::sms_halt()` instead fast-forwards
+  `g_z80.cyc` to the next synchronization deadline and calls
+  `sms_sync()`, **without incrementing R** during the elapsed
+  halted time.
+
+This is a documented semantic difference in **R accounting** for
+halted execution. It is **not yet proven** to be the sole or main cause
+of the execution-frequency divergence, stack changes or IRQ discrepancy.
+No HALT candidate patch has been incorporated into the acceptance gate
+or original source.
+
 This is **stronger evidence of genuine execution divergence** than a
 frame-end SP mismatch. An earlier compiled path logged 26 hybrid
 interpreter calls and 8 unique computed-dispatch misses by frame 60.
@@ -113,18 +138,23 @@ strict SP/WRAM/VDP comparison requirements remain in place.
 
 ## Next corrective investigation
 
-1. Locate the **first difference in actual IRQ count, mapper slot bank,
+1. Independently test a **candidate HALT-refresh/time-step correction**
+   that advances the native CPU in 4-cycle HALT intervals, incrementing
+   R and sampling IRQ at the instruction boundary as the interpreter
+   does. Validate against original full-ROM traces; do not change the
+   historical original or the evaluator to make it pass.
+2. Locate the **first difference in actual IRQ count, mapper slot bank,
    or identical-PC cycle history**, not merely the first frame snapshot
    difference. Prioritize the first naturally accepted IM1 and banked
    dispatch around frames 5–6.
-2. Check whether generated `sms_tick/sms_sync`, `sms_halt`, and
+3. Check whether generated `sms_tick/sms_sync`, `sms_halt`, and
    hybrid-interpreter handoff sample a pending IRQ at the same
    instruction boundary as superzazu. This is a hypothesis, not a proven
    bug location.
-3. Check the live mapping, stack push/pop and continuation semantics of
+4. Check the live mapping, stack push/pop and continuation semantics of
    `$8883` and other banked computed-dispatch misses. Compare matched
    guest PC and mapper state before changing emitter or runner logic.
-4. Apply any corrected implementation in its own reviewed code change,
+5. Apply any corrected implementation in its own reviewed code change,
    without relaxing the original strict gate; independently repeat
    source-ROM 60-frame and longer controller/VDP/audio checks.
 
