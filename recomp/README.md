@@ -70,12 +70,26 @@ Independent fixture tests:
 They actually compile, link and **execute synthetic C**, and verify corrupted
 header/ABI/provenance/compile failures. They do *not* execute original Ys.
 
-GitHub Actions `ys-r1-recomp.yml` has an explicit manual
-`execute_original=true` experimental job that builds the upstream
-compiler, reconstructs the original cartridge, compiles generated C,
-and attempts a one-frame headless run. A passing one-frame run is still
-**not** equivalent to validated gameplay. The historical CPU/VDP
-differential gate must be developed and passed separately.
+GitHub Actions `ys-r1-recomp.yml` tests both the synthetic ABI
+and a real source-only original Ys run on this dedicated draft PR branch.
+A separate manual `execute_original=true` input also triggers the
+experiment. The [successful initial one-frame original generated-C run]
+(https://github.com/Hyperbog/Ys-Decomp/actions/runs/38992946897)
+compiled all four generated outputs and ran a 59,749-cycle prefix
+with zero hybrid fallback. This is real recompilation execution, but not
+original gameplay equivalence.
+
+The strict follow-up [60-frame differential run]
+(https://github.com/Hyperbog/Ys-Decomp/actions/runs/38993200809)
+**failed**, rather than being certified:
+frame 1 stack pointer differed (`$DFEE` recomp versus `$DFF0`
+upstream interpreter); across all 60 frames, VRAM/CRAM/register
+fingerprints agreed, WRAM disagreed on one frame, and the stack
+pointer disagreed on 57. The compiled execution had 26 hybrid calls
+and eight dispatch-miss targets. See
+[`research/R1A_GENERATED_EXECUTION.md`](research/R1A_GENERATED_EXECUTION.md).
+The independent strict parity gate remains mandatory; **R1 is blocked**
+pending a genuine CPU-state/stack correction, not a changed golden.
 
 ## Next execution milestone (not yet implemented)
 
