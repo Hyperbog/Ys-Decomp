@@ -1,0 +1,70 @@
+name: Ys R1 - generated C compile/link integration
+on:
+  push:
+    branches: ['feature/ys-expanded-r1-compiled-recomp']
+    paths:
+      - 'recomp/**'
+      - 'shared_decomp/smsgg_recomp.py'
+      - 'shared_decomp/tests/test_smsgg_recomp.py'
+      - '.github/workflows/ys-r1-recomp.yml'
+  pull_request:
+    branches: ['feature/ys-expanded-foundation', Ys]
+    paths:
+      - 'recomp/**'
+      - 'shared_decomp/smsgg_recomp.py'
+      - 'shared_decomp/tests/test_smsgg_recomp.py'
+      - '.github/workflows/ys-r1-recomp.yml'
+  workflow_dispatch:
+    inputs:
+      execute_original:
+        description: 'Opt in to rebuild Ys source-ROM and compile real upstream-generated C'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  synthetic-abi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate mandatory four-file output provenance
+        run: python3 -m unittest discover -s shared_decomp/tests -p test_smsgg_recomp.py -v
+      - name: Compile, link, execute mock generated ABI and run failure tests
+        run: python3 -m unittest discover -s recomp/tests -p test_compiled_runner.py -v
+      - name: Ensure tests did not modify tracked source
+        run: git diff --exit-code
+  real-generated-c-experiment:
+    # Real external tool/ROM execution is intentionally an explicit opt-in.
+    # Never misreport fixture success as authentic game execution.
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.execute_original }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Obtain external reference implementation without vendoring
+        shell: bash
+        run: |
+          git clone --no-checkout https://github.com/mstan/smsggrecomp.git "$RUNNER_TEMP/upstream"
+          git -C "$RUNNER_TEMP/upstream" checkout 224d5bb2c150a2c295033d35dec629ef9ee42940
+          git -C "$RUNNER_TEMP/upstream" submodule update --init --recursive
+      - name: Build external recompiler
+        run: |
+          cmake -S "$RUNNER_TEMP/upstream/recompiler" -B "$RUNNER_TEMP/upstream/recompiler/build" -DCMAKE_BUILD_TYPE=Release
+          cmake --build "$RUNNER_TEMP/upstream/recompiler/build" --parallel
+      - name: Rebuild source-only cartridge with exact original SHA
+        run: python3 Ys/tools/build_system_m10.py --check --out "$RUNNER_TEMP/ys-original-source.sms"
+      - name: Generate all four C/ABI files with original ROM verification
+        run: |
+          python3 shared_decomp/smsgg_recomp.py --rom "$RUNNER_TEMP/ys-original-source.sms" --manifest Ys/manifest.json --config Ys/recomp/game.toml --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/generated"
+      - name: Compile and link real generated C with upstream runner
+        run: |
+          mkdir -p recomp/build
+          python3 recomp/compile_generated.py --rom "$RUNNER_TEMP/ys-original-source.sms" --upstream "$RUNNER_TEMP/upstream" --tool "$RUNNER_TEMP/upstream/recompiler/build/SmsRecomp" --output "$GITHUB_WORKSPACE/recomp/build/ys_sms_runner"
+      - name: Bounded real generated-C smoke (not a gameplay parity claim)
+        shell: bash
+        run: |
+          cd recomp/build
+          timeout 45s ./ys_sms_runner "$RUNNER_TEMP/ys-original-source.sms" --frames 1 --vdp-trace "$RUNNER_TEMP/ys-r1-vdp.csv"
+          test -s "$RUNNER_TEMP/ys-r1-vdp.csv"
+      - name: Ensure original/cartridge artifacts remain untracked
+        run: git diff --exit-code
