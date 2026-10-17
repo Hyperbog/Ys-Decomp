@@ -34,9 +34,9 @@ jobs:
       - name: Ensure tests did not modify tracked source
         run: git diff --exit-code
   real-generated-c-experiment:
-    # Real external tool/ROM execution is intentionally an explicit opt-in.
+    # Real external tool/ROM execution needs explicit manual opt-in or [r1-real] commit marker.
     # Never misreport fixture success as authentic game execution.
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.execute_original }}
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.execute_original) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[r1-real]')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
