@@ -52,8 +52,24 @@ The strict `recomp/verify_vdp_parity.py` comparer remains unchanged
 in what it requires: **all** recorded fields must match for **every**
 requested frame. Failure remains a CI failure; no golden fingerprints
 are rewritten, no SP tolerance is introduced, and no game state or PC
-is forced. A later diagnostic update adds a per-field mismatch
-histogram without weakening these acceptance conditions.
+is forced. The [second 60-frame diagnostic run
+38993200809](https://github.com/Hyperbog/Ys-Decomp/actions/runs/38993200809)
+returned the same initial SP discrepancy and strict CI failure.
+The all-frame mismatch histogram was:
+
+| Frame fingerprint field | Nonmatching frames (of 60) |
+| --- | ---: |
+| VRAM | 0 |
+| CRAM | 0 |
+| VDP register array | 0 |
+| Full WRAM | **1** |
+| VDP R8/R9/R0/R1 | 0 for each |
+| Z80 stack pointer | **57** |
+
+These are checksums, not byte-level CPU-state equivalence. The identity
+of the one WRAM-divergent frame and the first differing byte remain to
+be established. There is no verified explanation yet for the SP
+difference. This strict mismatch **must not** be waived to promote R1.
 
 ## Status
 
