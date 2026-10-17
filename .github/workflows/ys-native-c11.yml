@@ -1,7 +1,8 @@
 name: Ys native C11 startup, VDP and sound
 on:
   push:
-    branches: [Ys]
+    # Stacked PRs target feature branches; run their independent gates on push.
+    branches: [Ys, 'feature/pc45-resource-route-audit']
     paths:
       - 'native/**'
       - '.github/workflows/ys-native-c11.yml'
